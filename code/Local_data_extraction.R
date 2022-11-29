@@ -64,7 +64,7 @@ ph_theme = function(){
 
 # In Census 2021, we swapped records (targeted record swapping), for example, if a household was likely to be identified in datasets because it has unusual characteristics, we swapped the record with a similar one from a nearby small area (very unusual households could be swapped with one in a nearby local authority)
 
-# We also added small changes to some counts (cell key perturbation), for example, we might change a count of four to a three or a five -- this might make small differences between tables depending on how the data are broken down when we applied perturbation
+# We also added small changes to some counts (cell key perturbation), for example, we might change a count of four to a three or a five -- this might make small differences between tables depending on how the data are broken down when we applied perturbationI'm
 
 # Age MSOAs
 
