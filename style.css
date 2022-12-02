@@ -1,0 +1,109 @@
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 3rem;
+}
+
+
+*{font-family: 'Roboto', sans-serif;}
+
+body {width: 80vw;
+  box-sizing: border-box;
+  margin: auto;}
+
+#map_1_id {
+  height: 480px;
+  /* width: 80%; */
+  margin: auto;
+  background-color: antiquewhite;
+}
+
+p {
+  text-align: justify;
+  color: #4c4c4e;
+}
+
+b {
+  color: #1e4b7a;
+}
+
+b.extra {
+  font-size: 1.6rem;
+}
+
+a {
+  color: #cc0052;
+}
+
+.good_to_know {
+  border: 2px solid #cc0052;
+  border-radius: 5px;
+  font-size: .8rem;
+  padding: 10px;
+  padding-top: 5px;
+}
+
+.tooltip_class {
+  max-width: 200px;
+  padding-left: 5px;
+  padding-right: 5px;
+  /* font-size: 0.9rem; */
+  background: #ffffff;
+  color: #000000;
+  border-radius: 5px;
+  border: 1px solid #000;
+  text-align: left !important;
+}
+
+.legend {
+  border-radius: 10px;
+  background-color: #fff;
+  padding: 5px;
+  line-height: 18px;
+  color: #555;
+}
+.legend i {
+   width: 18px;
+   height: 18px;
+   border-radius: 50%;
+   float: left;
+   margin-right: 8px;
+   opacity: 1;
+} 
+
+
+/* Table styling */
+table {
+  border-collapse: collapse;
+  width: auto;
+}
+
+th {
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  margin-top: 15px;
+  padding: 5px;
+  vertical-align: top;
+  font-size: 0.9rem;
+  color: #003366;
+}
+
+tbody {
+  text-align: right;
+  vertical-align: top;
+  font-size: 0.9rem;
+  color: #4c4c4e;
+  border-bottom: 1px solid #333;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+td:nth-child(1) {
+  width: 30%;
+  text-align: left;
+}
+
+td:nth-child(2) {
+  text-align: left;
+}
