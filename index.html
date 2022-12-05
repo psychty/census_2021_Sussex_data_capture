@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local variation in Life Expectancy; 2015-2019</title>
+    <title>Census 2021 - Sussex PH</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
@@ -55,6 +55,24 @@
    <tbody id="table_change_1"></tbody>
    </table>
 
+   <p>The map below has a slider (the line down the middle with a circle button). Drag the slider left and right to see how the boundaries for LSOAs changed between 2011 and 2021. The boundaries for 2021 are in purple on the right hand side and the 2011 boundaries are on the left.</p>
+   <p>You can drag the slider or drag the map, and zoom in using your mouse or the +/- button on the top left of the map.</p>
+
+   <h3>Map 1 - Neighbourhood (LSOA) changes between Census 2011 and Census 2021</h3>
+   <div id = "map_1_id"></div>
+
+   <p>You can also search for a postcode in the box below for any postcode in Sussex and a marker will appear on the map with more detail about that local area. For example, searching for 'RH13 6HF' will show Colgate in Horsham, an area which has been split into multiple LSOAs as a result of the latest census.</p>
+
+   <div class="inputHolder">
+    <input placeholder="Postcode" type="text" id="txtPostcode" />
+    <input type="button" value="Search" id="btnPostcode" />
+  </div>
+
+   <div class="local_summary_map_1">
+    <h4 id="local_postcode_summary_1"></h4>
+    <p id="local_postcode_summary_2"></p>
+  </div>
+
     </section>
     
     <section id = 'other_small_areas'>
@@ -70,6 +88,7 @@
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
     <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script src="leaflet-side-by-side.js"></script>
     <script src="https://d3js.org/d3-format.v1.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="app.js"></script>

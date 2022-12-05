@@ -32,12 +32,22 @@ output_directory <- '~/Repositories/census_2021_Sussex_data_capture/outputs'
 areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing') 
 
 #LTLA boundaries
-# This will read in the boundaries (in a geojson format) from Open Geography Portal
-lad_boundaries_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2021_GB_BFC/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
-  filter(LAD21NM %in% areas) 
 
-# Convert it to a spatial polygon data frame
-lad_boundaries_spdf <- as_Spatial(lad_boundaries_sf, IDs = lad_boundaries_sf$LAD21NM)
+# This will read in the boundaries (in a geojson format) from Open Geography Portal - we dont really want all the rivers included but if we use full extent boundaries for the whole county then the area around chichester harbour might look strane to how people expect it to look.
+
+# As such, we can take the clipped boudnary for chichester and the full extent boundaries for the rest of the county and then stitch it together.
+query <- 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFC_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
+
+lad_boundaries_clipped_sf <- st_read(query) %>% 
+  filter(LAD22NM %in% c('Chichester')) 
+
+query <- 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFE_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
+
+lad_boundaries_full_extent_sf <- st_read(query) %>% 
+  filter(LAD22NM %in% areas & LAD22NM != 'Chichester')
+
+lad_boundaries_sf <- rbind(lad_boundaries_clipped_sf, lad_boundaries_full_extent_sf)
+lad_boundaries_spdf <- as_Spatial(lad_boundaries_sf, IDs = lad_boundaries_sf$LAD22NM)
 
 # 2021 lookup
 # This is an output area lookup 
@@ -50,7 +60,7 @@ lsoa21_lookup <- oa21_lookup %>%
   filter(LTLA %in% areas)
 
 # this will download all lsoas and then filter just those in Sussex
-lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_2021_EW_BFC_V2/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson') %>% 
+lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2021_Boundaries_Generalised_Clipped_EW_BGC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD) 
 
 # Convert it to a spatial polygon data frame
@@ -72,7 +82,6 @@ lsoa_changes <- lsoa_change_df %>%
   filter(LTLA %in% areas) %>% 
   mutate(UTLA = ifelse(LTLA == 'Brighton and Hove', 'Brighton and Hove', ifelse(LTLA %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden'), 'East Sussex', ifelse(LTLA %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing'), 'West Sussex', LTLA)))) %>% 
   arrange(UTLA, LTLA)
-
 
 lsoa_change_detail <- lsoa_change_df %>% 
   group_by(LTLA, Change) %>% 
@@ -115,9 +124,14 @@ lsoa11_lookup <- oa11_lookup %>%
     select(LSOA11CD, LSOA11NM, MSOA11CD, MSOA11NM, LTLA = LAD20NM) %>% 
     unique() %>% 
     filter(LTLA %in% areas)
+
+
+lsoa_2011_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) 
   
-lsoa_2011_boundaries_spdf <- geojson_read("https://opendata.arcgis.com/datasets/8bbadffa6ddc493a94078c195a1e293b_0.geojson",  what = "sp") %>% 
-  filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD)
+# Convert it to a spatial polygon data frame
+lsoa_2011_boundaries_spdf <-  as_Spatial(lsoa_2011_sf, IDs = lsoa_2011_sf$LSOA11CD)
+
 
 lsoa_2021_leaflet_map <- leaflet(lsoa_2021_boundaries_spdf,
         options = leafletOptions(zoomControl = FALSE)) %>%
@@ -136,110 +150,34 @@ lsoa_2021_leaflet_map <- leaflet(lsoa_2021_boundaries_spdf,
               weight = 1,
               popup = paste0('LSOA 2011: ', lsoa_2011_boundaries_spdf$LSOA11NM, ' (', lsoa_2011_boundaries_spdf$LSOA11CD, ')'),
               options = pathOptions(pane = "left")) %>% 
-  addMapPane("right", zIndex = 0) %>% 
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
-           layerId = "right_layer",
-           options = pathOptions(pane = "right")) %>%
-  addPolygons(data = lsoa_2021_boundaries_spdf,
-              stroke = TRUE, 
-              color = "purple",
-              popup = paste0('LSOA 2021: ', lsoa_2021_boundaries_spdf$LSOA21NM, ' (', lsoa_2021_boundaries_spdf$LSOA21CD, ')'),
-    weight = 1,
-    group = 'Show 2021 boundaries',
-    options = pathOptions(pane = "right")) %>%
-  addSidebyside(layerId = "sidecontrols",
-                leftId = "left_layer",
-                rightId = "right_layer")
-
-# Export the map as a html file
-htmlwidgets::saveWidget(lsoa_2021_leaflet_map,
-                        paste0(output_directory, '/lsoa_2021_leaflet_map.html'),
-                        selfcontained = TRUE)
-
-# This file is massive (38mb!)
-
-# It could be the data (the two near 1,000 element layers) and the intricate detail of the boundaries.
-# We might be ablet o simplify the geometry but it will lose some of the definition, and if it is the side-by-side functionality then this is wasted.
-
-# Let's try saving a map that does not have the slider on it.
-# Is it the side by side feature?
-
-lsoa_2021_leaflet_map_flat <- leaflet(lsoa_2021_boundaries_spdf,
-                                 options = leafletOptions(zoomControl = FALSE)) %>%
-  addControl(paste0("<font size = '1px'><b>Sussex 2011 LSOAs</font>"),
-             position='topleft') %>% 
-  addControl(paste0("<font size = '1px'><b>Sussex 2021 LSOAs</font>"),
-             position='topright') %>% 
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.') %>%
-  addPolygons(data = lsoa_2011_boundaries_spdf,
-              stroke = TRUE, 
-              color = "maroon",
-              weight = 1,
-              popup = paste0('LSOA 2011: ', lsoa_2011_boundaries_spdf$LSOA11NM, ' (', lsoa_2011_boundaries_spdf$LSOA11CD, ')')) %>% 
-  addPolygons(data = lsoa_2021_boundaries_spdf,
-              stroke = TRUE, 
-              color = "purple",
-              popup = paste0('LSOA 2021: ', lsoa_2021_boundaries_spdf$LSOA21NM, ' (', lsoa_2021_boundaries_spdf$LSOA21CD, ')'),
-              weight = 1,
-              group = 'Show 2021 boundaries')
-
-
-htmlwidgets::saveWidget(lsoa_2021_leaflet_map_flat,
-                        paste0(output_directory, '/lsoa_2021_leaflet_map_flat.html'),
-                        selfcontained = TRUE)
-
-# That maye no difference (perhaps 10 or 15 kb in file size)
-
-# Simplify the polygons
-
-lsoa_2021_simplified <- ms_simplify(lsoa_2021_boundaries_spdf, keep = 0.2)
-lsoa_2011_simplified <- lsoa_2011_boundaries_spdf
-
-# When i tried this earlier the 2011 boundary was smaller to start with so reducing the quality did more 'damage' to the 2011 lsoa object than the 2021 one. In fact, I actually left the 2011 boundary alone.
-
-# A 10 ish mb html map is reasonable for the functionality.
-
-# lsoa_2021_leaflet_map_3 <- 
-  
-leaflet(lsoa_2021_simplified,
-                                 options = leafletOptions(zoomControl = FALSE)) %>%
-  addControl(paste0("<font size = '1px'><b>Sussex 2011 LSOAs</font>"),
-             position='topleft') %>% 
-  addControl(paste0("<font size = '1px'><b>Sussex 2021 LSOAs</font>"),
-             position='topright') %>% 
-   addMapPane("left", zIndex = 0) %>%
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
-           layerId = "left_layer",
-           options = pathOptions(pane = "left")) %>%
-  addPolygons(data = lsoa_2011_simplified,
-              stroke = TRUE, 
-              color = "maroon",
-              weight = 1,
-              popup = paste0('LSOA 2011: ', lsoa_2011_simplified$LSOA11NM, ' (', lsoa_2011_simplified$LSOA11CD, ')'),
-              options = pathOptions(pane = "left")) %>% 
-  addMapPane("right", zIndex = 0) %>% 
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
-           layerId = "right_layer",
-           options = pathOptions(pane = "right")) %>%
-  addPolygons(data = lsoa_2021_simplified,
-              stroke = TRUE, 
-              color = "purple",
-              popup = paste0('LSOA 2021: ', lsoa_2021_simplified$LSOA21NM, ' (', lsoa_2021_simplified$LSOA21CD, ')'),
-              label = paste0('LSOA 2021: ', lsoa_2021_simplified$LSOA21NM, ' (', lsoa_2021_simplified$LSOA21CD, ')'),
-              weight = 1,
-              group = 'Show 2021 boundaries',
-              options = pathOptions(pane = "right")) %>%
   addPolygons(data = lad_boundaries_spdf,
               fill = FALSE,
               stroke = TRUE, 
               color = "#000000",
               weight = 2,
               group = 'lad',
-              label = paste0(lad_boundaries_spdf$LAD21NM),
+              label = paste0(lad_boundaries_spdf$LAD22NM),
+              options = pathOptions(pane = "left")) %>% 
+  addMapPane("right", zIndex = 0) %>% 
+  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
+           layerId = "right_layer",
+           options = pathOptions(pane = "right")) %>%
+  addPolygons(data = lsoa_2021_boundaries_spdf,
+              stroke = TRUE, 
+              color = "purple",
+              label = paste0(lsoa_2021_boundaries_spdf$LSOA21CD, ' (', lsoa_2021_boundaries_spdf$LSOA21NM, ')'),
+              popup = paste0('LSOA 2021: ', lsoa_2021_boundaries_spdf$LSOA21NM, ' (', lsoa_2021_boundaries_spdf$LSOA21CD, ')'),
+    weight = 1,
+    group = 'Show 2021 boundaries',
+    options = pathOptions(pane = "right")) %>%
+  addPolygons(data = lad_boundaries_spdf,
+              fill = FALSE,
+              stroke = TRUE, 
+              color = "#000000",
+              weight = 2,
+              group = 'lad',
+              label = paste0(lad_boundaries_spdf$LAD22NM),
               options = pathOptions(pane = "right")) %>% 
   addSidebyside(layerId = "sidecontrols",
                 leftId = "left_layer",
@@ -250,19 +188,18 @@ leaflet(lsoa_2021_simplified,
                                                     moveToLocation = TRUE,
                                                     autoType = TRUE,
                                                     textPlaceholder = 'Search for a 2021 LSOA Code (e.g. E01034817)',
-                                                    collapsed = FALSE)) %>% 
-  addSearchFeatures(targetGroups = 'lad',
-                    options = searchFeaturesOptions(zoom = 10,
-                                                    openPopup = TRUE,
-                                                    moveToLocation = TRUE,
-                                                    autoType = TRUE,
-                                                    textPlaceholder = 'Search for a local authority (e.g Adur)',
                                                     collapsed = FALSE))
 
 # Export the map as a html file
-htmlwidgets::saveWidget(lsoa_2021_leaflet_map_3,
-                        paste0(output_directory, '/lsoa_2021_leaflet_map_v2.html'),
+htmlwidgets::saveWidget(lsoa_2021_leaflet_map,
+                        paste0(output_directory, '/lsoa_2021_leaflet_map.html'),
                         selfcontained = TRUE)
 
 
- 
+# geojson_write(ms_simplify(geojson_json(utla_ua_boundaries_rate_geo), keep = 0.2), file = paste0(output_directory_x, '/utla_covid_rate_latest.geojson'))
+
+geojson_write(geojson_json(lsoa_2021_boundaries_spdf), file = paste0(output_directory, '/sussex_2021_lsoas.geojson'))
+
+geojson_write(geojson_json(lsoa_2011_boundaries_spdf), file = paste0(output_directory, '/sussex_2011_lsoas.geojson'))
+
+geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory, '/sussex_ltlas.geojson'))

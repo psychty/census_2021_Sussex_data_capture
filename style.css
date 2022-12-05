@@ -70,6 +70,11 @@ a {
    opacity: 1;
 } 
 
+.map_title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #fff;
+}
 
 /* Table styling */
 table {
