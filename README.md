@@ -31,5 +31,6 @@ There are some R scripts available in the 'code' folder.
 I have also created a website (which is written using the index.html, styles.css, and app.js files also on this repository).
 
 This is hosted on netlify at the following address;
+[https://census-2021-sussex-ph-overview.netlify.app](https://census-2021-sussex-ph-overview.netlify.app)
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ebcd429c-b829-4a06-89d9-c68fffa78dec/deploy-status)](https://app.netlify.com/sites/census-2021-sussex-ph-overview/deploys)

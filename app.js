@@ -168,7 +168,7 @@ var baseMaps_map_1 = {
   var lsoa2011_boundary = L.geoJSON(LSOA11_geojson.responseJSON, { style: lsoa2011_colours, pane: 'left' })
  .bindPopup(function (layer) {
     return (
-      '<Strong>2011</Strong> LSOA: <Strong>' +
+      '<Strong>2011</Strong> LSOA:<br><Strong>' +
       layer.feature.properties.LSOA11CD +
       "</Strong> (" +
       layer.feature.properties.LSOA11NM +
@@ -180,7 +180,7 @@ var baseMaps_map_1 = {
 var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: lsoa2021_colours, pane: 'right' })
  .bindPopup(function (layer) {
     return (
-      '<Strong>2021</Strong> LSOA: <Strong>' +
+      '<Strong>2021</Strong> LSOA:<br><Strong>' +
       layer.feature.properties.LSOA21CD +
       "</Strong> (" +
       layer.feature.properties.LSOA21NM +
