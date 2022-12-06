@@ -13,7 +13,6 @@
 
 # Census outputs will also be available for 2022 ward boundaries and where possible we will also present area level analyses at this level. However, ward boundaries are not coterminous (aligning) with OA geographies, have greater variation in population coverage, and are frequently amended.
 
-
 # Changes have been made to the 2011 LSOAs as a result of population and household changes found in the 2021 Census. New 2021 LSOAs were created by merging or splitting 2011 LSOAs to ensure that population and household thresholds were met. Whilst health statistics may continue to be published on the 2011 LSOA boundaries for the foreseable future, they will eventually switch to the 2021 boundaries and so a lookup and explanation of what has changed may be useful.
 
 # Wards and LSOA boundaries do not neatly align and a ward can contain just a few LSOAs or several. Importantly, LSOAs can also span across more than one ward. The Office for National Statistics provides a ‘best-fit’ lookup which assigns LSOAs to the ward in which most of the population lies (based on the population weighted centroid of the area). This means that some residents can be assigned to a different ward if the majority of their neighbourhood falls into an adjacent ward.
@@ -22,7 +21,7 @@
 
 # This short report shows the changes in geographies between the 2011 and 2021
 
-packages <- c('easypackages', 'tidyr', 'ggplot2', 'dplyr', 'scales', 'readxl', 'readr', 'purrr', 'stringr', 'rgdal', 'spdplyr', 'geojsonio', 'rmapshaper', 'jsonlite', 'rgeos', 'sp', 'sf', 'maptools', 'leaflet', 'leaflet.extras', 'leaflet.extras2')
+packages <- c('easypackages', 'tidyr', 'ggplot2', 'dplyr', 'scales', 'readxl', 'readr', 'purrr', 'stringr', 'rgdal', 'spdplyr', 'geojsonio', 'rmapshaper', 'jsonlite', 'rgeos', 'sp', 'sf', 'maptools', 'leaflet', 'leaflet.extras', 'leaflet.extras2', 'nomisr')
 install.packages(setdiff(packages, rownames(installed.packages())))
 easypackages::libraries(packages)
 
@@ -36,15 +35,11 @@ areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'We
 # This will read in the boundaries (in a geojson format) from Open Geography Portal - we dont really want all the rivers included but if we use full extent boundaries for the whole county then the area around chichester harbour might look strane to how people expect it to look.
 
 # As such, we can take the clipped boudnary for chichester and the full extent boundaries for the rest of the county and then stitch it together.
-query <- 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFC_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
+lad_boundaries_clipped_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFC_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(LAD22NM %in% c('Chichester', 'Brighton and Hove')) 
 
-lad_boundaries_clipped_sf <- st_read(query) %>% 
-  filter(LAD22NM %in% c('Chichester')) 
-
-query <- 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFE_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
-
-lad_boundaries_full_extent_sf <- st_read(query) %>% 
-  filter(LAD22NM %in% areas & LAD22NM != 'Chichester')
+lad_boundaries_full_extent_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFE_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(LAD22NM %in% areas & LAD22NM != 'Chichester' & LAD22NM != 'Brighton and Hove')
 
 lad_boundaries_sf <- rbind(lad_boundaries_clipped_sf, lad_boundaries_full_extent_sf)
 lad_boundaries_spdf <- as_Spatial(lad_boundaries_sf, IDs = lad_boundaries_sf$LAD22NM)
@@ -65,6 +60,38 @@ lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/re
 
 # Convert it to a spatial polygon data frame
 lsoa_2021_boundaries_spdf <- as_Spatial(lsoa_2021_sf, IDs = lsoa_2021_sf$LSOA2CD)
+
+# Small areas
+# TODO get nomis figures for LSOA population
+
+nomis_data_info() %>% View()
+
+census_LSOA_raw_df <- nomis_get_data(id = 'NM_2028_1',
+                                     time = 'latest', 
+                                     c_sex = '0', # '1,2' would return males and females
+                                     measures = '20100',
+                                     geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, LSOA21NM = GEOGRAPHY_NAME, Sex = C_SEX_NAME, Population = OBS_VALUE) %>% 
+  mutate(Sex = gsub('All persons', 'Persons', Sex)) %>% 
+  filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD)
+
+census_LSOA_density_raw_df <- nomis_get_data(id = 'NM_2026_1',
+                                     time = 'latest', 
+                                     measures = '20100',
+                                     geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Persons_per_square_kilometre = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD)
+
+census_LSOA_df <- census_LSOA_density_raw_df %>% 
+  left_join(census_LSOA_raw_df, by = 'LSOA21CD') %>% 
+  select(!Sex)
+
+# census_2011_density <- nomis_get_data(id = 'NM_160_1',
+#                                        time = 'latest', 
+#                                        measures = '20100',
+#                                        geography = 'TYPE298') #%>% 
+#   select(LSOA21CD = GEOGRAPHY_CODE, Persons_per_square_kilometre = OBS_VALUE) %>% 
+#   filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD)
 
 # This is extracting a geojson format file from open geography portal. It has geometry information as well as the information we need and is a spatial features object. By adding the st_drop_geometry() function we turn this into a dataframe
 lsoa_change_df <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA11_LSOA21_LAD22_EW_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
@@ -125,13 +152,17 @@ lsoa11_lookup <- oa11_lookup %>%
     unique() %>% 
     filter(LTLA %in% areas)
 
-
 lsoa_2011_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) 
   
 # Convert it to a spatial polygon data frame
 lsoa_2011_boundaries_spdf <-  as_Spatial(lsoa_2011_sf, IDs = lsoa_2011_sf$LSOA11CD)
 
+lsoa_2021_boundaries_spdf <- lsoa_2021_boundaries_spdf %>% 
+  left_join(census_LSOA_df, by = c('LSOA21CD', 'LSOA21NM')) 
+
+lsoa_2011_boundaries_spdf <- lsoa_2011_boundaries_spdf %>% 
+  select(!LSOA11NMW)
 
 lsoa_2021_leaflet_map <- leaflet(lsoa_2021_boundaries_spdf,
         options = leafletOptions(zoomControl = FALSE)) %>%
@@ -198,8 +229,8 @@ htmlwidgets::saveWidget(lsoa_2021_leaflet_map,
 
 # geojson_write(ms_simplify(geojson_json(utla_ua_boundaries_rate_geo), keep = 0.2), file = paste0(output_directory_x, '/utla_covid_rate_latest.geojson'))
 
-geojson_write(geojson_json(lsoa_2021_boundaries_spdf), file = paste0(output_directory, '/sussex_2021_lsoas.geojson'))
+geojson_write(ms_simplify(geojson_json(lsoa_2021_boundaries_spdf), keep = 0.85), file = paste0(output_directory, '/sussex_2021_lsoas.geojson'))
 
-geojson_write(geojson_json(lsoa_2011_boundaries_spdf), file = paste0(output_directory, '/sussex_2011_lsoas.geojson'))
+geojson_write(ms_simplify(geojson_json(lsoa_2011_boundaries_spdf), keep = 1), file = paste0(output_directory, '/sussex_2011_lsoas.geojson'))
 
 geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory, '/sussex_ltlas.geojson'))

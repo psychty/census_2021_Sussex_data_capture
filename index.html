@@ -23,11 +23,43 @@
     
     <section id = 'intro'>
     <h1>Census 2021 in Sussex</h1>
-    <p></p>
+    <p>The census is a national survey which happens once every 10 years across England and Wales providing a detailed snapshot of factors releting to people, their households, and their homes. Responses help organisations to make decisions on planning and funding public services in local areas, including transport, education, and healthcare.</p>
+    <p>Census Day 2021 was on Sunday 21 March 2021.</p>
+    <p>This analyses shows an overview summary of what the 2021 Census can tell us about the population of Sussex, with a particular emphasis on creating tools for use in Public Health.</p>
     </section>
 
     <section id = 'population_overview'>
     <h1>Population overview</h1>    
+
+    <h3>Table 1 - Overall population estimates (usual residents) by area; Census 2021</h3>
+    <table id = 'table_1' style="margin-bottom: 20px" class = 'table_1_class'>
+     <thead>
+       <tr>
+         <th style = 'text-align: left;'>Local authority</th>
+         <th style = 'text-align: right;'>Total</th>
+         <th style = 'text-align: right;'>Females</th>
+         <th style = 'text-align: right;'>Males</th>
+       </tr>
+     </thead>
+   <tbody id="table_total_1"></tbody>
+   </table>
+
+    <h3>Age structure</h3>
+    <p>Different parts of Sussex have markedly different populations.</p>
+
+    <p>Use the drop down menu here to choose a area to find out more information about its age and sex population structure.</p>
+    <h4 id = 'selected_area_pyramid_title'></h4>
+    <select title = 'Population pyramid area selector' id="select_area_pyramid_button"></select>
+    <div id = 'pyramid_container'>
+    <div id = 'pyramid_census_datavis'></div>
+    <div>
+    <p id = 'area_age_structure_text_1'></p>
+    <!-- <p id = 'area_age_structure_text_2'></p> -->
+    <!-- <p id = 'area_age_structure_text_3'></p> -->
+    <p>The shape of the pyramid gives an indication of the age structure of a population, if the shape is wider at the top, this is indicative of an ageing population and a pyramid which is wider at the bottom indicates a relatively younger population overall.</p>
+    <p class = 'good_to_know'>Note that the x axis scale (along the bottom) is redrawn when a new area is selected.</p>
+    </div>
+    </div>
     </section>
 
     <section id = 'small_area_changes'>
@@ -38,12 +70,11 @@
     <p>Changes have been made to the 2011 LSOAs as a result of population and household changes found in the 2021 Census. New 2021 LSOAs were created by merging or splitting 2011 LSOAs to ensure that population and household thresholds were met. Whilst health statistics may continue to be published on the 2011 LSOA boundaries for the foreseable future, they will eventually switch to the 2021 boundaries and so a lookup and explanation of what has changed may be useful.</p>
 
     <p>The table below shows the number of LSOAs for each lower tier local authority (LTLA)</p>
-    <h3>Table 1 - number of small areas (LSOAs) in Sussex LTLAs in 2011 and 2021</h3>
-    <table id = 'table_1' style="margin-bottom: 20px">
+    <h3>Table 2 - number of small areas (LSOAs) in Sussex LTLAs in 2011 and 2021</h3>
+    <table id = 'table_2' style="margin-bottom: 20px">
      <thead>
        <tr>
-         <th style = 'text-align: left;'>Lower tier local authority</th>
-         <th style = 'text-align: left;'>Upper tier local authority</th>
+         <th style = 'text-align: left;'>Local authority</th>
          <th style = 'text-align: right;'>LSOAs in 2011</th>
          <th style = 'text-align: right;'>LSOAs unchanged</th>
          <th style = 'text-align: right;'>LSOAs split</th>
