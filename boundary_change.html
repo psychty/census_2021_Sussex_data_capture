@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census 2021 - Sussex PH</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+      ,
+      type="text/css"
+    />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,700;1,500&display=swap" rel="stylesheet">
+  </head>
+   <body>
+    <header>
+        <nav>
+          <ul class="nav-links" id="nav-links">
+            <li>
+              <a data-page="home" href="./index.html">Home</a>
+            </li>
+            <li>
+              <a data-page="health_section" href="./health.html">Health</a>
+            </li>
+            <li>
+              <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
+            </li>
+            <li>
+              <a data-page="boundary_section" href="./boundary_change.html">Changes in boundaries</a>
+            </li>
+          </ul>
+          <p style="text-align: right; padding-right: 25px" id="update_date_nav_label"></p>
+        </nav>
+      </header>
+
+
+    <p class = 'good_to_know'>Note: this page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p>
+
+    <section id = 'small_area_changes'>
+        <h1>Small area boundary changes</h1>
+        <p>Small areas across England and Wales can be segmented based on consistent population sizes. Output Areas (OAs) are a geography used by many population and health services to detail small area characteristics, activity, and outcomes, because of their consistent population size and stable boundaries (which only change as a result of new Census outputs every 10 years).</p>
+        <p>Whilst Output Areas (OAs) are the smallest statistical geography from the Census, the numbers of people in each area (usually a maximum of 250 households or 650 people) are often too small when looking at specific population characteristics like age and sex or ethnicity to meaningfully compare areas.</p>
+        <p>Lower layer Super Output Areas (LSOAs) are made up of groups of OAs and comprise between 400 and 1,200 households and have a usually resident population between 1,000 and 3,000 persons. Area information such as neighbourhood deprivation is based on the LSOA geography and population estimates for calculating rates are published at LSOA level. We sometimes use Middle layer Super Output Areas (MSOAs) if the numbers of people are still too small (for example over 50s with a certain health condition). MSOAs comprise between 2,000 and 6,000 households and a usual resident population between 5,000 and 15,000 persons.</p> 
+        <p>Changes have been made to the 2011 LSOAs as a result of population and household changes found in the 2021 Census. New 2021 LSOAs were created by merging or splitting 2011 LSOAs to ensure that population and household thresholds were met. Whilst health statistics may continue to be published on the 2011 LSOA boundaries for the foreseable future, they will eventually switch to the 2021 boundaries and so a lookup and explanation of what has changed may be useful.</p>
+    
+        <p>The table below shows the number of LSOAs for each lower tier local authority (LTLA)</p>
+        <h3>Table 2 - number of small areas (LSOAs) in Sussex LTLAs in 2011 and 2021</h3>
+        <table id = 'table_2' style="margin-bottom: 20px" class = 'table_2_class'>
+         <thead>
+           <tr>
+             <th style = 'text-align: left;'>Local authority</th>
+             <th style = 'text-align: right;'>LSOAs in 2011</th>
+             <th style = 'text-align: right;'>LSOAs unchanged</th>
+             <th style = 'text-align: right;'>LSOAs split</th>
+             <th style = 'text-align: right;'>LSOAs merged</th>
+             <th style = 'text-align: right;'>LSOAs in 2021</th>
+             <th style = 'text-align: right;'>Difference</th>
+           </tr>
+         </thead>
+       <tbody id="table_change_1"></tbody>
+       </table>
+    
+       <p>The map below has a slider (the line down the middle with a circle button). Drag the slider left and right to see how the boundaries for LSOAs changed between 2011 and 2021. The boundaries for 2021 are in purple on the right hand side and the 2011 boundaries are on the left.</p>
+       <p>You can drag the slider or drag the map, and zoom in using your mouse or the +/- button on the top left of the map.</p>
+    
+       <h3>Map 1 - Neighbourhood (LSOA) changes between Census 2011 and Census 2021</h3>
+       <div id = "map_1_id"></div>
+    
+       <p>You can also search for a postcode in the box below for any postcode in Sussex and a marker will appear on the map with more detail about that local area. For example, searching for 'RH13 6HF' will show Colgate in Horsham, an area which has been split into multiple LSOAs as a result of the latest census.</p>
+    
+       <div class="inputHolder">
+        <input placeholder="Postcode" type="text" id="txtPostcode" />
+        <input type="button" value="Search" id="btnPostcode" />
+      </div>
+    
+       <div class="local_summary_map_1">
+        <h4 id="local_postcode_summary_1"></h4>
+        <p id="local_postcode_summary_2"></p>
+      </div>
+    
+        </section>
+        
+      <section id = 'other_small_areas'>
+        <h1>Other small area geographies</h1>
+        <p>The three levels of Output Areas have conterminous boundaries and an OA can only be part of one LSOA and MSOA. OAs are defined by codes rather than meaningful names, although the House of Commons library has created a meaningful naming convention for MSOAs which is contributed to by local areas.</p>
+        <p>Nonetheless, stakeholders may not be as familiar with OAs (or an aggregate level) as they are wit Wards and Parliamentary constituencies.</p>  
+        <p>Census outputs will also be available for 2022 ward boundaries and where possible we will also present area level analyses at this level. However, ward boundaries are not coterminous (aligning) with OA geographies, have greater variation in population coverage, and are frequently amended.</p>
+        <p>Wards and LSOA boundaries do not neatly align and a ward can contain just a few LSOAs or several. Importantly, LSOAs can also span across more than one ward. The Office for National Statistics provides a ‘best-fit’ lookup which assigns LSOAs to the ward in which most of the population lies (based on the population weighted centroid of the area). This means that some residents can be assigned to a different ward if the majority of their neighbourhood falls into an adjacent ward.</p>
+        <p>For more information see https://www.ons.gov.uk/methodology/geography/ukgeographies/censusgeographies/census2021geographies</p>
+        </section>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+        <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+        <script src="leaflet-side-by-side.js"></script>
+        <script src="https://d3js.org/d3-format.v1.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+        <script src="./javascripts/boundary_change.js"></script>
+    </body>
+</html>

@@ -23,15 +23,37 @@ census_LTLA_raw_df <- nomis_get_data(id = 'NM_2029_1',
   select(Area_code = GEOGRAPHY_CODE, Area = GEOGRAPHY_NAME, Year = DATE, Sex = C_SEX_NAME, Age = C2021_AGE_92_NAME, Population = OBS_VALUE) %>% 
  mutate(Sex = gsub('All persons', 'Persons', Sex))
 
- Total_population <- census_LTLA_raw_df %>% 
+Total_population <- census_LTLA_raw_df %>% 
   filter(Age == 'Total: All usual residents') %>% 
   pivot_wider(names_from = 'Sex',
               values_from = 'Population') %>% 
   filter(Area %in% areas) %>% 
   select(!c(Area_code, Age)) 
 
- Total_population %>% 
-   toJSON() %>% 
+esx_population <- census_LTLA_raw_df %>% 
+  filter(Area %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden')) %>% 
+  filter(Age == 'Total: All usual residents') %>% 
+  group_by(Sex) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE),
+            Area = 'East Sussex') %>% 
+  pivot_wider(names_from = 'Sex',
+              values_from = 'Population')
+
+wsx_population <- census_LTLA_raw_df %>% 
+  filter(Area %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) %>% 
+  filter(Age == 'Total: All usual residents') %>% 
+  group_by(Sex) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE),
+            Area = 'West Sussex') %>% 
+  pivot_wider(names_from = 'Sex',
+              values_from = 'Population')
+
+Total_population %>% 
+  bind_rows(esx_population) %>% 
+  bind_rows(wsx_population) %>% 
+  mutate(Area = factor(Area, levels = c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing'))) %>% 
+  arrange(Area) %>% 
+  toJSON() %>% 
    write_lines(paste0(output_directory, '/ltla_2021_pop_table.json'))
  
 # When we clean the age field we use nested gsub() functions to remove the year part of Aged 1 year, the as well as the 'aged' and 'years' parts of the rest of the values. This does not work for the Aged under 1 year and Aged 90 years and over so ahead of this we do a conditional ifelse statement to tell R how to deal with those values.
@@ -45,20 +67,11 @@ census_LTLA_five_year <- census_LTLA_raw_df %>%
   summarise(Population = sum(Population, na.rm = TRUE)) %>% 
   ungroup()
 
-# Small areas
-# TODO get nomis figures for LSOA population
-
-nomis_data_info() %>% View()
-
-
-
 # Population pyramid data ####
-
 sussex_ltla_pyramid_df <- census_LTLA_five_year %>% 
   filter(Sex != 'Persons') %>% 
   filter(Area %in% areas)
 
-  
 wsx_pyramid_df <- sussex_ltla_pyramid_df %>% 
   filter(Area %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) %>% 
   group_by(Year, Sex, Age_group) %>% 

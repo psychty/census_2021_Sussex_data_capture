@@ -61,11 +61,6 @@ lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/re
 # Convert it to a spatial polygon data frame
 lsoa_2021_boundaries_spdf <- as_Spatial(lsoa_2021_sf, IDs = lsoa_2021_sf$LSOA2CD)
 
-# Small areas
-# TODO get nomis figures for LSOA population
-
-nomis_data_info() %>% View()
-
 census_LSOA_raw_df <- nomis_get_data(id = 'NM_2028_1',
                                      time = 'latest', 
                                      c_sex = '0', # '1,2' would return males and females
@@ -86,6 +81,7 @@ census_LSOA_df <- census_LSOA_density_raw_df %>%
   left_join(census_LSOA_raw_df, by = 'LSOA21CD') %>% 
   select(!Sex)
 
+# The 2011 data would be nice to plot alongside but it is calculated as a per hectare rate
 # census_2011_density <- nomis_get_data(id = 'NM_160_1',
 #                                        time = 'latest', 
 #                                        measures = '20100',
@@ -106,9 +102,7 @@ lsoa_changes <- lsoa_change_df %>%
             LSOAs_in_2021 = n_distinct(LSOA21CD)) %>% 
   mutate(Difference = LSOAs_in_2021 - LSOAs_in_2011) %>% 
   mutate(Difference = ifelse(Difference > 0, paste0('+', Difference), Difference)) %>% 
-  filter(LTLA %in% areas) %>% 
-  mutate(UTLA = ifelse(LTLA == 'Brighton and Hove', 'Brighton and Hove', ifelse(LTLA %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden'), 'East Sussex', ifelse(LTLA %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing'), 'West Sussex', LTLA)))) %>% 
-  arrange(UTLA, LTLA)
+  filter(LTLA %in% areas)
 
 lsoa_change_detail <- lsoa_change_df %>% 
   group_by(LTLA, Change) %>% 
@@ -119,9 +113,37 @@ lsoa_change_detail <- lsoa_change_df %>%
   mutate(Merged = replace_na(Merged, 0),
          Split = replace_na(Split, 0))
 
-lsoa_changes %>% 
+ltla_summary_df <- lsoa_changes %>% 
   left_join(lsoa_change_detail, by = 'LTLA') %>% 
-  select(LTLA, UTLA, LSOAs_in_2011, Unchanged, Split, Merged, LSOAs_in_2021, Difference) %>% 
+  select(LTLA, LSOAs_in_2011, Unchanged, Split, Merged, LSOAs_in_2021, Difference) 
+
+esx_changes <- ltla_summary_df %>% 
+  filter(LTLA %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden')) %>% 
+  summarise(LSOAs_in_2011 = sum(LSOAs_in_2011, na.rm = TRUE),
+         Unchanged = sum(Unchanged, na.rm = TRUE),
+         Merged = sum(Merged, na.rm = TRUE),
+         Split = sum(Split, na.rm = TRUE),
+         LSOAs_in_2021 = sum(LSOAs_in_2021),
+         LTLA = 'East Sussex') %>% 
+  mutate(Difference = LSOAs_in_2021 - LSOAs_in_2011) %>% 
+  mutate(Difference = ifelse(Difference > 0, paste0('+', Difference), Difference))
+
+wsx_changes <- ltla_summary_df %>% 
+  filter(LTLA %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) %>% 
+  summarise(LSOAs_in_2011 = sum(LSOAs_in_2011, na.rm = TRUE),
+          Unchanged = sum(Unchanged, na.rm = TRUE),
+          Merged = sum(Merged, na.rm = TRUE),
+          Split = sum(Split, na.rm = TRUE),
+          LSOAs_in_2021 = sum(LSOAs_in_2021),
+          LTLA = 'West Sussex') %>% 
+  mutate(Difference = LSOAs_in_2021 - LSOAs_in_2011) %>% 
+  mutate(Difference = ifelse(Difference > 0, paste0('+', Difference), Difference))
+
+ltla_summary_df %>% 
+  bind_rows(esx_changes) %>% 
+  bind_rows(wsx_changes) %>% 
+  mutate(LTLA = factor(LTLA, levels = c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing'))) %>% 
+  arrange(LTLA) %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory, '/lsoa_changes_table.json'))
 
