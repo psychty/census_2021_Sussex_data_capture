@@ -12,7 +12,7 @@ areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'We
 
 nomis_area_types <- data.frame(Level = c('OA','LSOA','MSOA','LTLA', 'UTLA', 'Region'), Area_type_code = c('150','151','152','154', '155','480'))
 
-# This will take a minute as it is retreiving single year of age for all UTLAs for the last nine available years - 
+# This will take a minute as it is retrieving single year of age for all UTLAs for the last nine available years - 
 # This is from table TS009 - sex by single year of age
 census_LTLA_raw_df <- nomis_get_data(id = 'NM_2029_1',
                              time = 'latest', # latest = 2020

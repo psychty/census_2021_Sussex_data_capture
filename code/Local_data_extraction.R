@@ -77,8 +77,6 @@ if(file.exists( paste0(data_directory, '/TS007_resident_age_msoa.xlsx')) != TRUE
 TS007_resident_age_msoa <- read_excel("census_2021_Sussex_data_capture/raw_data/TS007_resident_age_msoa.xlsx", 
                                       sheet = "Table")
               
-
-
 # Number of households ####
 
 # Output area

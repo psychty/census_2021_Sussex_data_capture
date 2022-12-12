@@ -42,6 +42,12 @@ a:hover {
   padding-top: 5px;
 }
 
+.title {
+  color: #cc0052;
+  padding-left: 1vw;
+}
+
+
 /* Header styling  */
 
 header {
@@ -85,6 +91,10 @@ nav {
   font-weight: bold;
   font-size: 1rem;
   padding: 5px;
+}
+
+.highlighted {
+  color: #cc0052 !important;
 }
 
 

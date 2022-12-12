@@ -209,17 +209,18 @@ svg_pyramid
    .attr("height", y_pyramid_scale.bandwidth())
    .attr("fill", "#f1c232")
  
-svg_pyramid
-  .selectAll("myRect")
-  .data(chosen_pyramid_data)
-  .enter()
-  .append("rect")
-  .attr("class", "pyramid_1")
-  .attr("x", function(d) { return male_zero - pyramid_scale_bars(d['Population']); })
-  .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
-  .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
-  .attr("height", y_pyramid_scale.bandwidth())
-  .attr("fill", "#741b47")
+ // BUG  
+// svg_pyramid
+//   .selectAll("myRect")
+//   .data(chosen_pyramid_data)
+//   .enter()
+//   .append("rect")
+//   .attr("class", "pyramid_1")
+//   .attr("x", function(d) { return male_zero - pyramid_scale_bars(d['Population']); })
+//   .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
+//   .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
+//   .attr("height", y_pyramid_scale.bandwidth())
+//   .attr("fill", "#741b47")
 
 function render_pyramid(d) {
   var chosen_pyramid_area = d3
