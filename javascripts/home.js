@@ -56,7 +56,6 @@ function loadTable_ltla_population_summary(ltla_2021_pop_table) {
   tableBody.innerHTML = dataHTML;
 }
 
-
 // ! Population pyramid
 var margin_middle = 80,
     pyramid_plot_width = (height/2) - (margin_middle/2),
@@ -99,12 +98,12 @@ d3.select("#selected_area_pyramid_title").html(function (d) {
 
   var age_levels = ["0-4 years", "5-9 years", "10-14 years", "15-19 years", "20-24 years", "25-29 years", "30-34 years", "35-39 years", "40-44 years", "45-49 years", "50-54 years", "55-59 years", "60-64 years", "65-69 years", "70-74 years", "75-79 years", "80-84 years", "85-89 years", '90+ years']
 
-  Census_pyramid_data.sort(function(a,b) {
+Census_pyramid_data.sort(function(a,b) {
   return age_levels.indexOf(a.Age_group) > age_levels.indexOf(b.Age_group)});
 
 // Filter to get out chosen dataset
 chosen_pyramid_data = Census_pyramid_data.filter(function(d,i){
-  return d.Area_name === chosen_pyramid_area })
+  return d.Area === chosen_pyramid_area })
 
 chosen_pyramid_summary_data = ltla_pop_summary_data.filter(function(d,i){
     return d.Area === chosen_pyramid_area }) 
@@ -143,19 +142,20 @@ d3.select("#area_age_structure_text_1").html(function (d) {
 
 // find the maximum data value on either side
  var maxPopulation_static_pyr = Math.max(
-  d3.max(chosen_pyramid_data, function(d) { return d['Population']; })
+  d3.max(chosen_pyramid_data, function(d) { return d.Male; }),
+  d3.max(chosen_pyramid_data, function(d) { return d.Female; })
 );
 
 if(maxPopulation_static_pyr < 2000) {
   maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 200) * 200
 }
 
-if(maxPopulation_static_pyr >= 2000 && maxPopulation_static_pyr < 3000) {
-  maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 250) * 250
+if(maxPopulation_static_pyr >= 2000 && maxPopulation_static_pyr < 20000) {
+  maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 1000) * 1000
 }
 
-if(maxPopulation_static_pyr >= 3000) {
-    maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 500) * 500
+if(maxPopulation_static_pyr >= 20000) {
+    maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 5000) * 5000
 }
 
 // the scale goes from 0 to the width of the pyramid plotting region. We will invert this for the left x-axis
@@ -167,17 +167,17 @@ var x_static_pyramid_scale_male = d3.scaleLinear()
 var xAxis_static_pyramid = svg_pyramid
  .append("g")
  .attr("transform", "translate(0," + height + ")")
- .call(d3.axisBottom(x_static_pyramid_scale_male).ticks(6))
+ .call(d3.axisBottom(x_static_pyramid_scale_male).ticks(5))
 
  var x_static_pyramid_scale_female = d3.scaleLinear()
  .domain([0, maxPopulation_static_pyr])
  .range([female_zero, (height - margin_middle/4)])
- .nice();
+ .nice()
 
 var xAxis_static_pyramid_2 = svg_pyramid
  .append("g")
  .attr("transform", "translate(0," + height + ")")
- .call(d3.axisBottom(x_static_pyramid_scale_female).ticks(6));
+ .call(d3.axisBottom(x_static_pyramid_scale_female).ticks(5));
 
  var pyramid_scale_bars = d3.scaleLinear()
  .domain([0, maxPopulation_static_pyr])
@@ -205,22 +205,21 @@ svg_pyramid
    .attr("class", "pyramid_1")
    .attr("x", female_zero)
    .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
-   .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
+   .attr("width", function(d) { return pyramid_scale_bars(d.Female); })
    .attr("height", y_pyramid_scale.bandwidth())
    .attr("fill", "#f1c232")
  
- // BUG  
-// svg_pyramid
-//   .selectAll("myRect")
-//   .data(chosen_pyramid_data)
-//   .enter()
-//   .append("rect")
-//   .attr("class", "pyramid_1")
-//   .attr("x", function(d) { return male_zero - pyramid_scale_bars(d['Population']); })
-//   .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
-//   .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
-//   .attr("height", y_pyramid_scale.bandwidth())
-//   .attr("fill", "#741b47")
+svg_pyramid
+  .selectAll("myRect")
+  .data(chosen_pyramid_data)
+  .enter()
+  .append("rect")
+  .attr("class", "pyramid_1")
+  .attr("x", function(d) { return male_zero - pyramid_scale_bars(d.Male); })
+  .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
+  .attr("width", function(d) { return pyramid_scale_bars(d.Male); })
+  .attr("height", y_pyramid_scale.bandwidth())
+  .attr("fill", "#741b47")
 
 function render_pyramid(d) {
   var chosen_pyramid_area = d3
@@ -257,19 +256,20 @@ d3.select("#area_age_structure_text_1").html(function (d) {
 svg_pyramid.selectAll(".pyramid_1").remove();
 
 var maxPopulation_static_pyr = Math.max(
-    d3.max(chosen_pyramid_data, function(d) { return d['Population']; })
+    d3.max(chosen_pyramid_data, function(d) { return d['Male']; }),
+    d3.max(chosen_pyramid_data, function(d) { return d['Female']; })
   );
 
 if(maxPopulation_static_pyr < 2000) {
   maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 200) * 200
 }
 
-if(maxPopulation_static_pyr >= 2000 && maxPopulation_static_pyr < 3000) {
-  maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 250) * 250
+if(maxPopulation_static_pyr >= 2000 && maxPopulation_static_pyr < 20000) {
+  maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 1000) * 1000
 }
 
-if(maxPopulation_static_pyr >= 3000) {
-    maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 500) * 500
+if(maxPopulation_static_pyr >= 20000) {
+    maxPopulation_static_pyr  = Math.ceil(maxPopulation_static_pyr / 5000) * 5000
 }
 
 x_static_pyramid_scale_male
@@ -284,12 +284,12 @@ pyramid_scale_bars
 xAxis_static_pyramid 
   .transition()
   .duration(1000)
-  .call(d3.axisBottom(x_static_pyramid_scale_male).ticks(6));
+  .call(d3.axisBottom(x_static_pyramid_scale_male).ticks(5));
  
  xAxis_static_pyramid_2
  .transition()
  .duration(1000)
- .call(d3.axisBottom(x_static_pyramid_scale_female).ticks(6));
+ .call(d3.axisBottom(x_static_pyramid_scale_female).ticks(5));
 
 svg_pyramid
    .selectAll("myRect")
@@ -299,7 +299,7 @@ svg_pyramid
    .attr("class", "pyramid_1")
    .attr("x", female_zero)
    .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
-   .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
+   .attr("width", function(d) { return pyramid_scale_bars(d.Female); })
    .attr("height", y_pyramid_scale.bandwidth())
    .attr("fill", "#f1c232")
    
@@ -309,9 +309,9 @@ svg_pyramid
   .enter()
   .append("rect")
   .attr("class", "pyramid_1")
-  .attr("x", function(d) { return male_zero - pyramid_scale_bars(d['Population']); })
+  .attr("x", function(d) { return male_zero - pyramid_scale_bars(d.Male); })
   .attr("y", function(d) { return y_pyramid_scale(d.Age_group); })
-  .attr("width", function(d) { return pyramid_scale_bars(d['Population']); })
+  .attr("width", function(d) { return pyramid_scale_bars(d.Male); })
   .attr("height", y_pyramid_scale.bandwidth())
   .attr("fill", "#741b47")
 
