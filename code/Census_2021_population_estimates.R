@@ -83,11 +83,3 @@ esx_pyramid_df <- sussex_ltla_pyramid_df %>%
   group_by(Year, Sex, Age_group) %>% 
   summarise(Population = sum(Population, na.rm = TRUE),
             Area = 'East Sussex')
-
-sussex_ltla_pyramid_df %>% 
-  select(!Area_code) %>% 
-  bind_rows(wsx_pyramid_df) %>% 
-  bind_rows(esx_pyramid_df) %>% 
-  select(!Year) %>%
-  toJSON() %>% 
-  write_lines(paste0(output_directory, '/Census_2021_pyramid_data.json'))

@@ -134,7 +134,19 @@ pyramid_df <- pyramid_df %>%
   mutate(Proportion = Population / sum(Population)) %>% 
   ungroup()
 
-# An example with West Sussex ####
+# exporting for web ####
+# For plotting on a webpage using the d3 javascript library we need to put males and females in separate columns.
+pyramid_df %>% 
+  select(!c('Proportion', 'Year')) %>%
+  pivot_wider(names_from = 'Sex',
+              values_from = 'Population')  %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/Census_2021_pyramid_data.json'))
+
+# TODO We also may want to have some broader summaries of the data (e.g. what is the proportion of over 65s, 18-64 year olds', under 18s etc) and maybe median age?
+
+# Back to plotting in ggplot and R ####
+# An example with West Sussex
 
 Area_x <- 'West Sussex'
 
@@ -159,13 +171,9 @@ pyramid_x_df_limit <- pyramid_x_df %>%
 # The function is very straight forward though, and allows you to specify the value you'd like to round to (e.g. nearest 500, or 700)  
 round_any = function(x, accuracy, f = round){f(x / accuracy) * accuracy}
 
-# This is saying if the limit is up to and including 1,000, then round the number up (becuase we said ceiling rather than floor) to the nearest 200, if not then check to see if the limit is up to and including 5,000, if it is then round the number up to the nearest 1,000, if not then check if it is up to and including 10,000, then round up to the nearest 2,000, and if not (e.g. if the number is greater than 10,000, then round the limit up to the nearest 5000)
+# This is saying if the limit is up to and including 1,000, then round the number up (because we said ceiling rather than floor) to the nearest 200, if not then check to see if the limit is up to and including 5,000, if it is then round the number up to the nearest 1,000, if not then check if it is up to and including 10,000, then round up to the nearest 2,000, if not then check if the value is up to 30,000, if it is then round up to the nearest 5,000 and if none of those conditions are met (e.g. if the number is greater than 30,000, then round the limit up to the nearest 10,000)
 
-pyramid_x_df_limit <- ifelse(pyramid_x_df_limit <= 1000, round_any(pyramid_x_df_limit, 200, ceiling),
-                             ifelse(pyramid_x_df_limit <= 5000, round_any(pyramid_x_df_limit, 1000, ceiling), 
-                                    ifelse(pyramid_x_df_limit <= 10000, round_any(pyramid_x_df_limit, 2000, ceiling), 
-                                           ifelse(pyramid_x_df_limit <= 30000, round_any(pyramid_x_df_limit, 5000, ceiling), 
-                                                  round_any(pyramid_x_df_limit, 10000, ceiling)))))
+pyramid_x_df_limit <- ifelse(pyramid_x_df_limit <= 1000, round_any(pyramid_x_df_limit, 200, ceiling),ifelse(pyramid_x_df_limit <= 5000, round_any(pyramid_x_df_limit, 1000, ceiling), ifelse(pyramid_x_df_limit <= 10000, round_any(pyramid_x_df_limit, 2000, ceiling), ifelse(pyramid_x_df_limit <= 30000, round_any(pyramid_x_df_limit, 5000, ceiling), round_any(pyramid_x_df_limit, 10000, ceiling)))))
 
 # Then once we have the limit value, we can specify some sensible break points for the axes.
 pyramid_x_breaks <- ifelse(pyramid_x_df_limit <= 1000, 100, 
@@ -179,7 +187,7 @@ pyramid_x_breaks <- ifelse(pyramid_x_df_limit <= 1000, 100,
 area_x_dummy <- pyramid_x_df %>% 
   mutate(Denominator_dummy = pyramid_x_df_limit) # We also need to give the population field a different name in order for ggplot to treat it differently.
 
-pyramid_x_df %>% # Use the pyramid_x_df with ggplot
+pyramid_example_1 <- pyramid_x_df %>% # Use the pyramid_x_df with ggplot
   ggplot() +
   geom_bar(data = area_x_dummy, aes(x = Age_group,
                                     y = ifelse(Sex == 'Male', 0 - Denominator_dummy /2, Denominator_dummy / 2)), # Add a bar graph using the dummy dataframe (to get symmetrical male and female plots). Here we have change the sign from positive to negative for males 
@@ -197,7 +205,8 @@ pyramid_x_df %>% # Use the pyramid_x_df with ggplot
   # Remove the x and y axes labels and add a title
   labs(x = '',
        y = '',
-       title = paste0('Population pyramid; ', Area_x, ';\n Census 2021;')) + 
+       title = paste0('Population pyramid; ', Area_x, ';'),
+       subtitle = paste0('Census 2021;')) + 
   # Plot the males and females on separate figures
   facet_share(~Sex, 
               dir = "h",
@@ -210,24 +219,29 @@ pyramid_x_df %>% # Use the pyramid_x_df with ggplot
   # flip the plot on its side
   coord_flip() +
   # add some formatting
-  pyramid_theme() +
-  # choose where to put the legend
-  theme(legend.position = 'top')
+  pyramid_theme() 
 
+pyramid_example_1
 
+# You can save this as a png (raster image format) or svg (scalable vector format) file as follows
 
+png(paste0(output_directory,'/West Sussex Census 2021 Population structure.png'),
+    width = 1080,
+    height = 1280,
+    res = 160)
+print(pyramid_example_1)
+dev.off()
 
+svg(paste0(output_directory, '/West Sussex Census 2021 Population structure.svg'),
+    width = 6,
+    height = 8,
+    pointsize = 8)
+print(pyramid_example_1)
+dev.off()
 
+# Looping ####
 
-
-
-
-
-
-
-
-
-
+# TODO looping
 
 for(i in 1:length(Areas)){
   
