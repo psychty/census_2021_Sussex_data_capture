@@ -53,6 +53,9 @@
     <section id = 'population_overview'>
     <h1>Population overview</h1>    
 
+    <p>The table below shows the overall population estimates as at Census day 2021 for each of our lower and upper tier local authorites. More information about the age and sex structure is available in the section below.</p>
+  
+
     <h3>Table - Overall population estimates (usual residents) by area; Census 2021</h3>
     <table id = 'table_1' style="margin-bottom: 20px" class = 'table_1_class'>
      <thead>
@@ -61,37 +64,54 @@
          <th style = 'text-align: right;'>Total</th>
          <th style = 'text-align: right;'>Females</th>
          <th style = 'text-align: right;'>Males</th>
+         <th style = 'text-align: right;'>Median age<br>(persons)</th>
        </tr>
      </thead>
    <tbody id="table_total_1"></tbody>
    </table>
-
-    <h3>Population structure</h3>
-    <p>Different parts of Sussex have markedly different populations. For example, Brighton and Hove has a much younger population compared to Horsham.</p>
-
-    <p>Use the drop down menu here to choose a area to find out more information about its age and sex population structure.</p>
-    
-    <h4 id = 'selected_area_pyramid_title'></h4>
-    <select title = 'Population pyramid area selector' id="select_area_pyramid_button"></select>
-    <!-- <h4 class = 'title'>NOTE: this population pyramid is not currently displaying as it should, please do not use.</h4> -->
-    <div id = 'pyramid_container'>
-    <div id = 'pyramid_census_datavis'></div>
-    <div>
-    <p id = 'area_age_structure_text_1'></p>
-    <!-- <p id = 'area_age_structure_text_2'></p> -->
-    <!-- <p id = 'area_age_structure_text_3'></p> -->
-    <p>The shape of the pyramid gives an indication of the age structure of a population, if the shape is wider at the top, this is indicative of an ageing population and a pyramid which is wider at the bottom indicates a relatively younger population overall.</p>
-    <p class = 'good_to_know'>Note that the x axis scale (along the bottom) is redrawn when a new area is selected.</p>
-    </div>
-    </div>
-    </section>
+   <p>The median age of the population in Brighton and Hove (38 years) is a decade younger than East Sussex (48 years), with West Sussex roughly in between the two.</p>
+   <p>There is also substantial variation within the local authorities, ranging from 37 years in Crawley, to 53 years in Rother. Unsurprisingly, the median age in all areas rose by roughly 2-3 years since the 2011 Census.</p>
+   <p>The next table shows the overall population change between the 2011 and 2021 censuses for Sussex areas. All areas increased in population (usual residents) size, although some areas increased more than others particularly in West Sussex. Arun, Crawley, and Horsham all had at least 10% more usual residents in the 2021 Census.</p>
    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
-    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
-    <script src="https://d3js.org/d3-format.v1.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <script src="./javascripts/home.js"></script>
+   <h3>Table - Overall population (usual residents) change by area; Census 2011 compared to 2021</h3>
+   <table id = 'table_2' style="margin-bottom: 20px" class = 'table_1_class'>
+    <thead>
+      <tr>
+        <th style = 'text-align: left;'>Local authority</th>
+        <th style = 'text-align: right;'>Census<br>2011</th>
+        <th style = 'text-align: right;'>Census<br>2021</th>
+        <th style = 'text-align: right;'>Population<br>change</th>
+        <th style = 'text-align: right;'>Percentage<br>change</th>
+      </tr>
+    </thead>
+  <tbody id="table_total_2"></tbody>
+  </table>
+
+   <h3>Census 2021 population structure</h3>
+   <p>Different parts of Sussex have markedly different populations. For example, Brighton and Hove has a much younger population compared to Rother.</p>
+   <p>Use the drop down menu here to choose a area to find out more information about its age and sex population structure.</p>
+    
+   <h4 id = 'selected_area_pyramid_title'></h4>
+   <select title = 'Population pyramid area selector' id="select_area_pyramid_button"></select>
+
+   <div id = 'pyramid_container'>
+   <div id = 'pyramid_census_datavis'></div>
+   <div>
+   <p id = 'area_age_structure_text_1'></p>
+   <p id = 'area_age_structure_text_2'></p>
+   <p id = 'area_age_structure_text_3'></p>
+   <p>The shape of the pyramid gives an indication of the age structure of a population, if the shape is wider at the top, this is indicative of an ageing population and a pyramid which is wider at the bottom indicates a relatively younger population overall.</p>
+   <p class = 'good_to_know'>Note that the x axis scale (along the bottom) is redrawn when a new area is selected.</p>
+   </div>
+   </div>
+   </section>
+   
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+   <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+   <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+   <script src="https://d3js.org/d3-format.v1.min.js"></script>
+   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+   <script src="./javascripts/home.js"></script>
 </body>
 </html>

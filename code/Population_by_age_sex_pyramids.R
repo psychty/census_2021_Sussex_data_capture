@@ -83,7 +83,7 @@ Total_population <- Total_population %>%
 
 rm(esx_population, wsx_population)
 
-# A total df which might be useful for labels
+# A total df which might be useful for labels. A bit later we will add to this table the median age
 Total_population
 
 # When we clean the age field we use nested gsub() functions to remove the year part of Aged 1 year, the as well as the 'aged' and 'years' parts of the rest of the values. This does not work for the Aged under 1 year and Aged 90 years and over so ahead of this we do a conditional ifelse statement to tell R how to deal with those values.
@@ -98,6 +98,147 @@ census_LTLA_five_year <- census_LTLA_raw_df %>%
   ungroup()
 
 # The above is for every LTLA in England
+census_LTLA_broad <- census_LTLA_raw_df %>%  
+  mutate(Age_group = factor(ifelse(Age <= 17, "0-17 years", ifelse(Age <= 64, "18-64 years", "65+ years")), levels = c('0-17 years', '18-64 years','65+ years')))  %>% 
+  group_by(Area_code, Area, Year, Sex, Age_group) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  filter(Area %in% areas)
+
+esx_broad <- census_LTLA_broad %>% 
+  filter(Area %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden')) %>% 
+  group_by(Sex, Age_group) %>% 
+  summarise(Area = 'East Sussex',
+            Population = sum(Population))
+
+wsx_broad <- census_LTLA_broad %>% 
+  filter(Area %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) %>% 
+  group_by(Sex, Age_group) %>% 
+  summarise(Area = 'West Sussex',
+            Population = sum(Population))
+
+census_LTLA_broad %>% 
+  bind_rows(esx_broad) %>% 
+  bind_rows(wsx_broad) %>% 
+  select(Area, Sex, Age_group, Population) %>% 
+  pivot_wider(names_from = 'Age_group',
+              values_from = 'Population') %>% 
+  mutate(Total = `0-17 years` + `18-64 years` + `65+ years`) %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/Census_2021_broad_pop.json'))
+
+# Median age - this is a tricky one. Average is easy in dplyr, but to get a median we need to create a long vector of ages, order them, then select the middle value
+# Apparently, Rother has a median age of 53 https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/bulletins/populationandhouseholdestimatesenglandandwales/census2021unroundeddata so lets try to get there
+
+Area_x <- 'Rother'
+
+df_x <- census_LTLA_raw_df %>% 
+  filter(Area == Area_x) %>% 
+  filter(Sex == 'Persons')
+
+df_x <- rep(x = df_x$Age,
+           times = df_x$Population) %>% 
+  as.data.frame() %>% 
+  mutate(Area = Area_x) %>% 
+  rename(Age = 1)
+
+df_x %>% 
+  group_by(Area) %>% 
+  summarise(Median_age = median(Age))
+
+# That seems to be working, now lets do that for each area.
+# We'll go through each of our areas, create a dataframe and then add it to a master/compiled dataframe containing one row per person in Sussex giving their age and where they live 
+
+# Create a blank dataframe that we will keep adding to as we go through the list of areas.
+
+for(i in 1:length(unique(areas))){
+
+# We only want this to happen once, at the start of the loop so we'll say if i equals 1 then create it, if i != 1 then the compiled_df should already exist and we do not want to keep creating a blank one).
+if(i == 1){compiled_df <- data.frame(Area = character(), Median_age = numeric())}
+
+df_x <- census_LTLA_raw_df %>% 
+  filter(Area == areas[i]) %>% 
+  filter(Sex == 'Persons')
+
+df_x <- rep(x = df_x$Age,
+            times = df_x$Population) %>% 
+  as.data.frame() %>% 
+  mutate(Area = areas[i]) %>% 
+  rename(Age = 1) %>% 
+  arrange(Age)
+
+median_df_x <- df_x %>% 
+  group_by(Area) %>% 
+  summarise(Median_age = median(Age))
+
+compiled_df <- compiled_df %>% 
+  bind_rows(median_df_x)
+
+}
+
+# We also want to make East Sussex and West Sussex versions
+
+esx_median_df <- census_LTLA_raw_df %>% 
+  filter(Area %in% c('Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden')) %>% 
+  filter(Sex == 'Persons') %>% 
+  group_by(Age) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE))
+
+df_esx <- rep(x = esx_median_df$Age,
+            times = esx_median_df$Population) %>% 
+  as.data.frame() %>% 
+  mutate(Area = 'East Sussex') %>% 
+  rename(Age = 1) %>% 
+  arrange(Age)
+
+median_df_esx <- df_esx %>% 
+  group_by(Area) %>% 
+  summarise(Median_age = median(Age))
+
+wsx_median_df <- census_LTLA_raw_df %>% 
+  filter(Area %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) %>% 
+  filter(Sex == 'Persons') %>% 
+  group_by(Age) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE))
+
+df_wsx <- rep(x = wsx_median_df$Age,
+              times = wsx_median_df$Population) %>% 
+  as.data.frame() %>% 
+  mutate(Area = 'West Sussex') %>% 
+  rename(Age = 1) %>% 
+  arrange(Age)
+
+median_df_wsx <- df_wsx %>% 
+  group_by(Area) %>% 
+  summarise(Median_age = median(Age))
+
+median_df <- compiled_df %>% 
+  bind_rows(median_df_esx) %>% 
+  bind_rows(median_df_wsx)
+
+# Compared to 2011 - Thankfully by this point ONS have provided the median age and total population in 2011 to compare.
+census_11 <- nomis_get_data(id = 'NM_145_1',
+                            time = 'latest',#, 
+                            cell = '0,18',
+                            measures = '20100',
+                            rural_urban = '0',
+                            geography = '1941962753...1941962926,1946157057...1946157404') %>% 
+  select(Year = DATE, Area = GEOGRAPHY_NAME, Measure = CELL_NAME, Value = OBS_VALUE) %>% 
+  unique() %>% 
+  pivot_wider(names_from = 'Measure',
+              values_from = 'Value') %>% 
+  filter(Area %in% c(areas, 'East Sussex', 'West Sussex')) %>% 
+  select(Area, Population_2011 = 'All usual residents', Median_age_2011 = 'Median Age')
+
+# Add this to the total pop df and export #####
+
+Total_population %>% 
+  left_join(median_df, by = 'Area') %>% 
+  left_join(census_11, by = 'Area') %>% 
+  mutate(Population_change = Persons - Population_2011) %>% 
+  mutate(Population_percentage_change = Population_change / Population_2011) %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/ltla_2021_pop_table.json'))
 
 # Population pyramid data preparation
 
@@ -142,8 +283,6 @@ pyramid_df %>%
               values_from = 'Population')  %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory, '/Census_2021_pyramid_data.json'))
-
-# TODO We also may want to have some broader summaries of the data (e.g. what is the proportion of over 65s, 18-64 year olds', under 18s etc) and maybe median age?
 
 # Back to plotting in ggplot and R ####
 # An example with West Sussex

@@ -33,6 +33,18 @@ $.ajax({
   },
 });
 
+$.ajax({
+  url: "./outputs/Census_2021_broad_pop.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    Census_broad_age_data = data;
+   console.log('Area broad age summary data successfully loaded.')},
+  error: function (xhr) {
+    alert('Area broad age summary data not loaded - ' + xhr.statusText);
+  },
+});
+
 // Get a list of unique PCN_codes from the data using d3.map
 var area_list = d3
   .map(ltla_pop_summary_data, function (d) {
@@ -43,6 +55,7 @@ var area_list = d3
 // ! Render LTLA table on load
 window.onload = () => {
   loadTable_ltla_population_summary(ltla_pop_summary_data);
+  loadTable_ltla_population_change_summary(ltla_pop_summary_data);
 };
 
 
@@ -51,7 +64,17 @@ function loadTable_ltla_population_summary(ltla_2021_pop_table) {
   var dataHTML = "";
 
   for (let item of ltla_2021_pop_table) {
-    dataHTML += `<tr><td>${item.Area}</td><td>${d3.format(",.0f")(item.Persons)}</td><td>${d3.format(',.0f')(item.Female)}</td><td>${d3.format(",.0f")(item.Male)}</td></tr>`;
+    dataHTML += `<tr><td>${item.Area}</td><td>${d3.format(",.0f")(item.Persons)}</td><td>${d3.format(',.0f')(item.Female)}</td><td>${d3.format(",.0f")(item.Male)}</td><td>${d3.format(",.0f")(item.Median_age)}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
+
+function loadTable_ltla_population_change_summary(ltla_2021_pop_table) {
+  const tableBody = document.getElementById("table_total_2");
+  var dataHTML = "";
+
+  for (let item of ltla_2021_pop_table) {
+    dataHTML += `<tr><td>${item.Area}</td><td>${d3.format(",.0f")(item.Population_2011)}</td><td>${d3.format(',.0f')(item.Persons)}</td><td>${'+' + d3.format(",.0f")(item.Population_change)}</td><td>${'+' + d3.format(",.1%")(item.Population_percentage_change)}</td></tr>`;
   }
   tableBody.innerHTML = dataHTML;
 }
@@ -107,6 +130,10 @@ chosen_pyramid_data = Census_pyramid_data.filter(function(d,i){
 
 chosen_pyramid_summary_data = ltla_pop_summary_data.filter(function(d,i){
     return d.Area === chosen_pyramid_area }) 
+
+chosen_pryamid_broad_data = Census_broad_age_data.filter(function(d,i){
+  return d.Area === chosen_pyramid_area  && d.Sex === 'Persons'})
+  
  
 d3.select("#area_age_structure_text_1").html(function (d) {
   return (
@@ -121,24 +148,29 @@ d3.select("#area_age_structure_text_1").html(function (d) {
        ' females</b>.');
 });
 
-// d3.select("#pcn_age_structure_text_2").html(function (d) {
-//   return (
-//   '<b class = "extra">' +
-//   d3.format(',.0f')(chosen_pcn_pyramid_summary_data[0]['65+ years']) +
-//   ' </b>patients are aged 65+ and over, this is ' +
-//   d3.format('.1%')(chosen_pcn_pyramid_summary_data[0]['65+ years'] / chosen_pcn_pyramid_summary_data[0]['Total'])
-//   );
-// });
+   
+d3.select("#area_age_structure_text_2").html(function (d) {
+  return (
+  '<b>' +
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['65+ years']) +
+  ' </b>residents were aged 65+ and over, this is ' +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['65+ years'] / chosen_pryamid_broad_data[0]['Total'])
+  );
+});
 
-// d3.select("#pcn_age_structure_text_3").html(function (d) {
-//  return (
-//   '<b class = "extra">' +
-//   d3.format(',.0f')(chosen_pcn_pyramid_summary_data[0]['0-15 years']) +
-//   '</b> are aged 0-15 and <b class = "extra">'+
-//   d3.format(',.0f')(chosen_pcn_pyramid_summary_data[0]['16-64 years']) +
-//   '</b> are aged 16-64.'
-//  );
-//  });
+d3.select("#area_age_structure_text_3").html(function (d) {
+ return (
+  '<b>' +
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['0-17 years']) +
+  '</b> were aged 0-17 ('  +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['0-17 years'] / chosen_pryamid_broad_data[0]['Total']) +
+  ') and <b>'+
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['18-64 years']) +
+  '</b> were aged 18-64 ('  +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['18-64 years'] / chosen_pryamid_broad_data[0]['Total']) +
+  ').'
+ );
+ });
 
 // find the maximum data value on either side
  var maxPopulation_static_pyr = Math.max(
@@ -239,7 +271,10 @@ chosen_pyramid_data = Census_pyramid_data.filter(function(d,i){
    
 chosen_pyramid_summary_data = ltla_pop_summary_data.filter(function(d,i){
   return d.Area === chosen_pyramid_area }) 
-    
+
+chosen_pryamid_broad_data = Census_broad_age_data.filter(function(d,i){
+  return d.Area === chosen_pyramid_area  && d.Sex === 'Persons'})
+  
 d3.select("#area_age_structure_text_1").html(function (d) {
   return (
     "According to the 2021 Census, there were an estimated <b class = 'extra'>" +
@@ -252,6 +287,31 @@ d3.select("#area_age_structure_text_1").html(function (d) {
        d3.format(',.0f')(chosen_pyramid_summary_data[0]['Female']) +
        ' females</b>.');
      });
+   
+d3.select("#area_age_structure_text_2").html(function (d) {
+  return (
+  '<b>' +
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['65+ years']) +
+  ' </b>residents were aged 65+ and over, this is ' +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['65+ years'] / chosen_pryamid_broad_data[0]['Total'])
+  );
+});
+
+d3.select("#area_age_structure_text_3").html(function (d) {
+ return (
+  '<b>' +
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['0-17 years']) +
+  '</b> were aged 0-17 ('  +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['0-17 years'] / chosen_pryamid_broad_data[0]['Total']) +
+  ') and <b>'+
+  d3.format(',.0f')(chosen_pryamid_broad_data[0]['18-64 years']) +
+  '</b> were aged 18-64 ('  +
+  d3.format('.1%')(chosen_pryamid_broad_data[0]['18-64 years'] / chosen_pryamid_broad_data[0]['Total']) +
+  ').'
+ );
+ });
+
+// fin
     
 svg_pyramid.selectAll(".pyramid_1").remove();
 

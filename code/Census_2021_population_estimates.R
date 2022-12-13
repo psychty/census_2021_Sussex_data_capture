@@ -48,14 +48,6 @@ wsx_population <- census_LTLA_raw_df %>%
   pivot_wider(names_from = 'Sex',
               values_from = 'Population')
 
-Total_population %>% 
-  bind_rows(esx_population) %>% 
-  bind_rows(wsx_population) %>% 
-  mutate(Area = factor(Area, levels = c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing'))) %>% 
-  arrange(Area) %>% 
-  toJSON() %>% 
-   write_lines(paste0(output_directory, '/ltla_2021_pop_table.json'))
- 
 # When we clean the age field we use nested gsub() functions to remove the year part of Aged 1 year, the as well as the 'aged' and 'years' parts of the rest of the values. This does not work for the Aged under 1 year and Aged 90 years and over so ahead of this we do a conditional ifelse statement to tell R how to deal with those values.
 census_LTLA_raw_df <- census_LTLA_raw_df %>% 
   filter(Age != 'Total: All usual residents') %>% 

@@ -79,3 +79,5 @@ census_LSOA_raw_df <- nomis_get_data(id = 'NM_2028_1',
   select(LSOA21CD = GEOGRAPHY_CODE, LSOA21NM = GEOGRAPHY_NAME, Sex = C_SEX_NAME, Population = OBS_VALUE) %>% 
   mutate(Sex = gsub('All persons', 'Persons', Sex)) %>% 
   filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD)
+
+
