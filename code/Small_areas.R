@@ -1,5 +1,6 @@
 
-# Output Area boundary changes
+# Small areas 
+
 
 # Small areas across England and Wales can be segmented based on consistent population sizes. Output Areas (OAs) are a geography used by many population and health services to detail small area characteristics, activity, and outcomes, because of their consistent population size and stable boundaries (which only change as a result of new Census outputs every 10 years). 
 
@@ -255,4 +256,40 @@ geojson_write(ms_simplify(geojson_json(lsoa_2021_boundaries_spdf), keep = 0.85),
 
 geojson_write(ms_simplify(geojson_json(lsoa_2011_boundaries_spdf), keep = 1), file = paste0(output_directory, '/sussex_2011_lsoas.geojson'))
 
+
+# Add population
+
+census_LTLA_df <- nomis_get_data(id = 'NM_2029_1',
+                                     time = 'latest', # latest = 2020
+                                     c_sex = '0', # '1,2' would return males and females
+                                     measures = '20100',
+                                     c2021_age_92 = '0') %>% 
+  select(Area = GEOGRAPHY_NAME, Year = DATE, Sex = C_SEX_NAME, Age = C2021_AGE_92_NAME, Population = OBS_VALUE) %>% 
+  mutate(Sex = gsub('All persons', 'Persons', Sex)) %>% 
+  unique() %>% 
+  filter(Area %in% c(areas, 'East Sussex', 'West Sussex'))
+
+lad_boundaries_spdf <- lad_boundaries_spdf %>% 
+  left_join(census_LTLA_df[c('Area', 'Population')], by = c('LAD22NM' = 'Area'))
+
 geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory, '/sussex_ltlas.geojson'))
+
+# small area population maps ####
+
+# We already have LSOA
+
+# Middle super output areas ####
+
+msoas <- lsoa21_lookup %>% 
+  select(MSOA21CD, MSOA21NM, LTLA) %>% 
+  unique()
+
+# this will download all lsoas and then filter just those in Sussex
+msoa_2021_clipped_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_Layer_Super_Output_Areas_Dec_2021_Boundaries_Full_Clipped_EW_BFC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(MSOA21CD %in% msoas$MSOA21CD) 
+
+# Convert it to a spatial polygon data frame
+msoa_2021_boundaries_spdf <- as_Spatial(msoa_2021_clipped_sf, IDs = msoa_2021_clipped_sf$MSOA21CD)
+
+
+

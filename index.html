@@ -40,6 +40,7 @@
       </header>
 
     <p class = 'good_to_know'>Note: this page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p>
+    <p class = 'good_to_know'>Note: This page displays a lot of data and may take a few moments to load.</p>
         
     <section id = 'intro'>
     <h1>Census 2021 in Sussex</h1>
@@ -70,7 +71,7 @@
    <tbody id="table_total_1"></tbody>
    </table>
    <p>The median age of the population in Brighton and Hove (38 years) is a decade younger than East Sussex (48 years), with West Sussex roughly in between the two.</p>
-   <p>There is also substantial variation within the local authorities, ranging from 37 years in Crawley, to 53 years in Rother. Unsurprisingly, the median age in all areas rose by roughly 2-3 years since the 2011 Census.</p>
+   <p>There is also substantial variation within the local authorities, ranging from 37 years in Crawley, to 53 years in Rother. The median age in all areas rose by roughly 2-3 years since the 2011 Census.</p>
    <p>The next table shows the overall population change between the 2011 and 2021 censuses for Sussex areas. All areas increased in population (usual residents) size, although some areas increased more than others particularly in West Sussex. Arun, Crawley, and Horsham all had at least 10% more usual residents in the 2021 Census.</p>
    
    <h3>Table - Overall population (usual residents) change by area; Census 2011 compared to 2021</h3>
@@ -104,6 +105,23 @@
    <p class = 'good_to_know'>Note that the x axis scale (along the bottom) is redrawn when a new area is selected.</p>
    </div>
    </div>
+   </section>
+   <section id = 'maps'>
+    <h1>Small area population estimates</h1>    
+
+    <p>Overall population estimates are available at very local areas down to neighbourhoods. For more detail on small area geographies, see the <a href = './boundary_change.html'>changes in boundaries</a> section.</p>
+
+    <p>The map below shows the overall population available at Lower layer super output areas (LSOAs), Middle layer super output areas (MSOA), and local authority (LTLA) level.</p>
+
+    <h3>Map - small area population estimates; Census 2021</h3>
+    <div id = "map_overall_population"></div>
+ 
+    <p>Note that population estimates for particular demographics (such as by age) are not currently available for every geography whilst the ONS prioritises releasing topic summary data as fast as possible. These data will become available soon.</p>
+    <p>For now, the smallest geography available for looking at differences by age is at MSOA level.</p>
+
+    <h3>Map - small area population estimates by age; Census 2021</h3>
+    <div id = "map_age_population"></div>
+ 
    </section>
    
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>

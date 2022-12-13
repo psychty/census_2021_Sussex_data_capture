@@ -45,7 +45,34 @@ $.ajax({
   },
 });
 
-// Get a list of unique PCN_codes from the data using d3.map
+
+var LTLA_geojson = $.ajax({
+  url: "./outputs/sussex_ltlas.geojson",
+  dataType: "json",
+  success: console.log("LTLA boundary data successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+var LSOA21_geojson = $.ajax({
+  url: "./outputs/sussex_2021_lsoas.geojson",
+  dataType: "json",
+  success: console.log("LSOA (2021) boundary data successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+var MSOA21_geojson = $.ajax({
+  url: "./outputs/sussex_2021_msoas.geojson",
+  dataType: "json",
+  success: console.log("MSOA (2021) boundary data successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
 var area_list = d3
   .map(ltla_pop_summary_data, function (d) {
     return d.Area;
@@ -113,7 +140,7 @@ var chosen_pyramid_area = d3
 // Use the value from chosen_pcn_pyramid_area to populate a title for the figure. This will be placed as the element 'selected_pcn_pyramid_title' on the webpage
 d3.select("#selected_area_pyramid_title").html(function (d) {
   return (
-    "Population pyramid; " +
+    "Figure - Population pyramid; " +
     chosen_pyramid_area +
     "; usual resident population; Census 2021"   
    );
@@ -260,7 +287,7 @@ function render_pyramid(d) {
    
   d3.select("#selected_area_pyramid_title").html(function (d) {
     return (
-       "Population pyramid; " +
+       "Figure - Population pyramid; " +
        chosen_pyramid_area +
        "; usual resident population; Census 2021"   
       );
