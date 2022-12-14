@@ -7,6 +7,33 @@ if (width > 900) {
 }
 var width_margin = width * 0.15;
 
+function ltla_colours(feature) {
+  return {
+   //  fillColor: '#000000',
+    color: '#000000',
+    weight: 2,
+    fillOpacity: 0
+  }
+}
+
+function lsoa2021_colours(feature) {
+  return {
+   //  fillColor: '#000000',
+    color: '#000000',
+    weight: 2,
+    fillOpacity: 0
+  }
+}
+
+function msoa2021_colours(feature) {
+  return {
+   //  fillColor: '#000000',
+    color: '#000000',
+    weight: 2,
+    fillOpacity: 0
+  }
+}
+
 // ! Load data
 
 $.ajax({
@@ -438,3 +465,85 @@ d3.select("#select_area_pyramid_button").on("change", function (d) {
 render_pyramid()
 });
 
+
+
+// Generic Map parameters
+// Define the background tiles for our maps 
+// This tile layer is coloured
+// var tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+// This tile layer is black and white
+var tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+// Define an attribution statement to go onto our maps
+var attribution =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Contains Ordnance Survey data © Crown copyright and database right 2022';
+
+// ! LSOA boundary changes 
+
+// Specify that this code should run once the PCN_geojson data request is complete
+$.when(LSOA21_geojson).done(function () {
+
+// Create a leaflet map (L.map) in the element map_1_id
+var map_population = L.map("map_overall_population");
+
+L.control.zoom({
+  position: 'bottomleft'
+}).addTo(map_population);
+
+// add the background and attribution to the map
+L.tileLayer(tileUrl, { attribution })
+.addTo(map_population);
+
+var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: lsoa2021_colours})
+ .bindPopup(function (layer) {
+    return (
+      '2021 LSOA: <Strong>' +
+      layer.feature.properties.LSOA21CD +
+      "</Strong> (" +
+      layer.feature.properties.LSOA21NM +
+      ')<br>Population: <Strong>' +
+      d3.format(',.0f')(layer.feature.properties.Population) +
+      '</Strong>'
+    );
+ })
+//  .addTo(map_population);
+
+var msoa2021_boundary = L.geoJSON(MSOA21_geojson.responseJSON, { style: msoa2021_colours})
+ .bindPopup(function (layer) {
+    return (
+      '2021 LSOA: <Strong>' +
+      layer.feature.properties.MSOA21CD +
+      "</Strong> (" +
+      layer.feature.properties.MSOA21NM +
+      ')<br>Population: <Strong>' +
+      d3.format(',.0f')(layer.feature.properties.Population) +
+      '</Strong>'
+    );
+ })
+//  .addTo(map_population);
+
+var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: ltla_colours })
+.bindPopup(function (layer) {
+   return (
+     "Local authority: <Strong>" +
+     layer.feature.properties.LAD22NM +
+     "</Strong><br>Population: <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Population) +
+     '</Strong>'
+   );
+})
+.addTo(map_population);
+
+map_population.fitBounds(ltla_boundary.getBounds());
+
+var baseMaps_map_population = {
+  'Show Lower layer super output areas (LSOAs)': lsoa2021_boundary,
+  'Show Middle layer super output areas (MSOAs)': msoa2021_boundary,
+   "Show Local Authorities": ltla_boundary,
+  };
+
+ L.control
+ .layers(baseMaps_map_population, null, { collapsed: false, position: 'topright'})
+ .addTo(map_population);
+
+});

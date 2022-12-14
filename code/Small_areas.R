@@ -55,6 +55,10 @@ lsoa21_lookup <- oa21_lookup %>%
   unique() %>% 
   filter(LTLA %in% areas)
 
+msoas <- lsoa21_lookup %>% 
+  select(MSOA21CD, MSOA21NM, LTLA) %>% 
+  unique()
+
 # this will download all lsoas and then filter just those in Sussex
 lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2021_Boundaries_Generalised_Clipped_EW_BGC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   filter(LSOA21CD %in% lsoa21_lookup$LSOA21CD) 
@@ -81,6 +85,21 @@ census_LSOA_density_raw_df <- nomis_get_data(id = 'NM_2026_1',
 census_LSOA_df <- census_LSOA_density_raw_df %>% 
   left_join(census_LSOA_raw_df, by = 'LSOA21CD') %>% 
   select(!Sex)
+
+census_MSOA_density_raw_df <- nomis_get_data(id = 'NM_2026_1',
+                                          time = 'latest', 
+                                          measures = '20100',
+                                          geography = 'TYPE152') %>% 
+  select(MSOA21CD = GEOGRAPHY_CODE, Persons_per_square_kilometre = OBS_VALUE) %>% 
+  filter(MSOA21CD %in% msoas$MSOA21CD)
+
+census_LAD_density_raw_df <- nomis_get_data(id = 'NM_2026_1',
+                                             time = 'latest', 
+                                             measures = '20100',
+                                             geography = 'TYPE154,TYPE155') %>% 
+  select(Area = GEOGRAPHY_NAME, Persons_per_square_kilometre = OBS_VALUE) %>% 
+  filter(Area %in% c(areas, 'East Sussex', 'West Sussex')) %>% 
+  unique()
 
 # The 2011 data would be nice to plot alongside but it is calculated as a per hectare rate
 # census_2011_density <- nomis_get_data(id = 'NM_160_1',
@@ -270,7 +289,10 @@ census_LTLA_df <- nomis_get_data(id = 'NM_2029_1',
   filter(Area %in% c(areas, 'East Sussex', 'West Sussex'))
 
 lad_boundaries_spdf <- lad_boundaries_spdf %>% 
-  left_join(census_LTLA_df[c('Area', 'Population')], by = c('LAD22NM' = 'Area'))
+  left_join(census_LTLA_df[c('Area', 'Population')], by = c('LAD22NM' = 'Area')) %>% 
+  left_join(census_LAD_density_raw_df, by = c('LAD22NM' = 'Area'))
+
+lad_boundaries_spdf@data %>% View()
 
 geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory, '/sussex_ltlas.geojson'))
 
@@ -280,9 +302,6 @@ geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory,
 
 # Middle super output areas ####
 
-msoas <- lsoa21_lookup %>% 
-  select(MSOA21CD, MSOA21NM, LTLA) %>% 
-  unique()
 
 # https://www.nomisweb.co.uk/api/v01/dataset/NM_2027_1.data.csv?date=latest&geography=637540494&c2021_age_102=0...101&measures=20100
 
@@ -298,16 +317,26 @@ census_MSOA_df <- nomis_get_data(id = 'NM_2027_1',
                                  c2021_age_102 = '0...101',
                                  measures = '20100',
                                  geography = 'TYPE152') %>% 
-  select(Area_Code = GEOGRAPHY_CODE, Area = GEOGRAPHY_NAME, Age = C2021_AGE_102_NAME, Population = OBS_VALUE) %>% 
+  select(MSOA21CD = GEOGRAPHY_CODE, MSOA21NM = GEOGRAPHY_NAME, Age = C2021_AGE_102_NAME, Population = OBS_VALUE) %>% 
   unique() %>% 
-  filter(Area_Code %in% msoas$MSOA21CD)
-
+  filter(MSOA21CD %in% msoas$MSOA21CD)
 
 msoa_total <- census_MSOA_df %>% 
   filter(Age == 'Total: All usual residents')
 
+msoa_broad_age <- census_MSOA_df %>% 
+  filter(Age != 'Total: All usual residents') %>%
+  mutate(Age = as.numeric(ifelse(Age == 'Aged under 1 year', 0, ifelse(Age == 'Aged 100 years and over', 100, gsub(' year','', gsub(' years', '', gsub('Aged ', '', Age))))))) %>% 
+  mutate(Age_group = factor(ifelse(Age <= 17, "0-17 years", ifelse(Age <= 64, "18-64 years", "65+ years")), levels = c('0-17 years', '18-64 years','65+ years'))) %>% 
+  group_by(MSOA21CD, MSOA21NM, Age_group) %>% 
+  summarise(Population = sum(Population, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'Age_group',
+              values_from = 'Population')
 
-msoa_2021_boundaries_spdf <- msoa_2021_boundaries_spdf %>% 
-  left_join(msoa_total[c('Area_Code', 'Population')], by = c('MSOA21CD' = 'Area_Code'))
-
-geojson_write(ms_simplify(geojson_json(msoa_2021_boundaries_spdf), keep = 1), file = paste0(output_directory, '/sussex_2011_msoas.geojson'))
+msoa_2021_spdf <- msoa_2021_boundaries_spdf %>% 
+  left_join(msoa_total[c('Area_Code', 'Population')], by = c('MSOA21CD' = 'Area_Code')) %>% 
+  left_join(census_MSOA_density_raw_df, by = 'MSOA21CD') %>% 
+  left_join(msoa_broad_age, by = c('MSOA21CD', 'MSOA21NM'))
+  
+geojson_write(ms_simplify(geojson_json(msoa_2021_spdf), keep = 1), file = paste0(output_directory, '/sussex_2021_msoas.geojson'))
