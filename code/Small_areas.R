@@ -294,9 +294,11 @@ lad_boundaries_spdf <- lad_boundaries_spdf %>%
 
 lad_boundaries_spdf@data %>% View()
 
-geojson_write(geojson_json(lad_boundaries_spdf), file = paste0(output_directory, '/sussex_ltlas.geojson'))
+geojson_write(ms_simplify(geojson_json(lad_boundaries_spdf), keep = .6), file = paste0(output_directory, '/sussex_ltlas.geojson'))
 
 # small area population maps ####
+
+
 
 # We already have LSOA
 
@@ -340,3 +342,9 @@ msoa_2021_spdf <- msoa_2021_boundaries_spdf %>%
   left_join(msoa_broad_age, by = c('MSOA21CD', 'MSOA21NM'))
   
 geojson_write(ms_simplify(geojson_json(msoa_2021_spdf), keep = 1), file = paste0(output_directory, '/sussex_2021_msoas.geojson'))
+
+
+summary(lad_boundaries_spdf@data$Persons_per_square_kilometre)
+summary(msoa_2021_spdf$Persons_per_square_kilometre)
+summary(lsoa_2021_boundaries_spdf$Persons_per_square_kilometre)
+

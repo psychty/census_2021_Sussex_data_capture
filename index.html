@@ -111,16 +111,30 @@
 
     <p>Overall population estimates are available at very local areas down to neighbourhoods. For more detail on small area geographies, see the <a href = './boundary_change.html'>changes in boundaries</a> section.</p>
 
-    <p>The map below shows the overall population available at Lower layer super output areas (LSOAs), Middle layer super output areas (MSOA), and local authority (LTLA) level.</p>
+    <p>The map below shows the overall population available at Lower layer super output areas (LSOAs), Middle layer super output areas (MSOA), and local authority (LTLA) level. Click on an area to find out the population size and you can toggle between each area type using the buttons on the top right of the map.</p>
+    <p>The map is coloured by the population density of each area; this is the number of people resident in an area per square kilometre. Differences in population density become much more apparent at smaller geographies like LSOAs and MSOAs.</p>
 
     <h3>Map - small area population estimates; Census 2021</h3>
     <div id = "map_overall_population"></div>
+    
+    <p>You can also search for a postcode in the box below for any postcode in Sussex to zoom into that local area. </p>
+    
+    <div class="inputHolder">
+     <input placeholder="Postcode" type="text" id="txtPostcode" />
+     <input type="button" value="Search" id="btnPostcode" />
+   </div>
+ 
+    <div class="local_summary_map_1">
+     <h4 id="local_postcode_summary_1"></h4>
+     <p id="local_postcode_summary_2"></p>
+   </div>
+ 
  
     <p>Note that population estimates for particular demographics (such as by age) are not currently available for every geography whilst the ONS prioritises releasing topic summary data as fast as possible. These data will become available soon.</p>
     <p>For now, the smallest geography available for looking at differences by age is at MSOA level.</p>
 
-    <h3>Map - small area population estimates by age; Census 2021</h3>
-    <div id = "map_age_population"></div>
+    <!-- <h3>Map - small area population estimates by age; Census 2021</h3>
+    <div id = "map_age_population"></div> -->
  
    </section>
    

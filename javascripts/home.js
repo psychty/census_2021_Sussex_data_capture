@@ -7,6 +7,54 @@ if (width > 900) {
 }
 var width_margin = width * 0.15;
 
+function get_density_colour(d) {
+  return d > 25000 ? '#7f3b08' :
+         d > 20000  ? '#b35806' :
+         d > 15000  ? '#e08214' :
+         d > 10000  ? '#fdb863' :
+         d > 5000   ? '#fee0b6' :
+         d > 1000   ? '#f7f7f7' :
+         d > 500   ? '#d8daeb' :
+         d > 200   ? '#b2abd2' :
+         d > 100   ? '#8073ac' :
+         d > 50   ? '#542788' :
+         '#2d004b' ;
+}
+
+// function get_density_colour(d) {
+//   return d > 20000 ? '#2d004b' :
+//          d > 15000  ? '#542788' :
+//          d > 10000  ? '#8073ac' :
+//          d > 8000  ? '#b2abd2' :
+//          d > 5000   ? '#d8daeb' :
+//          d > 1000   ? '#f7f7f7' :
+//          d > 500   ? '#fee0b6' :
+//          d > 200   ? '#fdb863' :
+//          d > 100   ? '#e08214' :
+//          d > 50   ? '#b35806' :
+//          '#7f3b08' ;
+// }
+
+// Create a function to add stylings to the polygons in the leaflet map
+function density_style(feature) {
+  return {
+    fillColor: get_density_colour(feature.properties.Persons_per_square_kilometre),
+    color: get_density_colour(feature.properties.Persons_per_square_kilometre),
+    // color: '#',
+    weight: 1,
+    fillOpacity: 0.85,
+  };
+}
+
+function density_style_ltla(feature) {
+  return {
+    fillColor: get_density_colour(feature.properties.Persons_per_square_kilometre),
+    color: '#000',
+    weight: 1,
+    fillOpacity: 0.85,
+  };
+}
+
 function ltla_colours(feature) {
   return {
    //  fillColor: '#000000',
@@ -33,6 +81,8 @@ function msoa2021_colours(feature) {
     fillOpacity: 0
   }
 }
+
+
 
 // ! Load data
 
@@ -494,42 +544,48 @@ L.control.zoom({
 L.tileLayer(tileUrl, { attribution })
 .addTo(map_population);
 
-var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: lsoa2021_colours})
+var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: density_style})
  .bindPopup(function (layer) {
     return (
       '2021 LSOA: <Strong>' +
       layer.feature.properties.LSOA21CD +
-      "</Strong> (" +
+      " (" +
       layer.feature.properties.LSOA21NM +
-      ')<br>Population: <Strong>' +
+      ')</Strong><br>Population: <Strong>' +
       d3.format(',.0f')(layer.feature.properties.Population) +
-      '</Strong>'
+      '</Strong><br>Population per square kilometre: <Strong>' +
+      d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+      'km<sup>2</sup> </Strong>.'
     );
  })
 //  .addTo(map_population);
 
-var msoa2021_boundary = L.geoJSON(MSOA21_geojson.responseJSON, { style: msoa2021_colours})
+var msoa2021_boundary = L.geoJSON(MSOA21_geojson.responseJSON, { style: density_style})
  .bindPopup(function (layer) {
     return (
       '2021 LSOA: <Strong>' +
       layer.feature.properties.MSOA21CD +
-      "</Strong> (" +
+      ' (' +
       layer.feature.properties.MSOA21NM +
-      ')<br>Population: <Strong>' +
+      ')</Strong><br>Population: <Strong>' +
       d3.format(',.0f')(layer.feature.properties.Population) +
-      '</Strong>'
+      '</Strong><br>Population per square kilometre: <Strong>' +
+      d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+      'km<sup>2</sup> </Strong>.'
     );
  })
 //  .addTo(map_population);
 
-var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: ltla_colours })
+var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: density_style_ltla })
 .bindPopup(function (layer) {
    return (
      "Local authority: <Strong>" +
      layer.feature.properties.LAD22NM +
      "</Strong><br>Population: <Strong>" +
      d3.format(',.0f')(layer.feature.properties.Population) +
-     '</Strong>'
+     '</Strong><br>Population per square kilometre: <Strong>' +
+     d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+     'km<sup>2</sup> </Strong>.'
    );
 })
 .addTo(map_population);
@@ -546,4 +602,94 @@ var baseMaps_map_population = {
  .layers(baseMaps_map_population, null, { collapsed: false, position: 'topright'})
  .addTo(map_population);
 
+ var legend_map_population = L.control({position: 'bottomright'});
+  
+ legend_map_population.onAdd = function (map_population) {
+ 
+     var div = L.DomUtil.create('div', 'info legend'),
+         grades = [0, 50, 100, 200, 500, 1000, 5000, 10000, 15000, 20000, 25000],
+         labels = ['<b>Population density<br>(people per km<sup>2</sup>)</b>'];
+ 
+     // loop through our density intervals and generate a label with a colored square for each interval
+     for (var i = 0; i < grades.length; i++) {
+         div.innerHTML +=
+         labels.push(
+             '<i style="background:' + get_density_colour(grades[i] + 1) + '"></i> ' +
+             d3.format(',.0f')(grades[i]) + (grades[i + 1] ? '&ndash;' + d3.format(',.0f')(grades[i + 1]) + ' per km<sup>2</sup>' : ' per km<sup>2</sup>+'));
+     }
+     div.innerHTML = labels.join('<br>');
+     return div;
+ };
+ 
+legend_map_population.addTo(map_population);
+
+// ! Postcode search map population
+var marker_chosen = L.marker([0, 0])
+.addTo(map_population);
+
+//search event
+$(document).on("click", "#btnPostcode", function () {
+  var input = $("#txtPostcode").val();
+  var url = "https://api.postcodes.io/postcodes/" + input;
+
+  post(url).done(function (postcode) {
+    var chosen_lsoa = postcode["result"]["lsoa"];
+    var chosen_lat = postcode["result"]["latitude"];
+    var chosen_long = postcode["result"]["longitude"];
+
+    marker_chosen.setLatLng([chosen_lat, chosen_long]);
+    map_population.setView([chosen_lat, chosen_long], 12);
+
+    var msoa_summary_data_chosen = msoa_summary_data.filter(function (d) {
+      return d.MSOA11NM == chosen_msoa;
+    });
+
+    // console.log(chosen_lsoa);
+
+    // d3.select("#local_postcode_summary_1")
+    //   // .data(msoa_summary_data_chosen)
+    //   .html(function (d) {
+    //     // return d.MSOA11NM + " (" + d.msoa11hclnm + ")";
+    //     return chosen_lsoa;
+    //   });
+
+    // d3.select("#local_postcode_summary_2")
+    //   // .data(msoa_summary_data_chosen)
+    //   .html(function (d) {
+    //     // return d.Change_label;
+    //     return 'This too shall pass... as a placeholder. Eventually this will be linked to more information about the LSOA such as the current usual resident population and whether the LSOA is the same as it was in 2011.'
+    //   });
+  });
 });
+
+//enter event - search
+$("#txtPostcode").keypress(function (e) {
+  if (e.which === 13) {
+    $("#btnPostcode").click();
+  }
+});
+
+//ajax call
+function post(url) {
+  return $.ajax({
+    url: url,
+    success: function () {
+      //woop
+    },
+    error: function (desc, err) {
+      $("#result_text").html("Details: " + desc.responseText);
+
+      d3.select("#local_postcode_summary_1").html(function (d) {
+        return "The postcode you entered does not seem to be valid, please check and try again.";
+      });
+      d3.select("#local_postcode_summary_2").html(function (d) {
+        return "This could be because there is a problem with the postcode look up tool we are using.";
+      });
+    },
+  });
+}
+
+
+
+});
+
