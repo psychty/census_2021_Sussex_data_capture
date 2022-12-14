@@ -202,6 +202,20 @@ td:nth-child(1) {
   background-color: antiquewhite;
 }
 
+#map_overall_population {
+  height: 480px;
+  /* width: 80%; */
+  margin: auto;
+  background-color: antiquewhite;
+}
+
+#map_age_population {
+  height: 480px;
+  /* width: 80%; */
+  margin: auto;
+  background-color: antiquewhite;
+}
+
 .legend {
   border-radius: 10px;
   background-color: #fff;

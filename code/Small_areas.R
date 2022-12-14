@@ -284,12 +284,30 @@ msoas <- lsoa21_lookup %>%
   select(MSOA21CD, MSOA21NM, LTLA) %>% 
   unique()
 
+# https://www.nomisweb.co.uk/api/v01/dataset/NM_2027_1.data.csv?date=latest&geography=637540494&c2021_age_102=0...101&measures=20100
+
 # this will download all lsoas and then filter just those in Sussex
-msoa_2021_clipped_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_Layer_Super_Output_Areas_Dec_2021_Boundaries_Full_Clipped_EW_BFC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+msoa_2021_clipped_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/MSOA_Dec_2021_Boundaries_Generalised_Clipped_EW_BGC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>%
   filter(MSOA21CD %in% msoas$MSOA21CD) 
 
 # Convert it to a spatial polygon data frame
 msoa_2021_boundaries_spdf <- as_Spatial(msoa_2021_clipped_sf, IDs = msoa_2021_clipped_sf$MSOA21CD)
 
+census_MSOA_df <- nomis_get_data(id = 'NM_2027_1',
+                                 time = 'latest', 
+                                 c2021_age_102 = '0...101',
+                                 measures = '20100',
+                                 geography = 'TYPE152') %>% 
+  select(Area_Code = GEOGRAPHY_CODE, Area = GEOGRAPHY_NAME, Age = C2021_AGE_102_NAME, Population = OBS_VALUE) %>% 
+  unique() %>% 
+  filter(Area_Code %in% msoas$MSOA21CD)
 
 
+msoa_total <- census_MSOA_df %>% 
+  filter(Age == 'Total: All usual residents')
+
+
+msoa_2021_boundaries_spdf <- msoa_2021_boundaries_spdf %>% 
+  left_join(msoa_total[c('Area_Code', 'Population')], by = c('MSOA21CD' = 'Area_Code'))
+
+geojson_write(ms_simplify(geojson_json(msoa_2021_boundaries_spdf), keep = 1), file = paste0(output_directory, '/sussex_2011_msoas.geojson'))
