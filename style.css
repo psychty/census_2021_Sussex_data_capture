@@ -146,12 +146,10 @@ tr:nth-child(even) {
   font-weight: bold;
 }
 
-
 td:nth-child(1) {
   width: 30%;
   text-align: left;
 }
-
 
 /* Element styling */
 .give_me_space_to_search {
@@ -213,6 +211,12 @@ td:nth-child(1) {
   height: 480px;
   /* width: 80%; */
   margin: auto;
+  background-color: antiquewhite;
+}
+
+#map_pcn_reach_lsoa {
+  height: 480px;
+  margin:auto;
   background-color: antiquewhite;
 }
 
