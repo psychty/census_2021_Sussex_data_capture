@@ -59,30 +59,26 @@ gp_locations <- gp_mapping_sussex %>%
   rename(postcode = Practice_postcode) %>% 
   left_join(lookup_result, by = 'postcode')  
 
-leaflet() %>% 
-  addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
-             position='topright') %>% 
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
-  addCircleMarkers(lng = gp_locations$longitude,
-                   lat = gp_locations$latitude,
-                   radius = 4,
-                   color = '#000000',
-                   fillColor = 'purple',
-                   stroke = TRUE,
-                   weight = .75,
-                   fillOpacity = 1,
-                   popup = gp_locations$ODS_Name,
-                   group = 'Show GP practice') %>%
-  addScaleBar(position = "bottomleft") %>%
-  addMeasure(position = 'bottomleft',
-             primaryAreaUnit = 'sqmiles',
-             primaryLengthUnit = 'miles')
+# leaflet() %>% 
+#   addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
+#              position='topright') %>% 
+#   addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
+#   addCircleMarkers(lng = gp_locations$longitude,
+#                    lat = gp_locations$latitude,
+#                    radius = 4,
+#                    color = '#000000',
+#                    fillColor = 'purple',
+#                    stroke = TRUE,
+#                    weight = .75,
+#                    fillOpacity = 1,
+#                    popup = gp_locations$ODS_Name,
+#                    group = 'Show GP practice') %>%
+#   addScaleBar(position = "bottomleft") %>%
+#   addMeasure(position = 'bottomleft',
+#              primaryAreaUnit = 'sqmiles',
+#              primaryLengthUnit = 'miles')
 
 
-gp_locations %>% 
-  select(ODS_Code, ODS_Name, PCN_Name, longitude, latitude) %>% 
-  toJSON() %>%
-  write_lines(paste0(output_directory, '/GP_location_data.json'))
 
 # Now we know that the file we want contains the string 'gp-reg-pat-prac-quin-age.csv' we can use that in the read_csv call.
 # I have also tidied it a little bit by renaming the Sex field and giving R some meta data about the order in which the age groups should be
@@ -92,11 +88,17 @@ latest_gp_total_pop <- read_csv(unique(grep('gp-reg-pat-prac-all.csv', calls_pat
   filter(ODS_Code %in% gp_mapping$ODS_Code) %>% 
   left_join(gp_mapping, by = 'ODS_Code') 
 
+gp_locations %>% 
+  select(ODS_Code, ODS_Name, PCN_Name, longitude, latitude) %>% 
+  left_join(latest_gp_total_pop[c('ODS_Code', 'Patients')], by = 'ODS_Code') %>% 
+  toJSON() %>%
+  write_lines(paste0(output_directory, '/GP_location_data.json'))
+
 latest_PCN_total_pop <- latest_gp_total_pop %>% 
   group_by(PCN_Code, PCN_Name) %>% 
   summarise(Patients = sum(Patients, na.rm = TRUE))
   
-paste0('There are ', format(nrow(latest_PCN_total_pop), big.mark = ','), ' distinct primary care networks in England (including ', numbers_to_words(nrow(subset(latest_PCN_total_pop, PCN_Code == 'U'))), ' practices which are not currently allocated to a PCN).') %>% 
+paste0('As at, ', Extract_date, ' there were ', format(nrow(latest_PCN_total_pop), big.mark = ','), ' distinct primary care networks in England (including ', numbers_to_words(nrow(subset(latest_PCN_total_pop, PCN_Code == 'U'))), ' practices which are not currently allocated to a PCN).') %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory,'/England_pcn_summary_text_1.json'))
 
@@ -105,6 +107,12 @@ sussex_gp_total_pop <- latest_gp_total_pop %>%
 
 sussex_PCN_total_pop <- latest_PCN_total_pop %>% 
   filter(PCN_Name %in% sussex_gp_total_pop$PCN_Name)
+
+sussex_PCN_total_pop %>% 
+  ungroup() %>% 
+  mutate(PCN_number = row_number()) %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory,'/Sussex_PCN_summary_df.json'))
 
 paste0('In the NHS Sussex ICB footprint, there are ', format(nrow(sussex_PCN_total_pop), big.mark = ','), ' distinct primary care networks in England (including ', numbers_to_words(nrow(subset(sussex_PCN_total_pop, PCN_Code == 'U'))), ' practices which are not currently allocated to a PCN).') %>% 
   toJSON() %>% 
@@ -149,6 +157,8 @@ lsoa_pcn_df <- lsoa_gp_df %>%
 
 # 13254
   
+ # "#440154", "#482173", "#433E85", "#38598C", "#2D708E", "#25858E", "#1E9B8A", "#2BB07F",
+ # "#51C56A", "#85D54A", "#C2DF23", "#FDE725"
 # count the unknown addresses - NO2011
   
 # We cannot map to 2021 LSOAs because we for LSOAs which split do not know which new LSOA they went to  
