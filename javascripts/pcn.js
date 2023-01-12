@@ -197,10 +197,69 @@ pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
 
 // ! Build the 40 layers (one for each PCN, with lsoa layers and gp practices)
 
+
+// for (var i = 1; i <= Sussex_pcn_summary_df.length; i++) {
+
+//   this['pcn_' + i + '_group'] = L.layerGroup();
+//   this['pcn_' + i] = PCNs[i - 1]
+//   this['pcn_' + i + '_boundary'] = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+//            filter: function(feat) { return feat.properties.PCN_Name === this['pcn_' + i]; }
+//           , style: reg_pop_style})
+//         //  .addTo(pcn_x_boundary)
+//          .bindPopup(function (layer) {
+//             return (
+//               '<Strong>' +
+//               layer.feature.properties.LSOA11CD +
+//               '</Strong><br><br>Patients registered to ' +
+//               layer.feature.properties.PCN_Name +
+//               ': <Strong>' +
+//               d3.format(',.0f')(layer.feature.properties.Patients) +
+//               '</Strong>.<br><br>This is <Strong>' +
+//               d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+//               '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+//               d3.format(',.0f')(layer.feature.properties.Total_patients) +
+//               '</Strong> patients).'
+//             );
+//          })
+  
+//   // Add this to the layerGroup      
+//   this['pcn_' + i + '_boundary'].addTo(this['pcn_' + i + '_group'])
+  
+//   // filter GP markers
+//   this['pcn_gp_location_' + i] = GP_location.filter(function (d) {
+//     return d.PCN_Name == this['pcn_' + i];
+//   });
+  
+//   // This loops through the Local_GP_location dataframe and plots a marker for every record.
+//   for (var k = 0; k < this['pcn_gp_location_' + i].length; i++) {
+//   new L.circleMarker([this['pcn_gp_location_' + i][k]['latitude'], this['pcn_gp_location_' + i][k]['longitude']],{
+//        radius: 8,
+//        weight: .5,
+//        fillColor: gp_marker_colour,
+//        color: '#000',
+//        fillOpacity: 1})
+//       .bindPopup('<Strong>' + 
+//       this['pcn_gp_location_' + i][k]['ODS_Code'] + 
+//       ' ' + 
+//       this['pcn_gp_location_' + i][k]['ODS_Name'] + 
+//       '</Strong><br><br>This practice is part of the ' + 
+//       this['pcn_gp_location_' + i][k]['PCN_Name'] +
+//       '. There are <Strong>' + 
+//       d3.format(',.0f')(this['pcn_gp_location_' + i][k]['Patients']) + 
+//       '</Strong> patients registered to this practice.' )
+//      .addTo(this['pcn_' + i + '_group']) // These markers are directly added to the layer group
+//     };
+  
+//   }
+// console.log(this.pcn_1_group)
+
+// this.pcn_1_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initialise on the page     
+
+
 // ! PCN 1
 pcn_1_group = L.layerGroup();
 pcn_1 = PCNs[1 - 1]
-var pcn_1_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_1_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_1; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -253,7 +312,7 @@ pcn_1_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initia
 // ! PCN 2 from two onwards we do not need to add this to the map
 pcn_2_group = L.layerGroup();
 pcn_2 = PCNs[2 - 1]
-var pcn_2_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_2_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_2; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -300,7 +359,7 @@ new L.circleMarker([pcn_gp_location_2[i]['latitude'], pcn_gp_location_2[i]['long
 // ! PCN 3
 pcn_3_group = L.layerGroup();
 pcn_3 = PCNs[3 - 1]
-var pcn_3_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_3_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_3; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -346,7 +405,7 @@ new L.circleMarker([pcn_gp_location_3[i]['latitude'], pcn_gp_location_3[i]['long
 // ! PCN 4
 pcn_4_group = L.layerGroup();
 pcn_4 = PCNs[4 - 1]
-var pcn_4_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_4_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_4; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -396,7 +455,7 @@ new L.circleMarker([pcn_gp_location_4[i]['latitude'], pcn_gp_location_4[i]['long
   // ! PCN 5
   pcn_5_group = L.layerGroup();
   pcn_5 = PCNs[5 - 1]
-  var pcn_5_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+  pcn_5_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
            filter: function(feat) { return feat.properties.PCN_Name === pcn_5; }
           , style: reg_pop_style})
         //  .addTo(pcn_x_boundary)
@@ -442,7 +501,7 @@ new L.circleMarker([pcn_gp_location_4[i]['latitude'], pcn_gp_location_4[i]['long
 // ! PCN 6
 pcn_6_group = L.layerGroup();
 pcn_6 = PCNs[6 - 1]
-var pcn_6_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_6_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_6; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -488,7 +547,7 @@ new L.circleMarker([pcn_gp_location_6[i]['latitude'], pcn_gp_location_6[i]['long
 // ! PCN 7
 pcn_7_group = L.layerGroup();
 pcn_7 = PCNs[7 - 1]
-var pcn_7_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_7_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_7; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -534,7 +593,7 @@ new L.circleMarker([pcn_gp_location_7[i]['latitude'], pcn_gp_location_7[i]['long
 // ! PCN 8
 pcn_8_group = L.layerGroup();
 pcn_8 = PCNs[8 - 1]
-var pcn_8_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_8_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_8; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -580,7 +639,7 @@ new L.circleMarker([pcn_gp_location_8[i]['latitude'], pcn_gp_location_8[i]['long
 // ! PCN 9
 pcn_9_group = L.layerGroup();
 pcn_9 = PCNs[9 - 1]
-var pcn_9_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_9_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_9; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -626,7 +685,7 @@ new L.circleMarker([pcn_gp_location_9[i]['latitude'], pcn_gp_location_9[i]['long
 // ! PCN 10
 pcn_10_group = L.layerGroup();
 pcn_10 = PCNs[10 - 1]
-var pcn_10_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_10_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_10; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -672,7 +731,7 @@ new L.circleMarker([pcn_gp_location_10[i]['latitude'], pcn_gp_location_10[i]['lo
 // ! PCN 11
 pcn_11_group = L.layerGroup();
 pcn_11 = PCNs[11 - 1]
-var pcn_11_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_11_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_11; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -718,7 +777,7 @@ new L.circleMarker([pcn_gp_location_11[i]['latitude'], pcn_gp_location_11[i]['lo
 // ! PCN 12
 pcn_12_group = L.layerGroup();
 pcn_12 = PCNs[12 - 1]
-var pcn_12_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_12_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_12; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -764,7 +823,7 @@ new L.circleMarker([pcn_gp_location_12[i]['latitude'], pcn_gp_location_12[i]['lo
 // ! PCN 13
 pcn_13_group = L.layerGroup();
 pcn_13 = PCNs[13 - 1]
-var pcn_13_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_13_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_13; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -810,7 +869,7 @@ new L.circleMarker([pcn_gp_location_13[i]['latitude'], pcn_gp_location_13[i]['lo
 // ! PCN 14
 pcn_14_group = L.layerGroup();
 pcn_14 = PCNs[14 - 1]
-var pcn_14_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_14_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_14; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -856,7 +915,7 @@ new L.circleMarker([pcn_gp_location_14[i]['latitude'], pcn_gp_location_14[i]['lo
 // ! PCN 15
 pcn_15_group = L.layerGroup();
 pcn_15 = PCNs[15 - 1]
-var pcn_15_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_15_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_15; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -902,7 +961,7 @@ new L.circleMarker([pcn_gp_location_15[i]['latitude'], pcn_gp_location_15[i]['lo
 // ! PCN 16
 pcn_16_group = L.layerGroup();
 pcn_16 = PCNs[16 - 1]
-var pcn_16_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_16_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_16; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -948,7 +1007,7 @@ new L.circleMarker([pcn_gp_location_16[i]['latitude'], pcn_gp_location_16[i]['lo
 // ! PCN 17
 pcn_17_group = L.layerGroup();
 pcn_17 = PCNs[17 - 1]
-var pcn_17_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_17_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_17; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -994,7 +1053,7 @@ new L.circleMarker([pcn_gp_location_17[i]['latitude'], pcn_gp_location_17[i]['lo
 // ! PCN 18
 pcn_18_group = L.layerGroup();
 pcn_18 = PCNs[18 - 1]
-var pcn_18_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_18_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_18; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1040,7 +1099,7 @@ new L.circleMarker([pcn_gp_location_18[i]['latitude'], pcn_gp_location_18[i]['lo
 // ! PCN 19
 pcn_19_group = L.layerGroup();
 pcn_19 = PCNs[19 - 1]
-var pcn_19_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_19_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_19; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1086,7 +1145,7 @@ new L.circleMarker([pcn_gp_location_19[i]['latitude'], pcn_gp_location_19[i]['lo
 // ! PCN 20
 pcn_20_group = L.layerGroup();
 pcn_20 = PCNs[20 - 1]
-var pcn_20_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_20_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_20; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1132,7 +1191,7 @@ new L.circleMarker([pcn_gp_location_20[i]['latitude'], pcn_gp_location_20[i]['lo
 // ! PCN 21
 pcn_21_group = L.layerGroup();
 pcn_21 = PCNs[21 - 1]
-var pcn_21_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_21_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_21; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1178,7 +1237,7 @@ new L.circleMarker([pcn_gp_location_21[i]['latitude'], pcn_gp_location_21[i]['lo
 // ! PCN 22
 pcn_22_group = L.layerGroup();
 pcn_22 = PCNs[22 - 1]
-var pcn_22_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_22_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_22; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1224,7 +1283,7 @@ new L.circleMarker([pcn_gp_location_22[i]['latitude'], pcn_gp_location_22[i]['lo
 // ! PCN 23
 pcn_23_group = L.layerGroup();
 pcn_23 = PCNs[23 - 1]
-var pcn_23_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_23_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_23; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1270,7 +1329,7 @@ new L.circleMarker([pcn_gp_location_23[i]['latitude'], pcn_gp_location_23[i]['lo
 // ! PCN 24
 pcn_24_group = L.layerGroup();
 pcn_24 = PCNs[24 - 1]
-var pcn_24_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_24_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_24; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1316,7 +1375,7 @@ new L.circleMarker([pcn_gp_location_24[i]['latitude'], pcn_gp_location_24[i]['lo
 // ! PCN 25
 pcn_25_group = L.layerGroup();
 pcn_25 = PCNs[25 - 1]
-var pcn_25_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_25_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_25; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1362,7 +1421,7 @@ new L.circleMarker([pcn_gp_location_25[i]['latitude'], pcn_gp_location_25[i]['lo
 // ! PCN 26
 pcn_26_group = L.layerGroup();
 pcn_26 = PCNs[26 - 1]
-var pcn_26_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_26_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_26; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1408,7 +1467,7 @@ new L.circleMarker([pcn_gp_location_26[i]['latitude'], pcn_gp_location_26[i]['lo
 // ! PCN 27
 pcn_27_group = L.layerGroup();
 pcn_27 = PCNs[27 - 1]
-var pcn_27_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_27_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_27; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1454,7 +1513,7 @@ new L.circleMarker([pcn_gp_location_27[i]['latitude'], pcn_gp_location_27[i]['lo
 // ! PCN 28
 pcn_28_group = L.layerGroup();
 pcn_28 = PCNs[28 - 1]
-var pcn_28_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_28_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_28; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1500,7 +1559,7 @@ new L.circleMarker([pcn_gp_location_28[i]['latitude'], pcn_gp_location_28[i]['lo
 // ! PCN 29
 pcn_29_group = L.layerGroup();
 pcn_29 = PCNs[29 - 1]
-var pcn_29_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_29_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_29; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1546,7 +1605,7 @@ new L.circleMarker([pcn_gp_location_29[i]['latitude'], pcn_gp_location_29[i]['lo
 // ! PCN 30
 pcn_30_group = L.layerGroup();
 pcn_30 = PCNs[30 - 1]
-var pcn_30_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_30_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_30; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1592,7 +1651,7 @@ new L.circleMarker([pcn_gp_location_30[i]['latitude'], pcn_gp_location_30[i]['lo
 // ! PCN 31
 pcn_31_group = L.layerGroup();
 pcn_31 = PCNs[31 - 1]
-var pcn_31_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_31_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_31; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1638,7 +1697,7 @@ new L.circleMarker([pcn_gp_location_31[i]['latitude'], pcn_gp_location_31[i]['lo
 // ! PCN 32
 pcn_32_group = L.layerGroup();
 pcn_32 = PCNs[32 - 1]
-var pcn_32_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_32_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_32; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1684,7 +1743,7 @@ new L.circleMarker([pcn_gp_location_32[i]['latitude'], pcn_gp_location_32[i]['lo
 // ! PCN 33
 pcn_33_group = L.layerGroup();
 pcn_33 = PCNs[33 - 1]
-var pcn_33_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_33_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_33; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1730,7 +1789,7 @@ new L.circleMarker([pcn_gp_location_33[i]['latitude'], pcn_gp_location_33[i]['lo
 // ! PCN 34
 pcn_34_group = L.layerGroup();
 pcn_34 = PCNs[34 - 1]
-var pcn_34_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_34_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_34; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1776,7 +1835,7 @@ new L.circleMarker([pcn_gp_location_34[i]['latitude'], pcn_gp_location_34[i]['lo
 // ! PCN 35
 pcn_35_group = L.layerGroup();
 pcn_35 = PCNs[35 - 1]
-var pcn_35_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_35_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_35; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1822,7 +1881,7 @@ new L.circleMarker([pcn_gp_location_35[i]['latitude'], pcn_gp_location_35[i]['lo
 // ! PCN 36
 pcn_36_group = L.layerGroup();
 pcn_36 = PCNs[36 - 1]
-var pcn_36_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_36_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_36; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1868,7 +1927,7 @@ new L.circleMarker([pcn_gp_location_36[i]['latitude'], pcn_gp_location_36[i]['lo
 // ! PCN 37
 pcn_37_group = L.layerGroup();
 pcn_37 = PCNs[37 - 1]
-var pcn_37_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_37_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_37; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1914,7 +1973,7 @@ new L.circleMarker([pcn_gp_location_37[i]['latitude'], pcn_gp_location_37[i]['lo
 // ! PCN 38
 pcn_38_group = L.layerGroup();
 pcn_38 = PCNs[38 - 1]
-var pcn_38_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_38_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_38; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -1960,7 +2019,7 @@ new L.circleMarker([pcn_gp_location_38[i]['latitude'], pcn_gp_location_38[i]['lo
 // ! PCN 39
 pcn_39_group = L.layerGroup();
 pcn_39 = PCNs[39 - 1]
-var pcn_39_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_39_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_39; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -2006,7 +2065,7 @@ new L.circleMarker([pcn_gp_location_39[i]['latitude'], pcn_gp_location_39[i]['lo
 // ! PCN 40
 pcn_40_group = L.layerGroup();
 pcn_40 = PCNs[40 - 1]
-var pcn_40_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+pcn_40_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
          filter: function(feat) { return feat.properties.PCN_Name === pcn_40; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
@@ -2049,32 +2108,6 @@ new L.circleMarker([pcn_gp_location_40[i]['latitude'], pcn_gp_location_40[i]['lo
    .addTo(pcn_40_group) // These markers are directly added to the layer group
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // This function identifies the selected PCN, hides all areas then adds the appropriate PCN layer 
 function showSelectedPCN(){
 
@@ -2092,208 +2125,19 @@ var selected_pcn_id = 'pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) 
 console.log(selected_pcn_id)
 
 // We can make sure every layergroup is off, and then turn on only the selected one
-map_lsoa_pcn_reach.removeLayer(pcn_1_group)
-map_lsoa_pcn_reach.removeLayer(pcn_2_group)
-map_lsoa_pcn_reach.removeLayer(pcn_3_group)
-map_lsoa_pcn_reach.removeLayer(pcn_4_group)
-map_lsoa_pcn_reach.removeLayer(pcn_5_group)
-map_lsoa_pcn_reach.removeLayer(pcn_6_group)
-map_lsoa_pcn_reach.removeLayer(pcn_7_group)
-map_lsoa_pcn_reach.removeLayer(pcn_8_group)
-map_lsoa_pcn_reach.removeLayer(pcn_9_group)
-map_lsoa_pcn_reach.removeLayer(pcn_10_group)
-map_lsoa_pcn_reach.removeLayer(pcn_11_group)
-map_lsoa_pcn_reach.removeLayer(pcn_12_group)
-map_lsoa_pcn_reach.removeLayer(pcn_13_group)
-map_lsoa_pcn_reach.removeLayer(pcn_14_group)
-map_lsoa_pcn_reach.removeLayer(pcn_15_group)
-map_lsoa_pcn_reach.removeLayer(pcn_16_group)
-map_lsoa_pcn_reach.removeLayer(pcn_17_group)
-map_lsoa_pcn_reach.removeLayer(pcn_18_group)
-map_lsoa_pcn_reach.removeLayer(pcn_19_group)
-map_lsoa_pcn_reach.removeLayer(pcn_20_group)
-map_lsoa_pcn_reach.removeLayer(pcn_21_group)
-map_lsoa_pcn_reach.removeLayer(pcn_22_group)
-map_lsoa_pcn_reach.removeLayer(pcn_23_group)
-map_lsoa_pcn_reach.removeLayer(pcn_24_group)
-map_lsoa_pcn_reach.removeLayer(pcn_25_group)
-map_lsoa_pcn_reach.removeLayer(pcn_26_group)
-map_lsoa_pcn_reach.removeLayer(pcn_27_group)
-map_lsoa_pcn_reach.removeLayer(pcn_28_group)
-map_lsoa_pcn_reach.removeLayer(pcn_29_group)
-map_lsoa_pcn_reach.removeLayer(pcn_30_group)
-map_lsoa_pcn_reach.removeLayer(pcn_31_group)
-map_lsoa_pcn_reach.removeLayer(pcn_32_group)
-map_lsoa_pcn_reach.removeLayer(pcn_33_group)
-map_lsoa_pcn_reach.removeLayer(pcn_34_group)
-map_lsoa_pcn_reach.removeLayer(pcn_35_group)
-map_lsoa_pcn_reach.removeLayer(pcn_36_group)
-map_lsoa_pcn_reach.removeLayer(pcn_37_group)
-map_lsoa_pcn_reach.removeLayer(pcn_38_group)
-map_lsoa_pcn_reach.removeLayer(pcn_39_group)
-map_lsoa_pcn_reach.removeLayer(pcn_40_group)
 
-// TODO make this programmatic (not manually coding 40 pcns if possible)
+// ! use a loop to remove all groups from the leaflet map
+for (var i = 1; i < Sussex_pcn_summary_df.length; i++) {
+map_lsoa_pcn_reach.removeLayer(this['pcn_' + i + '_group'])
+}
 
-if(selected_pcn_id === 'pcn_1_group'){
-  pcn_1_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_1_boundary.getBounds(), {maxZoom: 13});}
+// make this programmatic (not manually coding 40 pcns if possible)
+var selected_pcn_object = this['pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) + '_group'];
+var selected_pcn_boundary = this['pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) + '_boundary'];
 
-if(selected_pcn_id === 'pcn_2_group'){
-  pcn_2_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_2_boundary.getBounds(), {maxZoom: 12});}
+selected_pcn_object.addTo(map_lsoa_pcn_reach)
+map_lsoa_pcn_reach.fitBounds(selected_pcn_boundary.getBounds(), {maxZoom: 13});
 
-if(selected_pcn_id === 'pcn_3_group'){
-  pcn_3_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_3_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_4_group'){
-  pcn_4_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_4_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_5_group'){
-  pcn_5_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_5_boundary.getBounds());}
- 
-if(selected_pcn_id === 'pcn_6_group'){
-  pcn_6_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_6_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_7_group'){
-  pcn_7_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_7_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_8_group'){
-  pcn_8_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_8_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_9_group'){
-  pcn_9_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_9_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_10_group'){
-  pcn_10_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_10_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_11_group'){
-  pcn_11_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_11_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_12_group'){
-  pcn_12_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_12_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_13_group'){
-  pcn_13_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_13_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_14_group'){
-  pcn_14_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_14_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_15_group'){
-  pcn_15_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_15_boundary.getBounds());}  
-  
-if(selected_pcn_id === 'pcn_16_group'){
-  pcn_16_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_16_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_17_group'){
-  pcn_17_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_17_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_18_group'){
-  pcn_18_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_18_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_19_group'){
-  pcn_19_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_19_boundary.getBounds());}
- 
-if(selected_pcn_id === 'pcn_20_group'){
-  pcn_20_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_20_boundary.getBounds());}  
-  
-if(selected_pcn_id === 'pcn_21_group'){
-  pcn_21_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_21_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_22_group'){
-  pcn_22_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_22_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_23_group'){
-  pcn_23_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_23_boundary.getBounds());}
-    
-if(selected_pcn_id === 'pcn_24_group'){
-  pcn_24_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_24_boundary.getBounds());}
-
-if(selected_pcn_id === 'pcn_25_group'){
-  pcn_25_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_25_boundary.getBounds());}
-   
-if(selected_pcn_id === 'pcn_26_group'){
-  pcn_26_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_26_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_27_group'){
-  pcn_27_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_27_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_28_group'){
-  pcn_28_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_28_boundary.getBounds());}
-    
-if(selected_pcn_id === 'pcn_29_group'){
-  pcn_29_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_29_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_30_group'){
-  pcn_30_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_30_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_31_group'){
-  pcn_31_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_31_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_32_group'){
-  pcn_32_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_32_boundary.getBounds());}
- 
-if(selected_pcn_id === 'pcn_33_group'){
-  pcn_33_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_33_boundary.getBounds());}
-   
-if(selected_pcn_id === 'pcn_34_group'){
-  pcn_34_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_34_boundary.getBounds());}
- 
-if(selected_pcn_id === 'pcn_35_group'){
-  pcn_35_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_35_boundary.getBounds());}  
-  
-if(selected_pcn_id === 'pcn_36_group'){
-  pcn_36_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_36_boundary.getBounds());}
-   
-if(selected_pcn_id === 'pcn_37_group'){
-  pcn_37_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_37_boundary.getBounds());}
- 
-if(selected_pcn_id === 'pcn_38_group'){
-  pcn_38_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_38_boundary.getBounds());}
-   
-if(selected_pcn_id === 'pcn_39_group'){
-  pcn_39_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_39_boundary.getBounds());}
-  
-if(selected_pcn_id === 'pcn_40_group'){
-  pcn_40_group.addTo(map_lsoa_pcn_reach);
-  map_lsoa_pcn_reach.fitBounds(pcn_40_boundary.getBounds());}    
 }
 
 // initalise the function
