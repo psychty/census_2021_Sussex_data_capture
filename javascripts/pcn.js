@@ -6,6 +6,7 @@ if (width > 900) {
   var height = width * .6;
 }
 var width_margin = width * 0.15;
+var gp_marker_colour = '#c90076'
 
 $.ajax({
     url: "./outputs/England_pcn_summary_text_1.json",
@@ -41,7 +42,6 @@ d3.select("#pcn_summary_text_2").html(function (d) {
   );
 });
 
-
 $.ajax({
   url: "./outputs/GP_location_data.json",
   dataType: "json",
@@ -54,7 +54,6 @@ $.ajax({
 });
 
 // PCN summary
-
 $.ajax({
     url: "./outputs/Sussex_PCN_summary_df.json",
     dataType: "json",
@@ -66,18 +65,28 @@ $.ajax({
     },
  });
 
-
  var PCNs = d3
  .map(Sussex_pcn_summary_df, function (d) {
    return d.PCN_Name;
  })
  .keys();
 
-// This will be to highlight a particular line on the figure (and show some key figures)
-d3.select("#select_pcn_1_button")
+ var PCN_ids = d3
+ .map(Sussex_pcn_summary_df, function (d) {
+   return d.PCN_Number;
+ })
+ .keys();
+
+// We need a function to return our own PCN_ID (the number we've given to the PCN based on its row number in the dataframe in R).
+var selected_pcn_id_lookup = d3
+  .scaleOrdinal()
+  .domain(PCNs)
+  .range(PCN_ids);
+
+d3.select("#select_pcn_x_button")
   .selectAll("myOptions")
-  // .data(PCNs)
-  .data(['Cissbury Integrated Care PCN', 'Haywards Heath Villages PCN', 'West Hove PCN'])
+  .data(PCNs)
+  // .data(['Cissbury Integrated Care PCN', 'Haywards Heath Villages PCN'])
   .enter()
   .append("option")
   .text(function (d) {
@@ -163,16 +172,19 @@ legend_map_population.onAdd = function () {
 
 legend_map_population.addTo(map_lsoa_pcn_reach);
 
+L.control.scale().addTo(map_lsoa_pcn_reach);
+
 // ! filter chosen PCN LSOA data 
 
 // This is what we'll need to update on select change
 
 var Selected_pcn_area_option = d3
- .select("#select_pcn_1_button")
+ .select("#select_pcn_x_button")
  .property("value");
 
+var selected_pcn_id = 'pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) + '_group';
 
- d3.select("#pcn_reach_title_1").html(function (d) {
+d3.select("#pcn_reach_title_1").html(function (d) {
   return (
    Selected_pcn_area_option +
       '; Registered population residential neighbourhoods (LSOAs); LSOAs with five or more registered patients.'
@@ -183,155 +195,2114 @@ pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
   return d.PCN_Name == Selected_pcn_area_option;
 });
 
-Local_GP_location = GP_location.filter(function (d) {
-  return d.PCN_Name == Selected_pcn_area_option;
-});
+// ! Build the 40 layers (one for each PCN, with lsoa layers and gp practices)
 
-// ! Build the 40 layers (one for each PCN)
-
-var pcn_x_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
-         filter: function(feat) { return feat.properties.PCN_Name === 'Cissbury Integrated Care PCN'; }
+// ! PCN 1
+pcn_1_group = L.layerGroup();
+pcn_1 = PCNs[1 - 1]
+var pcn_1_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_1; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
        .bindPopup(function (layer) {
           return (
-            '2011 LSOA: <Strong>' +
+            '<Strong>' +
             layer.feature.properties.LSOA11CD +
-            '</Strong><br><br>Number of patients registered to ' +
+            '</Strong><br><br>Patients registered to ' +
             layer.feature.properties.PCN_Name +
             ': <Strong>' +
             d3.format(',.0f')(layer.feature.properties.Patients) +
             '</Strong>.<br><br>This is <Strong>' +
             d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
-            '</Strong> of the total number of patients registered to a practice in this PCN (' + 
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
             d3.format(',.0f')(layer.feature.properties.Total_patients) +
-            ' patients).'
+            '</Strong> patients).'
           );
        })
 
+// Add this to the layerGroup      
+pcn_1_boundary.addTo(pcn_1_group)
 
-       var pcn_y_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
-        filter: function(feat) { return feat.properties.PCN_Name === 'Haywards Heath Villages PCN'; }
-       , style: reg_pop_style})
-      // .addTo(map_lsoa_pcn_reach)
-      .bindPopup(function (layer) {
-         return (
-           '2011 LSOA: <Strong>' +
-           layer.feature.properties.LSOA11CD +
-           '</Strong><br><br>Number of patients registered to ' +
-           layer.feature.properties.PCN_Name +
-           ': <Strong>' +
-           d3.format(',.0f')(layer.feature.properties.Patients) +
-           '</Strong>.<br><br>This is <Strong>' +
-           d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
-           '</Strong> of the total number of patients registered to a practice in this PCN (' + 
-           d3.format(',.0f')(layer.feature.properties.Total_patients) +
-           ' patients).'
-         );
-      })
+// filter GP markers
+pcn_gp_location_1 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_1;
+});
 
-      var pcn_z_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
-        filter: function(feat) { return feat.properties.PCN_Name === 'West Hove PCN'; }
-       , style: reg_pop_style})
-      // .addTo(map_lsoa_pcn_reach)
-      .bindPopup(function (layer) {
-         return (
-           '2011 LSOA: <Strong>' +
-           layer.feature.properties.LSOA11CD +
-           '</Strong><br><br>Number of patients registered to ' +
-           layer.feature.properties.PCN_Name +
-           ': <Strong>' +
-           d3.format(',.0f')(layer.feature.properties.Patients) +
-           '</Strong>.<br><br>This is <Strong>' +
-           d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
-           '</Strong> of the total number of patients registered to a practice in this PCN (' + 
-           d3.format(',.0f')(layer.feature.properties.Total_patients) +
-           ' patients).'
-         );
-      })
+// This loops through the Local_GP_location dataframe and plots a marker for every record.
+for (var i = 0; i < pcn_gp_location_1.length; i++) {
+new L.circleMarker([pcn_gp_location_1[i]['latitude'], pcn_gp_location_1[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_1[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_1[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_1[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_1[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_1_group) // These markers are directly added to the layer group
+  };
 
-        // map_lsoa_pcn_reach.fitBounds(pcn_x_boundary.getBounds());
+pcn_1_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initialise on the page     
+
+// ! PCN 2 from two onwards we do not need to add this to the map
+pcn_2_group = L.layerGroup();
+pcn_2 = PCNs[2 - 1]
+var pcn_2_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_2; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_2_boundary.addTo(pcn_2_group)       
+pcn_gp_location_2 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_2;
+});
+
+// This loops through the Local_GP_location dataframe and plots a marker for every record.
+for (var i = 0; i < pcn_gp_location_2.length; i++) {
+new L.circleMarker([pcn_gp_location_2[i]['latitude'], pcn_gp_location_2[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_2[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_2[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_2[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_2[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_2_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 3
+pcn_3_group = L.layerGroup();
+pcn_3 = PCNs[3 - 1]
+var pcn_3_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_3; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+
+pcn_3_boundary.addTo(pcn_3_group)
+pcn_gp_location_3 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_3;
+});
+for (var i = 0; i < pcn_gp_location_3.length; i++) {
+new L.circleMarker([pcn_gp_location_3[i]['latitude'], pcn_gp_location_3[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_3[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_3[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_3[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_3[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_3_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 4
+pcn_4_group = L.layerGroup();
+pcn_4 = PCNs[4 - 1]
+var pcn_4_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_4; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+
+// Add this to the layerGroup      
+pcn_4_boundary.addTo(pcn_4_group)
+
+pcn_gp_location_4 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_4;
+});
+
+// This loops through the Local_GP_location dataframe and plots a marker for every record.
+for (var i = 0; i < pcn_gp_location_4.length; i++) {
+new L.circleMarker([pcn_gp_location_4[i]['latitude'], pcn_gp_location_4[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_4[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_4[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_4[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_4[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_4_group) // These markers are directly added to the layer group
+  };
+
+  // ! PCN 5
+  pcn_5_group = L.layerGroup();
+  pcn_5 = PCNs[5 - 1]
+  var pcn_5_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+           filter: function(feat) { return feat.properties.PCN_Name === pcn_5; }
+          , style: reg_pop_style})
+        //  .addTo(pcn_x_boundary)
+         .bindPopup(function (layer) {
+            return (
+              '<Strong>' +
+              layer.feature.properties.LSOA11CD +
+              '</Strong><br><br>Patients registered to ' +
+              layer.feature.properties.PCN_Name +
+              ': <Strong>' +
+              d3.format(',.0f')(layer.feature.properties.Patients) +
+              '</Strong>.<br><br>This is <Strong>' +
+              d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+              '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+              d3.format(',.0f')(layer.feature.properties.Total_patients) +
+              '</Strong> patients).'
+            );
+         })
+  pcn_5_boundary.addTo(pcn_5_group)
+  pcn_gp_location_5 = GP_location.filter(function (d) {
+    return d.PCN_Name == pcn_5;
+  });
+  
+  for (var i = 0; i < pcn_gp_location_5.length; i++) {
+  new L.circleMarker([pcn_gp_location_5[i]['latitude'], pcn_gp_location_5[i]['longitude']],{
+       radius: 8,
+       weight: .5,
+       fillColor: gp_marker_colour,
+       color: '#000',
+       fillOpacity: 1})
+      .bindPopup('<Strong>' + 
+      pcn_gp_location_5[i]['ODS_Code'] + 
+      ' ' + 
+      pcn_gp_location_5[i]['ODS_Name'] + 
+      '</Strong><br><br>This practice is part of the ' + 
+      pcn_gp_location_5[i]['PCN_Name'] +
+      '. There are <Strong>' + 
+      d3.format(',.0f')(pcn_gp_location_5[i]['Patients']) + 
+      '</Strong> patients registered to this practice.' )
+     .addTo(pcn_5_group) // These markers are directly added to the layer group
+    };
+  
+// ! PCN 6
+pcn_6_group = L.layerGroup();
+pcn_6 = PCNs[6 - 1]
+var pcn_6_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_6; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_6_boundary.addTo(pcn_6_group)
+pcn_gp_location_6 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_6;
+});
+
+for (var i = 0; i < pcn_gp_location_6.length; i++) {
+new L.circleMarker([pcn_gp_location_6[i]['latitude'], pcn_gp_location_6[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_6[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_6[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_6[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_6[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_6_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 7
+pcn_7_group = L.layerGroup();
+pcn_7 = PCNs[7 - 1]
+var pcn_7_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_7; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_7_boundary.addTo(pcn_7_group)
+pcn_gp_location_7 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_7;
+});
+
+for (var i = 0; i < pcn_gp_location_7.length; i++) {
+new L.circleMarker([pcn_gp_location_7[i]['latitude'], pcn_gp_location_7[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_7[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_7[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_7[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_7[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_7_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 8
+pcn_8_group = L.layerGroup();
+pcn_8 = PCNs[8 - 1]
+var pcn_8_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_8; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_8_boundary.addTo(pcn_8_group)
+pcn_gp_location_8 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_8;
+});
+
+for (var i = 0; i < pcn_gp_location_8.length; i++) {
+new L.circleMarker([pcn_gp_location_8[i]['latitude'], pcn_gp_location_8[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_8[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_8[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_8[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_8[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_8_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 9
+pcn_9_group = L.layerGroup();
+pcn_9 = PCNs[9 - 1]
+var pcn_9_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_9; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_9_boundary.addTo(pcn_9_group)
+pcn_gp_location_9 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_9;
+});
+
+for (var i = 0; i < pcn_gp_location_9.length; i++) {
+new L.circleMarker([pcn_gp_location_9[i]['latitude'], pcn_gp_location_9[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_9[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_9[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_9[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_9[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_9_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 10
+pcn_10_group = L.layerGroup();
+pcn_10 = PCNs[10 - 1]
+var pcn_10_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_10; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_10_boundary.addTo(pcn_10_group)
+pcn_gp_location_10 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_10;
+});
+
+for (var i = 0; i < pcn_gp_location_10.length; i++) {
+new L.circleMarker([pcn_gp_location_10[i]['latitude'], pcn_gp_location_10[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_10[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_10[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_10[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_10[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_10_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 11
+pcn_11_group = L.layerGroup();
+pcn_11 = PCNs[11 - 1]
+var pcn_11_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_11; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_11_boundary.addTo(pcn_11_group)
+pcn_gp_location_11 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_11;
+});
+
+for (var i = 0; i < pcn_gp_location_11.length; i++) {
+new L.circleMarker([pcn_gp_location_11[i]['latitude'], pcn_gp_location_11[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_11[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_11[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_11[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_11[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_11_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 12
+pcn_12_group = L.layerGroup();
+pcn_12 = PCNs[12 - 1]
+var pcn_12_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_12; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_12_boundary.addTo(pcn_12_group)
+pcn_gp_location_12 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_12;
+});
+
+for (var i = 0; i < pcn_gp_location_12.length; i++) {
+new L.circleMarker([pcn_gp_location_12[i]['latitude'], pcn_gp_location_12[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_12[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_12[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_12[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_12[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_12_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 13
+pcn_13_group = L.layerGroup();
+pcn_13 = PCNs[13 - 1]
+var pcn_13_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_13; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_13_boundary.addTo(pcn_13_group)
+pcn_gp_location_13 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_13;
+});
+
+for (var i = 0; i < pcn_gp_location_13.length; i++) {
+new L.circleMarker([pcn_gp_location_13[i]['latitude'], pcn_gp_location_13[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_13[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_13[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_13[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_13[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_13_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 14
+pcn_14_group = L.layerGroup();
+pcn_14 = PCNs[14 - 1]
+var pcn_14_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_14; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_14_boundary.addTo(pcn_14_group)
+pcn_gp_location_14 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_14;
+});
+
+for (var i = 0; i < pcn_gp_location_14.length; i++) {
+new L.circleMarker([pcn_gp_location_14[i]['latitude'], pcn_gp_location_14[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_14[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_14[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_14[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_14[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_14_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 15
+pcn_15_group = L.layerGroup();
+pcn_15 = PCNs[15 - 1]
+var pcn_15_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_15; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_15_boundary.addTo(pcn_15_group)
+pcn_gp_location_15 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_15;
+});
+
+for (var i = 0; i < pcn_gp_location_15.length; i++) {
+new L.circleMarker([pcn_gp_location_15[i]['latitude'], pcn_gp_location_15[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_15[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_15[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_15[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_15[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_15_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 16
+pcn_16_group = L.layerGroup();
+pcn_16 = PCNs[16 - 1]
+var pcn_16_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_16; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_16_boundary.addTo(pcn_16_group)
+pcn_gp_location_16 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_16;
+});
+
+for (var i = 0; i < pcn_gp_location_16.length; i++) {
+new L.circleMarker([pcn_gp_location_16[i]['latitude'], pcn_gp_location_16[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_16[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_16[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_16[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_16[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_16_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 17
+pcn_17_group = L.layerGroup();
+pcn_17 = PCNs[17 - 1]
+var pcn_17_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_17; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_17_boundary.addTo(pcn_17_group)
+pcn_gp_location_17 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_17;
+});
+
+for (var i = 0; i < pcn_gp_location_17.length; i++) {
+new L.circleMarker([pcn_gp_location_17[i]['latitude'], pcn_gp_location_17[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_17[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_17[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_17[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_17[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_17_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 18
+pcn_18_group = L.layerGroup();
+pcn_18 = PCNs[18 - 1]
+var pcn_18_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_18; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_18_boundary.addTo(pcn_18_group)
+pcn_gp_location_18 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_18;
+});
+
+for (var i = 0; i < pcn_gp_location_18.length; i++) {
+new L.circleMarker([pcn_gp_location_18[i]['latitude'], pcn_gp_location_18[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_18[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_18[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_18[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_18[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_18_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 19
+pcn_19_group = L.layerGroup();
+pcn_19 = PCNs[19 - 1]
+var pcn_19_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_19; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_19_boundary.addTo(pcn_19_group)
+pcn_gp_location_19 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_19;
+});
+
+for (var i = 0; i < pcn_gp_location_19.length; i++) {
+new L.circleMarker([pcn_gp_location_19[i]['latitude'], pcn_gp_location_19[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_19[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_19[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_19[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_19[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_19_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 20
+pcn_20_group = L.layerGroup();
+pcn_20 = PCNs[20 - 1]
+var pcn_20_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_20; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_20_boundary.addTo(pcn_20_group)
+pcn_gp_location_20 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_20;
+});
+
+for (var i = 0; i < pcn_gp_location_20.length; i++) {
+new L.circleMarker([pcn_gp_location_20[i]['latitude'], pcn_gp_location_20[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_20[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_20[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_20[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_20[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_20_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 21
+pcn_21_group = L.layerGroup();
+pcn_21 = PCNs[21 - 1]
+var pcn_21_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_21; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_21_boundary.addTo(pcn_21_group)
+pcn_gp_location_21 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_21;
+});
+
+for (var i = 0; i < pcn_gp_location_21.length; i++) {
+new L.circleMarker([pcn_gp_location_21[i]['latitude'], pcn_gp_location_21[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_21[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_21[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_21[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_21[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_21_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 22
+pcn_22_group = L.layerGroup();
+pcn_22 = PCNs[22 - 1]
+var pcn_22_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_22; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_22_boundary.addTo(pcn_22_group)
+pcn_gp_location_22 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_22;
+});
+
+for (var i = 0; i < pcn_gp_location_22.length; i++) {
+new L.circleMarker([pcn_gp_location_22[i]['latitude'], pcn_gp_location_22[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_22[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_22[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_22[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_22[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_22_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 23
+pcn_23_group = L.layerGroup();
+pcn_23 = PCNs[23 - 1]
+var pcn_23_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_23; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_23_boundary.addTo(pcn_23_group)
+pcn_gp_location_23 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_23;
+});
+
+for (var i = 0; i < pcn_gp_location_23.length; i++) {
+new L.circleMarker([pcn_gp_location_23[i]['latitude'], pcn_gp_location_23[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_23[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_23[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_23[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_23[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_23_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 24
+pcn_24_group = L.layerGroup();
+pcn_24 = PCNs[24 - 1]
+var pcn_24_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_24; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_24_boundary.addTo(pcn_24_group)
+pcn_gp_location_24 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_24;
+});
+
+for (var i = 0; i < pcn_gp_location_24.length; i++) {
+new L.circleMarker([pcn_gp_location_24[i]['latitude'], pcn_gp_location_24[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_24[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_24[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_24[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_24[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_24_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 25
+pcn_25_group = L.layerGroup();
+pcn_25 = PCNs[25 - 1]
+var pcn_25_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_25; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_25_boundary.addTo(pcn_25_group)
+pcn_gp_location_25 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_25;
+});
+
+for (var i = 0; i < pcn_gp_location_25.length; i++) {
+new L.circleMarker([pcn_gp_location_25[i]['latitude'], pcn_gp_location_25[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_25[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_25[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_25[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_25[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_25_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 26
+pcn_26_group = L.layerGroup();
+pcn_26 = PCNs[26 - 1]
+var pcn_26_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_26; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_26_boundary.addTo(pcn_26_group)
+pcn_gp_location_26 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_26;
+});
+
+for (var i = 0; i < pcn_gp_location_26.length; i++) {
+new L.circleMarker([pcn_gp_location_26[i]['latitude'], pcn_gp_location_26[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_26[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_26[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_26[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_26[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_26_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 27
+pcn_27_group = L.layerGroup();
+pcn_27 = PCNs[27 - 1]
+var pcn_27_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_27; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_27_boundary.addTo(pcn_27_group)
+pcn_gp_location_27 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_27;
+});
+
+for (var i = 0; i < pcn_gp_location_27.length; i++) {
+new L.circleMarker([pcn_gp_location_27[i]['latitude'], pcn_gp_location_27[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_27[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_27[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_27[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_27[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_27_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 28
+pcn_28_group = L.layerGroup();
+pcn_28 = PCNs[28 - 1]
+var pcn_28_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_28; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_28_boundary.addTo(pcn_28_group)
+pcn_gp_location_28 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_28;
+});
+
+for (var i = 0; i < pcn_gp_location_28.length; i++) {
+new L.circleMarker([pcn_gp_location_28[i]['latitude'], pcn_gp_location_28[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_28[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_28[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_28[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_28[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_28_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 29
+pcn_29_group = L.layerGroup();
+pcn_29 = PCNs[29 - 1]
+var pcn_29_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_29; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_29_boundary.addTo(pcn_29_group)
+pcn_gp_location_29 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_29;
+});
+
+for (var i = 0; i < pcn_gp_location_29.length; i++) {
+new L.circleMarker([pcn_gp_location_29[i]['latitude'], pcn_gp_location_29[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_29[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_29[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_29[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_29[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_29_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 30
+pcn_30_group = L.layerGroup();
+pcn_30 = PCNs[30 - 1]
+var pcn_30_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_30; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_30_boundary.addTo(pcn_30_group)
+pcn_gp_location_30 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_30;
+});
+
+for (var i = 0; i < pcn_gp_location_30.length; i++) {
+new L.circleMarker([pcn_gp_location_30[i]['latitude'], pcn_gp_location_30[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_30[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_30[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_30[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_30[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_30_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 31
+pcn_31_group = L.layerGroup();
+pcn_31 = PCNs[31 - 1]
+var pcn_31_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_31; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_31_boundary.addTo(pcn_31_group)
+pcn_gp_location_31 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_31;
+});
+
+for (var i = 0; i < pcn_gp_location_31.length; i++) {
+new L.circleMarker([pcn_gp_location_31[i]['latitude'], pcn_gp_location_31[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_31[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_31[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_31[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_31[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_31_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 32
+pcn_32_group = L.layerGroup();
+pcn_32 = PCNs[32 - 1]
+var pcn_32_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_32; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_32_boundary.addTo(pcn_32_group)
+pcn_gp_location_32 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_32;
+});
+
+for (var i = 0; i < pcn_gp_location_32.length; i++) {
+new L.circleMarker([pcn_gp_location_32[i]['latitude'], pcn_gp_location_32[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_32[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_32[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_32[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_32[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_32_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 33
+pcn_33_group = L.layerGroup();
+pcn_33 = PCNs[33 - 1]
+var pcn_33_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_33; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_33_boundary.addTo(pcn_33_group)
+pcn_gp_location_33 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_33;
+});
+
+for (var i = 0; i < pcn_gp_location_33.length; i++) {
+new L.circleMarker([pcn_gp_location_33[i]['latitude'], pcn_gp_location_33[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_33[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_33[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_33[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_33[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_33_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 34
+pcn_34_group = L.layerGroup();
+pcn_34 = PCNs[34 - 1]
+var pcn_34_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_34; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_34_boundary.addTo(pcn_34_group)
+pcn_gp_location_34 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_34;
+});
+
+for (var i = 0; i < pcn_gp_location_34.length; i++) {
+new L.circleMarker([pcn_gp_location_34[i]['latitude'], pcn_gp_location_34[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_34[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_34[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_34[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_34[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_34_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 35
+pcn_35_group = L.layerGroup();
+pcn_35 = PCNs[35 - 1]
+var pcn_35_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_35; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_35_boundary.addTo(pcn_35_group)
+pcn_gp_location_35 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_35;
+});
+
+for (var i = 0; i < pcn_gp_location_35.length; i++) {
+new L.circleMarker([pcn_gp_location_35[i]['latitude'], pcn_gp_location_35[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_35[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_35[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_35[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_35[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_35_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 36
+pcn_36_group = L.layerGroup();
+pcn_36 = PCNs[36 - 1]
+var pcn_36_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_36; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_36_boundary.addTo(pcn_36_group)
+pcn_gp_location_36 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_36;
+});
+
+for (var i = 0; i < pcn_gp_location_36.length; i++) {
+new L.circleMarker([pcn_gp_location_36[i]['latitude'], pcn_gp_location_36[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_36[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_36[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_36[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_36[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_36_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 37
+pcn_37_group = L.layerGroup();
+pcn_37 = PCNs[37 - 1]
+var pcn_37_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_37; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_37_boundary.addTo(pcn_37_group)
+pcn_gp_location_37 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_37;
+});
+
+for (var i = 0; i < pcn_gp_location_37.length; i++) {
+new L.circleMarker([pcn_gp_location_37[i]['latitude'], pcn_gp_location_37[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_37[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_37[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_37[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_37[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_37_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 38
+pcn_38_group = L.layerGroup();
+pcn_38 = PCNs[38 - 1]
+var pcn_38_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_38; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_38_boundary.addTo(pcn_38_group)
+pcn_gp_location_38 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_38;
+});
+
+for (var i = 0; i < pcn_gp_location_38.length; i++) {
+new L.circleMarker([pcn_gp_location_38[i]['latitude'], pcn_gp_location_38[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_38[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_38[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_38[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_38[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_38_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 39
+pcn_39_group = L.layerGroup();
+pcn_39 = PCNs[39 - 1]
+var pcn_39_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_39; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_39_boundary.addTo(pcn_39_group)
+pcn_gp_location_39 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_39;
+});
+
+for (var i = 0; i < pcn_gp_location_39.length; i++) {
+new L.circleMarker([pcn_gp_location_39[i]['latitude'], pcn_gp_location_39[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_39[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_39[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_39[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_39[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_39_group) // These markers are directly added to the layer group
+  };
+
+// ! PCN 40
+pcn_40_group = L.layerGroup();
+pcn_40 = PCNs[40 - 1]
+var pcn_40_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_40; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_40_boundary.addTo(pcn_40_group)
+pcn_gp_location_40 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_40;
+});
+
+for (var i = 0; i < pcn_gp_location_40.length; i++) {
+new L.circleMarker([pcn_gp_location_40[i]['latitude'], pcn_gp_location_40[i]['longitude']],{
+     radius: 8,
+     weight: .5,
+     fillColor: gp_marker_colour,
+     color: '#000',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_40[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_40[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_40[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_40[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_40_group) // These markers are directly added to the layer group
+  };
 
 
-      
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// This function identifies the selected PCN, hides all areas then adds the appropriate PCN layer 
 function showSelectedPCN(){
 
 var Selected_pcn_area_option = d3
-  .select("#select_pcn_1_button")
+  .select("#select_pcn_x_button")
   .property("value");
 
+d3.select("#pcn_reach_title_1").html(function (d) {
+  return (
+  Selected_pcn_area_option +
+  '; Registered population residential neighbourhoods (LSOAs); LSOAs with five or more registered patients.');
+});
+
+var selected_pcn_id = 'pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) + '_group';
+console.log(selected_pcn_id)
+
+// We can make sure every layergroup is off, and then turn on only the selected one
+map_lsoa_pcn_reach.removeLayer(pcn_1_group)
+map_lsoa_pcn_reach.removeLayer(pcn_2_group)
+map_lsoa_pcn_reach.removeLayer(pcn_3_group)
+map_lsoa_pcn_reach.removeLayer(pcn_4_group)
+map_lsoa_pcn_reach.removeLayer(pcn_5_group)
+map_lsoa_pcn_reach.removeLayer(pcn_6_group)
+map_lsoa_pcn_reach.removeLayer(pcn_7_group)
+map_lsoa_pcn_reach.removeLayer(pcn_8_group)
+map_lsoa_pcn_reach.removeLayer(pcn_9_group)
+map_lsoa_pcn_reach.removeLayer(pcn_10_group)
+map_lsoa_pcn_reach.removeLayer(pcn_11_group)
+map_lsoa_pcn_reach.removeLayer(pcn_12_group)
+map_lsoa_pcn_reach.removeLayer(pcn_13_group)
+map_lsoa_pcn_reach.removeLayer(pcn_14_group)
+map_lsoa_pcn_reach.removeLayer(pcn_15_group)
+map_lsoa_pcn_reach.removeLayer(pcn_16_group)
+map_lsoa_pcn_reach.removeLayer(pcn_17_group)
+map_lsoa_pcn_reach.removeLayer(pcn_18_group)
+map_lsoa_pcn_reach.removeLayer(pcn_19_group)
+map_lsoa_pcn_reach.removeLayer(pcn_20_group)
+map_lsoa_pcn_reach.removeLayer(pcn_21_group)
+map_lsoa_pcn_reach.removeLayer(pcn_22_group)
+map_lsoa_pcn_reach.removeLayer(pcn_23_group)
+map_lsoa_pcn_reach.removeLayer(pcn_24_group)
+map_lsoa_pcn_reach.removeLayer(pcn_25_group)
+map_lsoa_pcn_reach.removeLayer(pcn_26_group)
+map_lsoa_pcn_reach.removeLayer(pcn_27_group)
+map_lsoa_pcn_reach.removeLayer(pcn_28_group)
+map_lsoa_pcn_reach.removeLayer(pcn_29_group)
+map_lsoa_pcn_reach.removeLayer(pcn_30_group)
+map_lsoa_pcn_reach.removeLayer(pcn_31_group)
+map_lsoa_pcn_reach.removeLayer(pcn_32_group)
+map_lsoa_pcn_reach.removeLayer(pcn_33_group)
+map_lsoa_pcn_reach.removeLayer(pcn_34_group)
+map_lsoa_pcn_reach.removeLayer(pcn_35_group)
+map_lsoa_pcn_reach.removeLayer(pcn_36_group)
+map_lsoa_pcn_reach.removeLayer(pcn_37_group)
+map_lsoa_pcn_reach.removeLayer(pcn_38_group)
+map_lsoa_pcn_reach.removeLayer(pcn_39_group)
+map_lsoa_pcn_reach.removeLayer(pcn_40_group)
+
 // TODO make this programmatic (not manually coding 40 pcns if possible)
-// TODO also add markers to turn pcn_x_boundary into a layerGroup 
-  if(Selected_pcn_area_option === 'Cissbury Integrated Care PCN'){
-    map_lsoa_pcn_reach.removeLayer(pcn_y_boundary)
-    map_lsoa_pcn_reach.removeLayer(pcn_z_boundary)
-    pcn_x_boundary.addTo(map_lsoa_pcn_reach)
 
-    map_lsoa_pcn_reach.fitBounds(pcn_x_boundary.getBounds());
-  }
+if(selected_pcn_id === 'pcn_1_group'){
+  pcn_1_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_1_boundary.getBounds(), {maxZoom: 13});}
 
-  if(Selected_pcn_area_option === 'Haywards Heath Villages PCN'){
-    map_lsoa_pcn_reach.removeLayer(pcn_x_boundary)
-    map_lsoa_pcn_reach.removeLayer(pcn_z_boundary)
-    pcn_y_boundary.addTo(map_lsoa_pcn_reach)
+if(selected_pcn_id === 'pcn_2_group'){
+  pcn_2_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_2_boundary.getBounds(), {maxZoom: 12});}
 
-    map_lsoa_pcn_reach.fitBounds(pcn_y_boundary.getBounds());
-  }
+if(selected_pcn_id === 'pcn_3_group'){
+  pcn_3_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_3_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_4_group'){
+  pcn_4_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_4_boundary.getBounds());}
 
-  if(Selected_pcn_area_option === 'West Hove PCN'){
-    map_lsoa_pcn_reach.removeLayer(pcn_x_boundary)
-    map_lsoa_pcn_reach.removeLayer(pcn_y_boundary)
-    pcn_z_boundary.addTo(map_lsoa_pcn_reach)
-
-    map_lsoa_pcn_reach.fitBounds(pcn_z_boundary.getBounds());
-  }
-
-    d3.select("#pcn_reach_title_1").html(function (d) {
-   return (
-    Selected_pcn_area_option +
-       '; Registered population residential neighbourhoods (LSOAs); LSOAs with five or more registered patients.'
-   );
-
- });
+if(selected_pcn_id === 'pcn_5_group'){
+  pcn_5_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_5_boundary.getBounds());}
  
- pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
-   return d.PCN_Name == Selected_pcn_area_option;
- });
+if(selected_pcn_id === 'pcn_6_group'){
+  pcn_6_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_6_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_7_group'){
+  pcn_7_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_7_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_8_group'){
+  pcn_8_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_8_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_9_group'){
+  pcn_9_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_9_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_10_group'){
+  pcn_10_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_10_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_11_group'){
+  pcn_11_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_11_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_12_group'){
+  pcn_12_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_12_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_13_group'){
+  pcn_13_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_13_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_14_group'){
+  pcn_14_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_14_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_15_group'){
+  pcn_15_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_15_boundary.getBounds());}  
+  
+if(selected_pcn_id === 'pcn_16_group'){
+  pcn_16_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_16_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_17_group'){
+  pcn_17_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_17_boundary.getBounds());}
+
+if(selected_pcn_id === 'pcn_18_group'){
+  pcn_18_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_18_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_19_group'){
+  pcn_19_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_19_boundary.getBounds());}
  
- Local_GP_location = GP_location.filter(function (d) {
-   return d.PCN_Name == Selected_pcn_area_option;
- });
+if(selected_pcn_id === 'pcn_20_group'){
+  pcn_20_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_20_boundary.getBounds());}  
+  
+if(selected_pcn_id === 'pcn_21_group'){
+  pcn_21_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_21_boundary.getBounds());}
 
- // This loops through the Local_GP_location dataframe and plots a marker for every record.
-var pane1 = map_lsoa_pcn_reach.createPane('markers_local_gp');
+if(selected_pcn_id === 'pcn_22_group'){
+  pcn_22_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_22_boundary.getBounds());}
 
-for (var i = 0; i < Local_GP_location.length; i++) {
-gps = new L.circleMarker([Local_GP_location[i]['latitude'], Local_GP_location[i]['longitude']],
-     {
-     pane: 'markers_local_gp',
-     radius: 8,
-     weight: .5,
-     fillColor: '#c90076',
-     color: '#000',
-     fillOpacity: 1})
-    .bindPopup('<Strong>' + Local_GP_location[i]['ODS_Code'] + ' ' + Local_GP_location[i]['ODS_Name'] + '</Strong><br><br>This practice is part of the ' + Local_GP_location[i]['PCN_Name'] + '. There are <Strong>' + d3.format(',.0f')(Local_GP_location[i]['Patients']) + '</Strong> patients registered to this practice.')
-   .addTo(map_lsoa_pcn_reach) 
-  };
+if(selected_pcn_id === 'pcn_23_group'){
+  pcn_23_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_23_boundary.getBounds());}
+    
+if(selected_pcn_id === 'pcn_24_group'){
+  pcn_24_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_24_boundary.getBounds());}
 
-  // TODO find a way to remove all markers 
-
+if(selected_pcn_id === 'pcn_25_group'){
+  pcn_25_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_25_boundary.getBounds());}
+   
+if(selected_pcn_id === 'pcn_26_group'){
+  pcn_26_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_26_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_27_group'){
+  pcn_27_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_27_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_28_group'){
+  pcn_28_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_28_boundary.getBounds());}
+    
+if(selected_pcn_id === 'pcn_29_group'){
+  pcn_29_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_29_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_30_group'){
+  pcn_30_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_30_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_31_group'){
+  pcn_31_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_31_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_32_group'){
+  pcn_32_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_32_boundary.getBounds());}
+ 
+if(selected_pcn_id === 'pcn_33_group'){
+  pcn_33_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_33_boundary.getBounds());}
+   
+if(selected_pcn_id === 'pcn_34_group'){
+  pcn_34_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_34_boundary.getBounds());}
+ 
+if(selected_pcn_id === 'pcn_35_group'){
+  pcn_35_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_35_boundary.getBounds());}  
+  
+if(selected_pcn_id === 'pcn_36_group'){
+  pcn_36_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_36_boundary.getBounds());}
+   
+if(selected_pcn_id === 'pcn_37_group'){
+  pcn_37_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_37_boundary.getBounds());}
+ 
+if(selected_pcn_id === 'pcn_38_group'){
+  pcn_38_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_38_boundary.getBounds());}
+   
+if(selected_pcn_id === 'pcn_39_group'){
+  pcn_39_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_39_boundary.getBounds());}
+  
+if(selected_pcn_id === 'pcn_40_group'){
+  pcn_40_group.addTo(map_lsoa_pcn_reach);
+  map_lsoa_pcn_reach.fitBounds(pcn_40_boundary.getBounds());}    
 }
 
+// initalise the function
 showSelectedPCN()
 
-d3.select("#select_pcn_1_button").on("change", function (d) {
 
+// showSelectedPCN() is fired any time the select changes
+d3.select("#select_pcn_x_button").on("change", function (d) {
   showSelectedPCN()
-
  });
-
-
 
 }); // pcn data load scope

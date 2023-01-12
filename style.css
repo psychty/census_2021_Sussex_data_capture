@@ -207,6 +207,13 @@ td:nth-child(1) {
   background-color: antiquewhite;
 }
 
+#map_lsoa_pcn_footprint {
+  height: 480px;
+  /* width: 80%; */
+  margin: auto;
+  background-color: antiquewhite;
+}
+
 #map_age_population {
   height: 480px;
   /* width: 80%; */
