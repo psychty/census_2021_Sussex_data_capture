@@ -1,8 +1,11 @@
-// ! PCN 40
-pcn_40_group = L.layerGroup();
-pcn_40 = PCNs[40 - 1]
-var pcn_40_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
-         filter: function(feat) { return feat.properties.PCN_Name === pcn_40; }
+
+
+for (var i = 1; i <= Sussex_pcn_summary_df.length; i++) {
+
+this['pcn_' + i + '_group'] = L.layerGroup();
+this['pcn_' + i] = PCNs[i - 1]
+this['pcn_' + i + '_boundary'] = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === this['pcn_' + i]; }
         , style: reg_pop_style})
       //  .addTo(pcn_x_boundary)
        .bindPopup(function (layer) {
@@ -20,28 +23,33 @@ var pcn_40_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
             '</Strong> patients).'
           );
        })
-pcn_40_boundary.addTo(pcn_40_group)
-pcn_gp_location_40 = GP_location.filter(function (d) {
-  return d.PCN_Name == pcn_40;
+
+// Add this to the layerGroup      
+this['pcn_' + i + '_boundary'].addTo(this['pcn_' + i + '_group'])
+
+// filter GP markers
+this['pcn_gp_location_' + i] = GP_location.filter(function (d) {
+  return d.PCN_Name == this['pcn_' + i];
 });
 
-for (var i = 0; i < pcn_gp_location_40.length; i++) {
-new L.circleMarker([pcn_gp_location_40[i]['latitude'], pcn_gp_location_40[i]['longitude']],{
+// This loops through the Local_GP_location dataframe and plots a marker for every record.
+for (var k = 0; k < this['pcn_gp_location_' + i].length; i++) {
+new L.circleMarker([this['pcn_gp_location_' + i][k]['latitude'], this['pcn_gp_location_' + i][k]['longitude']],{
      radius: 8,
      weight: .5,
      fillColor: gp_marker_colour,
      color: '#000',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
-    pcn_gp_location_40[i]['ODS_Code'] + 
+    this['pcn_gp_location_' + i][k]['ODS_Code'] + 
     ' ' + 
-    pcn_gp_location_40[i]['ODS_Name'] + 
+    this['pcn_gp_location_' + i][k]['ODS_Name'] + 
     '</Strong><br><br>This practice is part of the ' + 
-    pcn_gp_location_40[i]['PCN_Name'] +
+    this['pcn_gp_location_' + i][k]['PCN_Name'] +
     '. There are <Strong>' + 
-    d3.format(',.0f')(pcn_gp_location_40[i]['Patients']) + 
+    d3.format(',.0f')(this['pcn_gp_location_' + i][k]['Patients']) + 
     '</Strong> patients registered to this practice.' )
-   .addTo(pcn_40_group) // These markers are directly added to the layer group
+   .addTo(this['pcn_' + i + '_group']) // These markers are directly added to the layer group
   };
 
-pcn_40_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initialise on the page     
+}
