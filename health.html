@@ -7,7 +7,7 @@
     <title>Census 2021 - Sussex PH</title>
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+      href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
       ,
       type="text/css"
     />
@@ -18,27 +18,37 @@
   </head>
    <body>
     <header>
-        <nav>
-          <h4 class = 'title'>Census 21 in Sussex</h4>
-          <ul class="nav-links" id="nav-links">
-            <li>
-              <a data-page="home" href="./index.html">Home</a>
+      <nav>
+        <h4 class = 'title'>Census 21 in Sussex</h4>
+        <ul class="nav-links" id="nav-links">
+          <li>
+            <a data-page="home" href="./index.html">Home</a>
+          </li>
+          <li>
+            <a data-page="health_section" class = 'highlighted' href="./health.html">Health</a>
+          </li>
+          <li>
+            <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
+          </li>
+          <li>
+              <a data-page="pcn_section" href="./pcn.html">Primary Care Network View</a>
             </li>
-            <li>
-              <a data-page="health_section" class = highlighted href="./health.html">Health</a>
-            </li>
-            <li>
-              <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
-            </li>
-            <li>
-              <a data-page="boundary_section" href="./boundary_change.html">Changes in boundaries</a>
-            </li>
-          </ul>
-          <p style="text-align: right; padding-right: 25px" id="update_date_nav_label"></p>
-        </nav>
-      </header>
+          <li>
+            <a data-page="boundary_section" href="./boundary_change.html">Changes in boundaries</a>
+          </li>
+        </ul>
+        <p style="text-align: right; padding-right: 25px" id="update_date_nav_label"></p>
+      </nav>
+    </header>
      
-      <p class = 'good_to_know'>Note: this page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p>
+      <section id = 'note'>
+        <div class="good_to_know">
+        <h3>Notes</h3>
+        <p>This page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p>
+        <p>This page displays a lot of data and may take a few moments to load.</p>
+        </div>
+        </section>
+            
         
       <section id = 'health_intro'>
         <h1>Health in Sussex</h1>
@@ -47,7 +57,7 @@
       </section>
          
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-      <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+      <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
       <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
       <script src="leaflet-side-by-side.js"></script>
