@@ -36,11 +36,17 @@ $.ajax({
    },
 });
 
-d3.select("#pcn_summary_text_2").html(function (d) {
-  return (
-      Sussex_pcn_summary_text_1
-  );
+$.ajax({
+  url: "./outputs/LSOA_pcns_summary_text_1.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    LSOA_pcns_summary_text_1 = data;},
+  error: function (xhr) {
+    alert('Sussex PCN Text not available - pcn' + xhr.statusText);
+  },
 });
+
 
 $.ajax({
   url: "./outputs/GP_location_data.json",
@@ -64,6 +70,47 @@ $.ajax({
       alert('Sussex PCN summary not available - pcn' + xhr.statusText);
     },
  });
+
+ var LTLA_geojson = $.ajax({
+  url: "./outputs/sussex_ltlas.geojson",
+  dataType: "json",
+  success: console.log("LTLA boundary data successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+
+// This is the sum of the Patients in the Sussex_pcn_summary_df
+var total_pcn_population = Sussex_pcn_summary_df.map(i=>i.Total_patients).reduce((a,b)=>a+b);
+var total_pcn_patients_with_no_lsoa = Sussex_pcn_summary_df.map(i=>i.Patients_with_no_LSOA).reduce((a,b)=>a+b);
+
+console.log(total_pcn_population)
+
+d3.select("#pcn_summary_text_2").html(function (d) {
+  return (  
+    Sussex_pcn_summary_text_1 +
+      ' There are a total of ' +
+      d3.format(',.0f')(total_pcn_population) + 
+      ' patients registered to one of these Sussex networks.'
+  );
+});
+
+d3.select("#pcn_summary_text_3").html(function (d) {
+  return (  
+      LSOA_pcns_summary_text_1
+  );
+});
+
+d3.select("#pcn_summary_text_4").html(function (d) {
+  return (  
+      'The coverage of residential information for GP registered populations is very high. However, residential location data is not available for a total of ' +
+      d3.format(',.0f')(total_pcn_patients_with_no_lsoa) + 
+      ' patients registered to a Sussex PCN with no LSOA information. This represents ' +
+      d3.format('.2%')(total_pcn_patients_with_no_lsoa / total_pcn_population) +
+      ' of all patients registered to one of these Sussex PCNs.'
+  );
+});
 
  var PCNs = d3
  .map(Sussex_pcn_summary_df, function (d) {
@@ -96,7 +143,17 @@ d3.select("#select_pcn_x_button")
     return d;
   });
 
-// Map
+// Map data
+var PCN_footprint_geojson = $.ajax({
+  url: "./outputs/sussex_pcn_footprints_plus_five.geojson",
+  dataType: "json",
+  success: console.log("LSOA (2011) boundary data for PCN reach successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+// Map data
 var PCN_ReachLSOA11_geojson = $.ajax({
     url: "./outputs/total_pcn_lsoa_level_reach_plus_five.geojson",
     dataType: "json",
@@ -108,7 +165,7 @@ var PCN_ReachLSOA11_geojson = $.ajax({
 
 $.when(PCN_ReachLSOA11_geojson).done(function () {
 
-function getpatient_countColour(d) {
+  function getpatient_countColour(d) {
     return d > 2000 ? '#440154' :
            d > 1800  ? '#482173' :
            d > 1600  ? '#433E85' :
@@ -135,6 +192,25 @@ function reg_pop_style(feature) {
    };
   }
 
+  function style_ltla(feature) {
+    return {
+      fill: false,
+      color: 'maroon',
+      weight: 1.5,
+      fillOpacity: 0,
+    };
+  }
+
+  
+  function style_footprint(feature) {
+    return {
+      fill: false,
+      color: '#999900',
+      weight: 1.5,
+      fillOpacity: 0,
+    };
+  }
+
 // Generic Map parameters
 
 // This tile layer is black and white
@@ -150,6 +226,20 @@ var map_lsoa_pcn_reach = L.map("map_pcn_reach_lsoa");
 
 // add the background and attribution to the map
 L.tileLayer(tileUrl, { attribution })
+.addTo(map_lsoa_pcn_reach);
+
+var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: style_ltla })
+.bindPopup(function (layer) {
+   return (
+     "Local authority: <Strong>" +
+     layer.feature.properties.LAD22NM +
+     "</Strong><br>Population: <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Population) +
+     '</Strong><br>Population per square kilometre: <Strong>' +
+     d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+     'km<sup>2</sup> </Strong>.'
+   );
+})
 .addTo(map_lsoa_pcn_reach);
 
 // // We use the same legend (and it is built independent of data) so add this now too.
@@ -174,6 +264,14 @@ legend_map_population.addTo(map_lsoa_pcn_reach);
 
 L.control.scale().addTo(map_lsoa_pcn_reach);
 
+var baseMaps_map_population = {
+   "Show Local Authorities": ltla_boundary,
+  };
+
+ L.control
+ .layers(null, baseMaps_map_population, { collapsed: false, position: 'topright'})
+ .addTo(map_lsoa_pcn_reach);
+
 // ! filter chosen PCN LSOA data 
 
 // This is what we'll need to update on select change
@@ -196,7 +294,6 @@ pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
 });
 
 // ! Build the 40 layers (one for each PCN, with lsoa layers and gp practices)
-
 
 // for (var i = 1; i <= Sussex_pcn_summary_df.length; i++) {
 
@@ -234,9 +331,9 @@ pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
 //   for (var k = 0; k < this['pcn_gp_location_' + i].length; i++) {
 //   new L.circleMarker([this['pcn_gp_location_' + i][k]['latitude'], this['pcn_gp_location_' + i][k]['longitude']],{
 //        radius: 8,
-//        weight: .5,
+//        weight: .75,
 //        fillColor: gp_marker_colour,
-//        color: '#000',
+//        color: '#fff',
 //        fillOpacity: 1})
 //       .bindPopup('<Strong>' + 
 //       this['pcn_gp_location_' + i][k]['ODS_Code'] + 
@@ -254,7 +351,6 @@ pcn_x_summary = Sussex_pcn_summary_df.filter(function (d) {
 // console.log(this.pcn_1_group)
 
 // this.pcn_1_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initialise on the page     
-
 
 // ! PCN 1
 pcn_1_group = L.layerGroup();
@@ -278,11 +374,7 @@ pcn_1_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
             '</Strong> patients).'
           );
        })
-
-// Add this to the layerGroup      
-pcn_1_boundary.addTo(pcn_1_group)
-
-// filter GP markers
+pcn_1_boundary.addTo(pcn_1_group)       
 pcn_gp_location_1 = GP_location.filter(function (d) {
   return d.PCN_Name == pcn_1;
 });
@@ -291,9 +383,9 @@ pcn_gp_location_1 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_1.length; i++) {
 new L.circleMarker([pcn_gp_location_1[i]['latitude'], pcn_gp_location_1[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_1[i]['ODS_Code'] + 
@@ -307,9 +399,7 @@ new L.circleMarker([pcn_gp_location_1[i]['latitude'], pcn_gp_location_1[i]['long
    .addTo(pcn_1_group) // These markers are directly added to the layer group
   };
 
-pcn_1_group.addTo(map_lsoa_pcn_reach) // This is our first PCN we want to initialise on the page     
-
-// ! PCN 2 from two onwards we do not need to add this to the map
+// ! PCN 2  
 pcn_2_group = L.layerGroup();
 pcn_2 = PCNs[2 - 1]
 pcn_2_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
@@ -340,9 +430,9 @@ pcn_gp_location_2 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_2.length; i++) {
 new L.circleMarker([pcn_gp_location_2[i]['latitude'], pcn_gp_location_2[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_2[i]['ODS_Code'] + 
@@ -386,9 +476,9 @@ pcn_gp_location_3 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_3.length; i++) {
 new L.circleMarker([pcn_gp_location_3[i]['latitude'], pcn_gp_location_3[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_3[i]['ODS_Code'] + 
@@ -436,9 +526,9 @@ pcn_gp_location_4 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_4.length; i++) {
 new L.circleMarker([pcn_gp_location_4[i]['latitude'], pcn_gp_location_4[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_4[i]['ODS_Code'] + 
@@ -482,9 +572,9 @@ new L.circleMarker([pcn_gp_location_4[i]['latitude'], pcn_gp_location_4[i]['long
   for (var i = 0; i < pcn_gp_location_5.length; i++) {
   new L.circleMarker([pcn_gp_location_5[i]['latitude'], pcn_gp_location_5[i]['longitude']],{
        radius: 8,
-       weight: .5,
+       weight: .75,
        fillColor: gp_marker_colour,
-       color: '#000',
+       color: '#fff',
        fillOpacity: 1})
       .bindPopup('<Strong>' + 
       pcn_gp_location_5[i]['ODS_Code'] + 
@@ -528,9 +618,9 @@ pcn_gp_location_6 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_6.length; i++) {
 new L.circleMarker([pcn_gp_location_6[i]['latitude'], pcn_gp_location_6[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_6[i]['ODS_Code'] + 
@@ -574,9 +664,9 @@ pcn_gp_location_7 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_7.length; i++) {
 new L.circleMarker([pcn_gp_location_7[i]['latitude'], pcn_gp_location_7[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_7[i]['ODS_Code'] + 
@@ -620,9 +710,9 @@ pcn_gp_location_8 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_8.length; i++) {
 new L.circleMarker([pcn_gp_location_8[i]['latitude'], pcn_gp_location_8[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_8[i]['ODS_Code'] + 
@@ -666,9 +756,9 @@ pcn_gp_location_9 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_9.length; i++) {
 new L.circleMarker([pcn_gp_location_9[i]['latitude'], pcn_gp_location_9[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_9[i]['ODS_Code'] + 
@@ -712,9 +802,9 @@ pcn_gp_location_10 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_10.length; i++) {
 new L.circleMarker([pcn_gp_location_10[i]['latitude'], pcn_gp_location_10[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_10[i]['ODS_Code'] + 
@@ -758,9 +848,9 @@ pcn_gp_location_11 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_11.length; i++) {
 new L.circleMarker([pcn_gp_location_11[i]['latitude'], pcn_gp_location_11[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_11[i]['ODS_Code'] + 
@@ -804,9 +894,9 @@ pcn_gp_location_12 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_12.length; i++) {
 new L.circleMarker([pcn_gp_location_12[i]['latitude'], pcn_gp_location_12[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_12[i]['ODS_Code'] + 
@@ -850,9 +940,9 @@ pcn_gp_location_13 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_13.length; i++) {
 new L.circleMarker([pcn_gp_location_13[i]['latitude'], pcn_gp_location_13[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_13[i]['ODS_Code'] + 
@@ -896,9 +986,9 @@ pcn_gp_location_14 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_14.length; i++) {
 new L.circleMarker([pcn_gp_location_14[i]['latitude'], pcn_gp_location_14[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_14[i]['ODS_Code'] + 
@@ -942,9 +1032,9 @@ pcn_gp_location_15 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_15.length; i++) {
 new L.circleMarker([pcn_gp_location_15[i]['latitude'], pcn_gp_location_15[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_15[i]['ODS_Code'] + 
@@ -988,9 +1078,9 @@ pcn_gp_location_16 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_16.length; i++) {
 new L.circleMarker([pcn_gp_location_16[i]['latitude'], pcn_gp_location_16[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_16[i]['ODS_Code'] + 
@@ -1034,9 +1124,9 @@ pcn_gp_location_17 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_17.length; i++) {
 new L.circleMarker([pcn_gp_location_17[i]['latitude'], pcn_gp_location_17[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_17[i]['ODS_Code'] + 
@@ -1080,9 +1170,9 @@ pcn_gp_location_18 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_18.length; i++) {
 new L.circleMarker([pcn_gp_location_18[i]['latitude'], pcn_gp_location_18[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_18[i]['ODS_Code'] + 
@@ -1126,9 +1216,9 @@ pcn_gp_location_19 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_19.length; i++) {
 new L.circleMarker([pcn_gp_location_19[i]['latitude'], pcn_gp_location_19[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_19[i]['ODS_Code'] + 
@@ -1172,9 +1262,9 @@ pcn_gp_location_20 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_20.length; i++) {
 new L.circleMarker([pcn_gp_location_20[i]['latitude'], pcn_gp_location_20[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_20[i]['ODS_Code'] + 
@@ -1218,9 +1308,9 @@ pcn_gp_location_21 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_21.length; i++) {
 new L.circleMarker([pcn_gp_location_21[i]['latitude'], pcn_gp_location_21[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_21[i]['ODS_Code'] + 
@@ -1264,9 +1354,9 @@ pcn_gp_location_22 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_22.length; i++) {
 new L.circleMarker([pcn_gp_location_22[i]['latitude'], pcn_gp_location_22[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_22[i]['ODS_Code'] + 
@@ -1310,9 +1400,9 @@ pcn_gp_location_23 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_23.length; i++) {
 new L.circleMarker([pcn_gp_location_23[i]['latitude'], pcn_gp_location_23[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_23[i]['ODS_Code'] + 
@@ -1356,9 +1446,9 @@ pcn_gp_location_24 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_24.length; i++) {
 new L.circleMarker([pcn_gp_location_24[i]['latitude'], pcn_gp_location_24[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_24[i]['ODS_Code'] + 
@@ -1402,9 +1492,9 @@ pcn_gp_location_25 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_25.length; i++) {
 new L.circleMarker([pcn_gp_location_25[i]['latitude'], pcn_gp_location_25[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_25[i]['ODS_Code'] + 
@@ -1448,9 +1538,9 @@ pcn_gp_location_26 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_26.length; i++) {
 new L.circleMarker([pcn_gp_location_26[i]['latitude'], pcn_gp_location_26[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_26[i]['ODS_Code'] + 
@@ -1494,9 +1584,9 @@ pcn_gp_location_27 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_27.length; i++) {
 new L.circleMarker([pcn_gp_location_27[i]['latitude'], pcn_gp_location_27[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_27[i]['ODS_Code'] + 
@@ -1540,9 +1630,9 @@ pcn_gp_location_28 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_28.length; i++) {
 new L.circleMarker([pcn_gp_location_28[i]['latitude'], pcn_gp_location_28[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_28[i]['ODS_Code'] + 
@@ -1586,9 +1676,9 @@ pcn_gp_location_29 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_29.length; i++) {
 new L.circleMarker([pcn_gp_location_29[i]['latitude'], pcn_gp_location_29[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_29[i]['ODS_Code'] + 
@@ -1632,9 +1722,9 @@ pcn_gp_location_30 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_30.length; i++) {
 new L.circleMarker([pcn_gp_location_30[i]['latitude'], pcn_gp_location_30[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_30[i]['ODS_Code'] + 
@@ -1678,9 +1768,9 @@ pcn_gp_location_31 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_31.length; i++) {
 new L.circleMarker([pcn_gp_location_31[i]['latitude'], pcn_gp_location_31[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_31[i]['ODS_Code'] + 
@@ -1724,9 +1814,9 @@ pcn_gp_location_32 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_32.length; i++) {
 new L.circleMarker([pcn_gp_location_32[i]['latitude'], pcn_gp_location_32[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_32[i]['ODS_Code'] + 
@@ -1770,9 +1860,9 @@ pcn_gp_location_33 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_33.length; i++) {
 new L.circleMarker([pcn_gp_location_33[i]['latitude'], pcn_gp_location_33[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_33[i]['ODS_Code'] + 
@@ -1816,9 +1906,9 @@ pcn_gp_location_34 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_34.length; i++) {
 new L.circleMarker([pcn_gp_location_34[i]['latitude'], pcn_gp_location_34[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_34[i]['ODS_Code'] + 
@@ -1862,9 +1952,9 @@ pcn_gp_location_35 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_35.length; i++) {
 new L.circleMarker([pcn_gp_location_35[i]['latitude'], pcn_gp_location_35[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_35[i]['ODS_Code'] + 
@@ -1908,9 +1998,9 @@ pcn_gp_location_36 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_36.length; i++) {
 new L.circleMarker([pcn_gp_location_36[i]['latitude'], pcn_gp_location_36[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_36[i]['ODS_Code'] + 
@@ -1954,9 +2044,9 @@ pcn_gp_location_37 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_37.length; i++) {
 new L.circleMarker([pcn_gp_location_37[i]['latitude'], pcn_gp_location_37[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_37[i]['ODS_Code'] + 
@@ -2000,9 +2090,9 @@ pcn_gp_location_38 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_38.length; i++) {
 new L.circleMarker([pcn_gp_location_38[i]['latitude'], pcn_gp_location_38[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_38[i]['ODS_Code'] + 
@@ -2046,9 +2136,9 @@ pcn_gp_location_39 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_39.length; i++) {
 new L.circleMarker([pcn_gp_location_39[i]['latitude'], pcn_gp_location_39[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_39[i]['ODS_Code'] + 
@@ -2092,9 +2182,9 @@ pcn_gp_location_40 = GP_location.filter(function (d) {
 for (var i = 0; i < pcn_gp_location_40.length; i++) {
 new L.circleMarker([pcn_gp_location_40[i]['latitude'], pcn_gp_location_40[i]['longitude']],{
      radius: 8,
-     weight: .5,
+     weight: .75,
      fillColor: gp_marker_colour,
-     color: '#000',
+     color: '#fff',
      fillOpacity: 1})
     .bindPopup('<Strong>' + 
     pcn_gp_location_40[i]['ODS_Code'] + 
@@ -2121,9 +2211,6 @@ d3.select("#pcn_reach_title_1").html(function (d) {
   '; Registered population residential neighbourhoods (LSOAs); LSOAs with five or more registered patients.');
 });
 
-var selected_pcn_id = 'pcn_' + selected_pcn_id_lookup(Selected_pcn_area_option) + '_group';
-console.log(selected_pcn_id)
-
 // We can make sure every layergroup is off, and then turn on only the selected one
 
 // ! use a loop to remove all groups from the leaflet map
@@ -2149,4 +2236,54 @@ d3.select("#select_pcn_x_button").on("change", function (d) {
   showSelectedPCN()
  });
 
+
+
+// Create a leaflet map (L.map) in the element map_1_id
+var map_pcn_footprint = L.map("map_lsoa_pcn_footprint");
+
+// add the background and attribution to the map
+L.tileLayer(tileUrl, { attribution })
+.addTo(map_pcn_footprint);
+
+var pcn_footprint = L.geoJSON(PCN_footprint_geojson.responseJSON, { style: style_footprint })
+.bindPopup(function (layer) {
+   return (
+     "PCN: <Strong>" 
+    //  layer.feature.properties.LAD22NM +
+    //  "</Strong><br>Population: <Strong>" +
+    //  d3.format(',.0f')(layer.feature.properties.Population) +
+    //  '</Strong><br>Population per square kilometre: <Strong>' +
+    //  d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+    //  'km<sup>2</sup> </Strong>.'
+   );
+})
+.addTo(map_pcn_footprint);
+
+var ltla_boundary_footprint = L.geoJSON(LTLA_geojson.responseJSON, { style: style_ltla })
+.bindPopup(function (layer) {
+   return (
+     "Local authority: <Strong>" +
+     layer.feature.properties.LAD22NM +
+     "</Strong><br>Population: <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Population) +
+     '</Strong><br>Population per square kilometre: <Strong>' +
+     d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
+     'km<sup>2</sup> </Strong>.'
+   );
+})
+.addTo(map_pcn_footprint);
+
+map_pcn_footprint.fitBounds(pcn_footprint.getBounds(), {maxZoom: 13});
+
+var baseMaps_map_footprint = {
+  "Show PCN footprints": pcn_footprint,
+  "Show Local Authorities": ltla_boundary_footprint,
+ };
+
+L.control
+.layers(null, baseMaps_map_footprint, { collapsed: false, position: 'topright'})
+.addTo(map_pcn_footprint);
+
 }); // pcn data load scope
+
+

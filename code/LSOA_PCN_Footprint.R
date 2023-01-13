@@ -8,16 +8,6 @@ output_directory <- '~/Repositories/census_2021_Sussex_data_capture/outputs'
 
 areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing') 
 
-options(scipen = 999)
-
-# We will need this a bit later 
-
-# This is extracting a geojson format file from open geography portal. It has geometry information as well as the information we need and is a spatial features object. By adding the st_drop_geometry() function we turn this into a dataframe
-lsoa_change_df <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA11_LSOA21_LAD22_EW_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
-  select(LSOA11CD = F_LSOA11CD, LSOA11NM, LSOA21CD, LSOA21NM, LTLA = LAD22NM, Change = CHGIND) %>% 
-  st_drop_geometry() %>% 
-  mutate(Change = ifelse(Change == 'M', 'Merged', ifelse(Change == 'S', 'Split', ifelse(Change == 'X', 'Redefined', ifelse(Change == 'U', 'Unchanged', NA)))))
-
 # GP Practice registered populations ####
 
 # October 2022 is the most recent release with an LSOA file. These are usually released once per quarter. We may find that on the January release (due on 12th Jan) this can be updated.
@@ -38,12 +28,10 @@ gp_mapping <- read_csv(unique(grep('gp-reg-pat-prac-map.csv', calls_patient_numb
 Extract_date = unique(gp_mapping$Extract_date)
 
 # Geolocating practices ####
-
 gp_mapping_sussex <- gp_mapping %>% 
   filter(str_detect(ICB_Name, '^NHS Sussex'))
 
 for(i in 1:length(unique(gp_mapping_sussex$Practice_postcode))){
-  
   if(i == 1){lookup_result <- data.frame(postcode = character(), longitude = double(), latitude = double())
   }
   
@@ -58,27 +46,6 @@ for(i in 1:length(unique(gp_mapping_sussex$Practice_postcode))){
 gp_locations <- gp_mapping_sussex %>%
   rename(postcode = Practice_postcode) %>% 
   left_join(lookup_result, by = 'postcode')  
-
-# leaflet() %>% 
-#   addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
-#              position='topright') %>% 
-#   addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
-#   addCircleMarkers(lng = gp_locations$longitude,
-#                    lat = gp_locations$latitude,
-#                    radius = 4,
-#                    color = '#000000',
-#                    fillColor = 'purple',
-#                    stroke = TRUE,
-#                    weight = .75,
-#                    fillOpacity = 1,
-#                    popup = gp_locations$ODS_Name,
-#                    group = 'Show GP practice') %>%
-#   addScaleBar(position = "bottomleft") %>%
-#   addMeasure(position = 'bottomleft',
-#              primaryAreaUnit = 'sqmiles',
-#              primaryLengthUnit = 'miles')
-
-
 
 # Now we know that the file we want contains the string 'gp-reg-pat-prac-quin-age.csv' we can use that in the read_csv call.
 # I have also tidied it a little bit by renaming the Sex field and giving R some meta data about the order in which the age groups should be
@@ -108,24 +75,17 @@ sussex_gp_total_pop <- latest_gp_total_pop %>%
 sussex_PCN_total_pop <- latest_PCN_total_pop %>% 
   filter(PCN_Name %in% sussex_gp_total_pop$PCN_Name)
 
-sussex_PCN_total_pop %>% 
-  ungroup() %>% 
-  mutate(PCN_Number = row_number()) %>% 
-  toJSON() %>% 
-  write_lines(paste0(output_directory,'/Sussex_PCN_summary_df.json'))
-
 paste0('In the NHS Sussex ICB footprint, there are ', format(nrow(sussex_PCN_total_pop), big.mark = ','), ' distinct primary care networks in England (including ', numbers_to_words(nrow(subset(sussex_PCN_total_pop, PCN_Code == 'U'))), ' practices which are not currently allocated to a PCN).') %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory,'/Sussex_pcn_summary_text_1.json'))
 
 # Combine population data with the PCN_data table ####
-
 practices_by_pcn <- latest_gp_total_pop %>% 
   select(ODS_Code, ODS_Name, PCN_Code, PCN_Name) %>% 
   unique() %>% 
   group_by(PCN_Code, PCN_Name) %>% 
   summarise(Practices = n()) #%>% 
-  # mutate(Practices = str_to_title(numbers_to_words(Practices)))
+# mutate(Practices = str_to_title(numbers_to_words(Practices)))
 
 # Residential area information
 download.file(unique(grep('gp-reg-pat-prac-lsoa-male-female', calls_patient_numbers_webpage, value = T)),
@@ -146,7 +106,21 @@ lsoa_pcn_df <- lsoa_gp_df %>%
   group_by(LSOA11CD, PCN_Code, PCN_Name) %>% 
   summarise(Patients = sum(Patients, na.rm = TRUE))
 
-# lsoa_x <- lsoa_gp_df %>% 
+no_lsoa_pcn_df <- sussex_lsoa_df %>% 
+  group_by(PCN_Name) %>% 
+  filter(LSOA11CD == 'NO2011' | str_detect(LSOA11CD, '^W')) %>% 
+  summarise(Patients_with_no_LSOA = sum(Patients)) 
+  
+sussex_PCN_total_pop %>% 
+  left_join(no_lsoa_pcn_df, by = 'PCN_Name') %>% 
+  ungroup() %>% 
+  arrange(PCN_Name) %>%
+  mutate(PCN_Number = row_number()) %>% 
+  mutate(Patients_with_no_LSOA = replace_na(Patients_with_no_LSOA, 0)) %>%
+  toJSON() %>% 
+  write_lines(paste0(output_directory,'/Sussex_PCN_summary_df.json'))
+
+ # lsoa_x <- lsoa_gp_df %>% 
   # filter(LSOA11CD == 'E01031611') 
 
 # lsoa_x_b <- lsoa_pcn_df %>% 
@@ -276,3 +250,92 @@ geojson_write(ms_simplify(geojson_json(total_pcn_reach_json), keep = 0.5), file 
 # LSOA view - which PCN should a single LSOA be assigned to based on its residents (mutually exclusive boundaries)
 # This could also be the basis for the census data
 
+# sussex_pcn_reach %>% 
+#   select(LSOA11CD) %>%
+#   unique() %>% 
+#   View()
+
+# Any LSOA in England where our Sussex PCNs have at least one registered patient.
+sussex_lsoa_df <- lsoa_pcn_df %>% 
+  filter(LSOA11CD %in% unique(sussex_pcn_reach$LSOA11CD)) 
+
+sussex_pcn_reach_five_plus <- sussex_pcn_reach %>% 
+  filter(Patients >= 5)
+
+# Any LSOA where our PCNs have at least five registered patients
+sussex_lsoa_df_plus_five_patients <- lsoa_pcn_df %>% 
+  filter(LSOA11CD %in% unique(sussex_pcn_reach_five_plus$LSOA11CD))
+
+length(setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2021'))
+  
+paste0('There are ', format(length(setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2011')), big.mark = ','), ' LSOAs where the Sussex PCNs have five or more registered patients. Sussex, as at the 2011 Census from which these LSOAs are formed, has 999 LSOAs.') %>%
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/LSOA_pcns_summary_text_1.json'))
+  
+# Sussex boundary
+
+total_breadth_sussex_pcn_all_patients <- lsoa_2011_boundaries_spdf %>% 
+  filter(LSOA11CD %in% setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2011')) %>% 
+  gUnaryUnion()
+
+leaflet() %>%
+    addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
+               position='topright') %>%
+    addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
+  addPolygons(data = total_breadth_sussex_pcn_all_patients,
+              stroke = TRUE,
+              smoothFactor = 0.2,
+              fillOpacity = NULL,
+              color = 'maroon')
+
+
+sussex_lsoa_df %>% 
+  ungroup() %>% 
+  select(PCN_Name) %>% 
+  unique() %>% 
+  nrow()
+
+# Here, the denominator is all LSOA residents registered to a practice (aggregated to PCN level).
+LSOA_based_PCN_df <- sussex_lsoa_df %>% 
+  group_by(LSOA11CD) %>% 
+  mutate(Proportion_residents_to_PCN = Patients / sum(Patients)) %>% 
+  arrange(LSOA11CD, desc(Proportion_residents_to_PCN)) %>% 
+  slice(1) %>% 
+  filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% 
+  ungroup()
+
+
+sussex_pcn_footprints <- lsoa_2011_boundaries_spdf %>% 
+  filter(LSOA11CD %in% LSOA_based_PCN_df$LSOA11CD) %>%
+  left_join(LSOA_based_PCN_df, by = 'LSOA11CD')
+
+sussex_pcn_footprints <- gUnaryUnion(sussex_pcn_footprints, id = sussex_pcn_footprints@data$PCN_Name)
+
+plot(PCN_boundary)
+plot(lsoa_2011_boundaries_spdf)
+
+leaflet() %>%
+  addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
+             position='topright') %>%
+  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
+  addPolygons(data = sussex_pcn_footprints,
+              stroke = TRUE,
+              smoothFactor = 0.2,
+              fillOpacity = NULL,
+              color = 'maroon')
+
+
+df <- data.frame(ID = character())
+
+# Get the IDs of spatial polygon
+for (i in sussex_pcn_footprints@polygons ) { df <- rbind(df, data.frame(ID = i@ID, stringsAsFactors = FALSE))  }
+
+# and set rowname = ID
+row.names(sussex_pcn_footprints) <- df$ID
+
+# Then use df as the second argument to the spatial dataframe conversion function:
+sussex_pcn_footprints_json <- SpatialPolygonsDataFrame(sussex_pcn_footprints, sussex_pcn_footprints@data)  
+
+geojson_write(ms_simplify(geojson_json(sussex_pcn_footprints), keep = 0.5), file = paste0(output_directory, '/sussex_pcn_footprints_plus_five.geojson'))
+
+          

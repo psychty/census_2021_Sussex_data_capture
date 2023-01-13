@@ -56,35 +56,36 @@
         <p>As such, in the first map below we show the breadth of reach for each PCN across Sussex (and beyond in some cases). In the second map, we assign neighbourhoods to a single PCN to create footprints, which can be useful for planning purposes. It is this mutually exclusive footprint map that is used in the final section of this page to draw together relevant Census 2021 data.</p>
 
         <div class="good_to_know">
-            <h3>What is a PCN</h3>
+            <h3>What is a PCN?</h3>
             <p>PCNs are networks of general practices which attempt to integrate primary care with secondary and community services, and bridge a gap between general practice and emerging Integrated Care Systems (Fisher, Thorlby, & Alderwick, 2019). Each PCN is made up a group of a number of GP practices forming a network that covers approximately 30,000 to 50,000 patients.</p>
             <p id = pcn_summary_text_1></p>
             <p id = pcn_summary_text_2></p>
+            <p>The Sussex PCNs form part of the wider NHS Sussex Integrated Care System (ICS) and Integrated Care Board (ICB) which is statutory body responsible for planning and funding most NHS services in the area. See the <a href= 'https://www.kingsfund.org.uk/publications/integrated-care-systems-explained'>Kings Fund</a> for an explainer on Integrated Care Systems in England.</p>
             </div>
 
-<p>The first map shows publicly available data on the residential neighbourhoods where patients registered to a particular PCN (as well as those practices which are unallocated to a network) live according to their GP record. We have excluded LSOAs where less than five residents are registered to the PCN. The GP practices linked to this PCN are also included on the map.</p>
-<p>For many PCNs, such as Dean's and Central Brighton PCN, the neighbourhoods closest to the practices have the most patients. However, for others, such as Healthy Crawley PCN and Hastings & St Leonards PCN, where some of the neighbourhoods with the largest numbers of registered patients are further away from the GP practice main sites. <b>Note: some practices may have branch surgeries which are not included on these maps (which shows the main site of a practice only)</b>. Nonetheless, it shows the importance of considering the geographic spread of registered patients when commissioning and monitoring community based services.</p>
-<p>Change the PCN using the drop down menu below.</p>
+<p id = pcn_summary_text_3></p>
+<p>The first map shows publicly available data on the residential neighbourhoods where patients registered to a particular PCN (as well as those NHS Sussex ICB practices that were not recorded by NHS Digital as being allocated to a PCN) live according to their GP record. We have excluded LSOAs where less than five residents are registered to the PCN. The GP practices linked to this PCN are also included on the map.</p>
+<p id = pcn_summary_text_4></p>
+
+<p>Change the PCN using the drop down menu below. You can also toggle the Local Authority boundaries on and off using the check box in the top right corner of the map.</p>
 <select  title = 'PCN area selector' id="select_pcn_x_button"></select>
 <h4 id="pcn_reach_title_1"></h4>
 <div id = map_pcn_reach_lsoa></div>
+<p>For many PCNs, such as Dean's and Central Brighton PCN, the neighbourhoods closest to the practices have the most patients. However, for others, such as Healthy Crawley PCN and Hastings & St Leonards PCN, where some of the neighbourhoods with the largest numbers of registered patients are further away from the GP practice main sites. <b>Note: some practices may have branch surgeries which are not included on these maps (which shows the main site of a practice only)</b>. Nonetheless, it shows the importance of considering the geographic spread of registered patients when commissioning and monitoring community based services.</p>
+<p>You can also see from the map that PCN reach transcends what might be considered natural boundaries for local communities, outside of the district and boroughs of the practices as well as outside of the counties and into neighbouring Surrey and Kent. An example of this is Crawley Care Collaborative PCN which has a registered populaiton of more than 1,000 patients in neighbouring Chichester district, and Rural Rother PCN which has hundreds of registered patients in neighbourhoods in Kent.</p>
 
 <h1>Neighbourhood view - PCN footprints</h1>
 <p>The next map shows Sussex neighbourhoods assigned to a single PCN. Remember, these are mutually exclusive boundaries that do not consider the complete breadth of a PCNs reach (as in map one above). Here, each neighbourhood is assigned to the PCN from which the highest number of patients are registered.</p>
-<p class = 'good_to_know'>There are a few methods of assigning neighbourhoods to PCNs (see <a href = 'https://bjgpopen.org/content/6/4/BJGPO.2022.0037'>Beany et al. 2022</a> for an explanation of different methods).</p>
-<h4>Sussex LSOAs mapped to PCNs</h4>
+<p class = 'good_to_know'>There are a few methods of assigning neighbourhoods to PCNs (see <a href = 'https://bjgpopen.org/content/6/4/BJGPO.2022.0037'>Beaney et al. 2022</a> for an explanation of different methods).</p>
+<h4>Sussex LSOAs mapped to PCNs - PCN footprint</h4>
 <div id = map_lsoa_pcn_footprint></div>
 
-            <!-- <p>Each PCN boundary is made by aggregating Lower-layer Super Output Areas (LSOAs) together. However, it should be noted that GP practices do not have geographical boundaries and more than one GP practice can operate in the same local area. Whilst the map is useful to understand roughly the local areas that each PCN may cover, for planning purposes, in reality these boundaries are not mutually exclusive (e.g. there is some crossover as patients may use GP services outside of their local areas).</p> -->
-            <!-- <p>We have assigned every LSOA in West Sussex to one PCN based on data from the number of residents in the LSOA registered to each GP practice and some GP practices operate in areas assigned to other PCNs (e.g. Horsham Collaborative practices in Horsham Central areas). PCN boundaries can transcend district and borough boundaries and some even cross into neighbouring counties.</p> -->
-            <!-- <p>Each GP practice in West Sussex is shown as a dot which is also coloured by the PCN (see the key under the map). Click on one of these dots to see more. Note that GP practices often have patients on their lists who may travel far, even out of the district or county, to use their services. Some practices may be part of one PCN but physically located inside an area designated to a different PCN.</p> -->
-
-
+<!-- <p>We have assigned every LSOA in West Sussex to one PCN based on data from the number of residents in the LSOA registered to each GP practice and some GP practices operate in areas assigned to other PCNs (e.g. Horsham Collaborative practices in Horsham Central areas). PCN boundaries can transcend district and borough boundaries and some even cross into neighbouring counties.</p> -->
 
       </section>
          
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-      <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+      <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
       <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
       <script src="leaflet-side-by-side.js"></script>
