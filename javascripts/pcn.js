@@ -144,8 +144,8 @@ d3.select("#select_pcn_x_button")
   });
 
 // Map data
-var PCN_footprint_geojson = $.ajax({
-  url: "./outputs/sussex_pcn_footprints_plus_five.geojson",
+var PCN_footprint_Method_1_geojson = $.ajax({
+  url: "./outputs/sussex_pcn_footprints_method_1.geojson",
   dataType: "json",
   success: console.log("LSOA (2011) boundary data for PCN reach successfully loaded."),
   error: function (xhr) {
@@ -200,14 +200,14 @@ function reg_pop_style(feature) {
       fillOpacity: 0,
     };
   }
-
   
   function style_footprint(feature) {
     return {
-      fill: false,
-      color: '#999900',
+      fill: true,
+      fillColor: '#338cc7',
+      color: '#000',
       weight: 1.5,
-      fillOpacity: 0,
+      fillOpacity: 0.8,
     };
   }
 
@@ -2245,16 +2245,17 @@ var map_pcn_footprint = L.map("map_lsoa_pcn_footprint");
 L.tileLayer(tileUrl, { attribution })
 .addTo(map_pcn_footprint);
 
-var pcn_footprint = L.geoJSON(PCN_footprint_geojson.responseJSON, { style: style_footprint })
+var pcn_footprint = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { style: style_footprint })
 .bindPopup(function (layer) {
    return (
-     "PCN: <Strong>" 
-    //  layer.feature.properties.LAD22NM +
-    //  "</Strong><br>Population: <Strong>" +
-    //  d3.format(',.0f')(layer.feature.properties.Population) +
-    //  '</Strong><br>Population per square kilometre: <Strong>' +
-    //  d3.format(',.0f')(layer.feature.properties.Persons_per_square_kilometre) +
-    //  'km<sup>2</sup> </Strong>.'
+     "PCN: <Strong>"+
+     layer.feature.properties.PCN_Name +
+     "</Strong><br><br>This footprint covers a population of <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Patients) +
+     ' residents</Strong>. This is <Strong>' +
+     d3.format('.1%')(layer.feature.properties.Patients/layer.feature.properties.Total_patients) + '</Strong> of all patients registered to this PCN <Strong>(' +
+     d3.format(',.0f')(layer.feature.properties.Total_patients) +
+     ' patients). </Strong>.'
    );
 })
 .addTo(map_pcn_footprint);

@@ -106,7 +106,8 @@ lsoa_pcn_df <- lsoa_gp_df %>%
   group_by(LSOA11CD, PCN_Code, PCN_Name) %>% 
   summarise(Patients = sum(Patients, na.rm = TRUE))
 
-no_lsoa_pcn_df <- sussex_lsoa_df %>% 
+no_lsoa_pcn_df <- lsoa_pcn_df %>%
+  filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% 
   group_by(PCN_Name) %>% 
   filter(LSOA11CD == 'NO2011' | str_detect(LSOA11CD, '^W')) %>% 
   summarise(Patients_with_no_LSOA = sum(Patients)) 
@@ -246,18 +247,10 @@ geojson_write(ms_simplify(geojson_json(total_pcn_reach_json), keep = 0.5), file 
 #   left_join(pcn_reach_x_df, by = 'LSOA11CD') %>% 
 #   filter(Patients >= 5)
 
-
-# LSOA view - which PCN should a single LSOA be assigned to based on its residents (mutually exclusive boundaries)
-# This could also be the basis for the census data
-
 # sussex_pcn_reach %>% 
 #   select(LSOA11CD) %>%
 #   unique() %>% 
 #   View()
-
-# Any LSOA in England where our Sussex PCNs have at least one registered patient.
-sussex_lsoa_df <- lsoa_pcn_df %>% 
-  filter(LSOA11CD %in% unique(sussex_pcn_reach$LSOA11CD)) 
 
 sussex_pcn_reach_five_plus <- sussex_pcn_reach %>% 
   filter(Patients >= 5)
@@ -266,76 +259,116 @@ sussex_pcn_reach_five_plus <- sussex_pcn_reach %>%
 sussex_lsoa_df_plus_five_patients <- lsoa_pcn_df %>% 
   filter(LSOA11CD %in% unique(sussex_pcn_reach_five_plus$LSOA11CD))
 
-length(setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2021'))
-  
 paste0('There are ', format(length(setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2011')), big.mark = ','), ' LSOAs where the Sussex PCNs have five or more registered patients. Sussex, as at the 2011 Census from which these LSOAs are formed, has 999 LSOAs.') %>%
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_pcns_summary_text_1.json'))
-  
-# Sussex boundary
 
-total_breadth_sussex_pcn_all_patients <- lsoa_2011_boundaries_spdf %>% 
+total_breadth_sussex_pcn_five_plus <- lsoa_2011_boundaries_spdf %>% 
   filter(LSOA11CD %in% setdiff(unique(sussex_lsoa_df_plus_five_patients$LSOA11CD), 'NO2011')) %>% 
   gUnaryUnion()
 
+# Load LTLA boundaries #
+lad_boundaries_clipped_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFC_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(LAD22NM %in% c('Chichester', 'Brighton and Hove')) 
+
+lad_boundaries_full_extent_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2022_UK_BFE_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  filter(LAD22NM %in% areas & LAD22NM != 'Chichester' & LAD22NM != 'Brighton and Hove')
+
+lad_boundaries_sf <- rbind(lad_boundaries_clipped_sf, lad_boundaries_full_extent_sf)
+lad_boundaries_spdf <- as_Spatial(lad_boundaries_sf, IDs = lad_boundaries_sf$LAD22NM)
+
 leaflet() %>%
-    addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
-               position='topright') %>%
-    addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
-  addPolygons(data = total_breadth_sussex_pcn_all_patients,
+  addControl(paste0("<font size = '2px'><b>PCN reach: Any LSOA with at least five residents registered to a Sussex PCN; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
+             position='topright') %>%
+  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
+  addPolygons(data = total_breadth_sussex_pcn_five_plus,
               stroke = TRUE,
+              weight = 1,
               smoothFactor = 0.2,
               fillOpacity = NULL,
-              color = 'maroon')
+              color = 'maroon') %>%
+  addPolygons(data = lad_boundaries_spdf,
+              stroke = TRUE,
+              weight = 1,
+              smoothFactor = 0.2,
+              fillOpacity = NULL,
+              color = '#000000')
+  
+# There is one Sussex LSOA (E01031502) with less than the threshold (five plus) residents registered to a Sussex PCN.
 
+LSOA_x <- lsoa_gp_df %>% 
+  filter(LSOA11CD %in% 'E01031502')
+  
+# Cut here for Phill @ ESCC ####
 
-sussex_lsoa_df %>% 
-  ungroup() %>% 
-  select(PCN_Name) %>% 
-  unique() %>% 
-  nrow()
+# LSOA view - which PCN should a single LSOA be assigned to based on it's residents' registered PCN (mutually exclusive boundaries)
+# This could also be the basis for the census data
+
+# sussex_pcn_reach is any the information (for every England PCN) for LSOAs where there is at least one resident registered to a Sussex PCN.
+
+# Method 1 - All England PCNs - This method uses the LSOA and PCN data for every PCN in England to assign a neighbourhood to a PCN. If a PCN in a Sussex neighbourhood has more patients registered to a PCN in a neighbouring county, it is assigned to that PCN.
 
 # Here, the denominator is all LSOA residents registered to a practice (aggregated to PCN level).
-LSOA_based_PCN_df <- sussex_lsoa_df %>% 
-  group_by(LSOA11CD) %>% 
-  mutate(Proportion_residents_to_PCN = Patients / sum(Patients)) %>% 
-  arrange(LSOA11CD, desc(Proportion_residents_to_PCN)) %>% 
-  slice(1) %>% 
-  filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% 
+Method_1_LSOA_based_PCN_df <- lsoa_pcn_df %>% 
+  filter(LSOA11CD %in% sussex_pcn_reach$LSOA11CD) %>% # look for any LSOA from our Sussex PCN reach dataframe
+  filter(LSOA11CD != 'NO2011') %>% # Filter out the No2011 areas
+  group_by(LSOA11CD) %>% # Group by LSOA
+  mutate(Proportion_residents_to_PCN = Patients / sum(Patients)) %>% # As we have group_by(LSOA11CD) this will divide the number of patients by the total number of patients in that LSOA
+  arrange(LSOA11CD, desc(Proportion_residents_to_PCN)) %>% # Sort by descending proportion 
+  slice(1) %>% # Keep the highest proportion (again for each LSOA11CD)
+  filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% # Keep only those 
   ungroup()
 
+Method_1_LSOA_based_PCN_footprint <- lsoa_2011_boundaries_spdf %>% 
+  filter(LSOA11CD %in% Method_1_LSOA_based_PCN_df$LSOA11CD) %>%
+  left_join(Method_1_LSOA_based_PCN_df, by = 'LSOA11CD')
 
-sussex_pcn_footprints <- lsoa_2011_boundaries_spdf %>% 
-  filter(LSOA11CD %in% LSOA_based_PCN_df$LSOA11CD) %>%
-  left_join(LSOA_based_PCN_df, by = 'LSOA11CD')
+paste0('Method 1 results in the Unallocated Brighton Station Health Centre having no designated neighbourhoods in its footprint.')
+setdiff(unique(sussex_PCN_total_pop$PCN_Name), unique(Method_1_LSOA_based_PCN_footprint@data$PCN_Name))
 
-sussex_pcn_footprints <- gUnaryUnion(sussex_pcn_footprints, id = sussex_pcn_footprints@data$PCN_Name)
+# We need to create a single geojson file that has our PCN boundaries.
+for(i in 1:length(unique(Method_1_LSOA_based_PCN_footprint@data$PCN_Name))){
+  pcn_x <- unique(Method_1_LSOA_based_PCN_footprint@data$PCN_Name)[i]
+  
+  pcn_footprint_x_df <- Method_1_LSOA_based_PCN_footprint@data %>% 
+    filter(PCN_Name == pcn_x) %>% 
+    summarise(Patients = sum(Patients),
+              PCN_Code = unique(PCN_Code),
+              PCN_Name = unique(PCN_Name))
+  
+  pcn_x_footprint <-  Method_1_LSOA_based_PCN_footprint %>% 
+    filter(PCN_Name %in% pcn_x) %>% 
+    gUnaryUnion()
+  
+  assign(paste0('pcn_footprint_', i),  SpatialPolygonsDataFrame(pcn_x_footprint, pcn_footprint_x_df))
+  
+}
 
-plot(PCN_boundary)
-plot(lsoa_2011_boundaries_spdf)
+method_1_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3,  pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39) %>% 
+  select(-c(PCN_Code)) %>% 
+  left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
 
 leaflet() %>%
   addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
              position='topright') %>%
   addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
-  addPolygons(data = sussex_pcn_footprints,
+  addPolygons(data = method_1_footprint,
               stroke = TRUE,
               smoothFactor = 0.2,
               fillOpacity = NULL,
               color = 'maroon')
 
-
 df <- data.frame(ID = character())
 
 # Get the IDs of spatial polygon
-for (i in sussex_pcn_footprints@polygons ) { df <- rbind(df, data.frame(ID = i@ID, stringsAsFactors = FALSE))  }
+for (i in method_1_footprint@polygons ) { df <- rbind(df, data.frame(ID = i@ID, stringsAsFactors = FALSE))  }
 
 # and set rowname = ID
-row.names(sussex_pcn_footprints) <- df$ID
+row.names(method_1_footprint) <- df$ID
 
 # Then use df as the second argument to the spatial dataframe conversion function:
-sussex_pcn_footprints_json <- SpatialPolygonsDataFrame(sussex_pcn_footprints, sussex_pcn_footprints@data)  
+method_1_footprint_json <- SpatialPolygonsDataFrame(method_1_footprint, method_1_footprint@data)  
 
-geojson_write(ms_simplify(geojson_json(sussex_pcn_footprints), keep = 0.5), file = paste0(output_directory, '/sussex_pcn_footprints_plus_five.geojson'))
+geojson_write(ms_simplify(geojson_json(method_1_footprint_json), keep = 0.5), file = paste0(output_directory, '/sussex_pcn_footprints_method_1.geojson'))
 
           
