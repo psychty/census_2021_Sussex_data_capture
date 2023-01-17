@@ -31,7 +31,7 @@
               <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
             </li>
             <li>
-                <a data-page="pcn_section" class = 'highlighted' href="./pcn.html">Primary Care Network View</a>
+                <a data-page="pcn_section" class = 'highlighted' href="./pcn.html">Primary Care Network Footprints</a>
               </li>
             <li>
               <a data-page="boundary_section" href="./boundary_change.html">Changes in boundaries</a>
@@ -43,15 +43,17 @@
       <section id = 'note'>
         <div class="good_to_know">
         <h3>Notes</h3>
-        <p>This page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p>
+        <!-- <p>This page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p> -->
         <p>This page displays a lot of data and may take a few moments to load.</p>
+        <p>As at January 2023, the numbers of patients in each LSOA registered to GP practices data in the public domain is only available for 2011 LSOA boundaries. In time these should be updated to 2021 LSOA boundaries, but for the moment there may be some descrepancies at the fringes of boundaries/footprints as patients might be assigned to new (split or merged) LSOAs. See the <a href = './boundary_change.html'>changes in boundaries</a> page for more information.</p>
         </div>
         </section>
             
         
       <section id = 'pcn_intro'>
-        <h1>Primary Care Network view in Sussex</h1>
-        <p>This page shows much of the data on the other pages but enables a quick glance view for understanding local Census data for Primary Care Networks (PCN) footprints.</p>
+        <h1>Primary Care Network Footprints in Sussex</h1>
+        <!-- <p>This page shows much of the data on the other pages but enables a quick glance view for understanding local Census data for Primary Care Networks (PCN) footprints.</p> -->
+        <p>This page shows the extent to which Primary Care Networks (PCNs) serve geographical catchments of populations. There are no officially defined boundaries for PCNs and so on this page we demonstrate some of the methods available to define a Sussex PCN footprint which can be used elsewhere on the website to get Census 2021 data relevant to the populations served by each PCN.</p>
         <p>Each PCN footprint is made by aggregating Lower-layer Super Output Areas (LSOAs) together. However, it should be noted that GP practices do not have geographical boundaries and more than one GP practice can operate in the same local area. Whilst footprint map is useful to understand roughly the local areas that each PCN may cover, for planning purposes, in reality these boundaries are not mutually exclusive (e.g. there is some crossover as patients may use GP services outside of their local areas).</p>
         <p>As such, in the first map below we show the breadth of reach for each PCN across Sussex (and beyond in some cases). In the second map, we assign neighbourhoods to a single PCN to create footprints, which can be useful for planning purposes. It is this mutually exclusive footprint map that is used in the final section of this page to draw together relevant Census 2021 data.</p>
 
@@ -75,8 +77,13 @@
 <p>You can also see from the map that PCN reach transcends what might be considered natural boundaries for local communities, outside of the district and boroughs of the practices as well as outside of the counties and into neighbouring Surrey and Kent. An example of this is Crawley Care Collaborative PCN which has a registered populaiton of more than 1,000 patients in neighbouring Chichester district, and Rural Rother PCN which has hundreds of registered patients in neighbourhoods in Kent.</p>
 
 <h1>Neighbourhood view - PCN footprints</h1>
-<p>The next map shows Sussex neighbourhoods assigned to a single PCN. Remember, these are mutually exclusive boundaries that do not consider the complete breadth of a PCNs reach (as in map one above). Here, each neighbourhood is assigned to the PCN from which the highest number of patients are registered.</p>
-<p class = 'good_to_know'>There are a few methods of assigning neighbourhoods to PCNs (see <a href = 'https://bjgpopen.org/content/6/4/BJGPO.2022.0037'>Beaney et al. 2022</a> for an explanation of different methods).</p>
+<p>There are a few methods of assigning neighbourhoods to PCNs which we outline here.</p>
+<p>The first method (Method 1 - all PCNs) shows a PCN footprint if the LSOA is assigned to the PCN of which most residents are registered using all PCNs in England. This means that some areas (such as neighbourhoods in the north of Chichester around Rogate, and Fernhurst) on the fringes/outskirts of Sussex (within the Brighton and Hove, East Sussex, and West Sussex local authority boundaries) might be assigned to a PCN from a different ICB (such as NHS Surrey Heartlands ICB or NHS Hampshire and Isle Of Wight ICB).</p> 
+  
+<p>The second method (Method 2 - Sussex PCNs) assigns LSOAs to the Sussex PCN of which most residents are registered. This makes sure that every LSOA in the Sussex local authority boundaries are assigned to a Sussex PCN. However, this method excludes neighbourhoods outside of the local authority footprint which may be assigned to a Sussex PCN based on the first method such as in the north of Felbridge in East Gristead.</p>
+
+<p>The next map shows Sussex neighbourhoods assigned to a single PCN using Method 1 - all England PCNs and Method 2 - Sussex PCNs. Remember, these are mutually exclusive boundaries that do not consider the complete breadth of a PCNs reach (as in map one above). Here, each neighbourhood is assigned to the PCN from which the highest number of patients are registered.</p>
+<!-- <p class = 'good_to_know'>There are a few methods of assigning neighbourhoods to PCNs (see <a href = 'https://bjgpopen.org/content/6/4/BJGPO.2022.0037'>Beaney et al. 2022</a> for an explanation of different methods).</p> -->
 <h4>Sussex LSOAs mapped to PCNs - PCN footprint</h4>
 <div id = map_lsoa_pcn_footprint></div>
 
