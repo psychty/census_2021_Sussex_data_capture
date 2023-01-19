@@ -80,12 +80,9 @@ $.ajax({
   },
 });
 
-
 // This is the sum of the Patients in the Sussex_pcn_summary_df
 var total_pcn_population = Sussex_pcn_summary_df.map(i=>i.Total_patients).reduce((a,b)=>a+b);
 var total_pcn_patients_with_no_lsoa = Sussex_pcn_summary_df.map(i=>i.Patients_with_no_LSOA).reduce((a,b)=>a+b);
-
-console.log(total_pcn_population)
 
 d3.select("#pcn_summary_text_2").html(function (d) {
   return (  
@@ -124,6 +121,12 @@ d3.select("#pcn_summary_text_4").html(function (d) {
  })
  .keys();
 
+// Function to colour our PCNs on the map
+var pcn_colour_function = d3
+  .scaleOrdinal()
+  .domain(PCNs)
+  .range(["#92a0d6","#74cf3d","#4577ff","#449e00","#e84fcd","#02de71","#f68bff","#63df6b","#8f227f","#508000","#4646a9","#deab00","#0295e8","#c44e00","#02caf9","#ff355c","#01c2a0","#a50c35","#019461","#ff7390","#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"]);
+
 // We need a function to return our own PCN_ID (the number we've given to the PCN based on its row number in the dataframe in R).
 var selected_pcn_id_lookup = d3
   .scaleOrdinal()
@@ -147,7 +150,17 @@ d3.select("#select_pcn_x_button")
 var PCN_footprint_Method_1_geojson = $.ajax({
   url: "./outputs/sussex_pcn_footprints_method_1.geojson",
   dataType: "json",
-  success: console.log("LSOA (2011) boundary data for PCN reach successfully loaded."),
+  success: console.log("LSOA (2011) boundary data for PCN footprint method 1 successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+// Map data
+var PCN_footprint_Method_2_geojson = $.ajax({
+  url: "./outputs/sussex_pcn_footprints_method_2.geojson",
+  dataType: "json",
+  success: console.log("LSOA (2011) boundary data for PCN footprint method 2 successfully loaded."),
   error: function (xhr) {
     alert(xhr.statusText);
   },
@@ -180,7 +193,19 @@ $.when(PCN_ReachLSOA11_geojson).done(function () {
            d >= 5   ? '#FDE725' :
            '#fcb045' ;
   }
-  
+
+  function getpatient_coverageColour(d) {
+    return d > 95 ? '#F0F921' :
+           d > 90  ? '#FDC926' :
+           d > 85  ? '#FA9E3B' :
+           d > 80  ? '#ED7953' :
+           d > 75  ? '#D8576B' :
+           d > 70  ? '#BD3786' :
+           d > 65  ? '#9C179E' :
+           d >= 60  ? '#7301A8' :
+           '#0D0887' ;
+  } 
+
 // Create a function to add stylings to the polygons in the leaflet map
 function reg_pop_style(feature) {
    return {
@@ -200,11 +225,23 @@ function reg_pop_style(feature) {
       fillOpacity: 0,
     };
   }
-  
+
   function style_footprint(feature) {
     return {
       fill: true,
-      fillColor: '#338cc7',
+      // fillColor: '#338cc7',
+      fillColor: pcn_colour_function(feature.properties.PCN_Name),
+      color: '#000',
+      weight: 1.5,
+      fillOpacity: 0.8,
+    };
+  }
+
+  function style_footprint_coverage(feature) {
+    return {
+      fill: true,
+      // fillColor: '#338cc7',
+      fillColor: getpatient_coverageColour(feature.properties.Patients / feature.properties.Total_patients *100),
       color: '#000',
       weight: 1.5,
       fillOpacity: 0.8,
@@ -262,7 +299,34 @@ legend_map_population.onAdd = function () {
 
 legend_map_population.addTo(map_lsoa_pcn_reach);
 
-L.control.scale().addTo(map_lsoa_pcn_reach);
+// Create a leaflet map (L.map) in the element map_1_id
+var map_pcn_footprint = L.map("map_lsoa_pcn_footprint");
+
+// add the background and attribution to the map
+L.tileLayer(tileUrl, { attribution })
+.addTo(map_pcn_footprint);
+
+// // We use the same legend (and it is built independent of data) so add this now too.
+var legend_map_footprint_coverage = L.control({position: 'bottomright'});
+  
+legend_map_footprint_coverage.onAdd = function () {
+    var div = L.DomUtil.create('div', 'info legend'),
+       grades = [0, 60, 65, 70, 75, 80, 85, 90, 95],
+      labels = ['<b>Patients covered<br>by PCN footprint</b>'];
+   //  loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+        labels.push(
+           '<i style="background:' + getpatient_coverageColour(grades[i] + 1) + '"></i> ' +
+           d3.format(',.0f')(grades[i]) + (grades[i + 1] ? '&ndash;' + d3.format(',.0f')(grades[i + 1]) + '%' : '%+'));
+   }
+   div.innerHTML = labels.join('<br>');
+   return div;
+};
+
+legend_map_footprint_coverage.addTo(map_pcn_footprint);
+
+L.control.scale().addTo(map_pcn_footprint);
 
 var baseMaps_map_population = {
    "Show Local Authorities": ltla_boundary,
@@ -2238,14 +2302,7 @@ d3.select("#select_pcn_x_button").on("change", function (d) {
 
 
 
-// Create a leaflet map (L.map) in the element map_1_id
-var map_pcn_footprint = L.map("map_lsoa_pcn_footprint");
-
-// add the background and attribution to the map
-L.tileLayer(tileUrl, { attribution })
-.addTo(map_pcn_footprint);
-
-var pcn_footprint = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { style: style_footprint })
+var pcn_footprint_method_1 = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { style: style_footprint })
 .bindPopup(function (layer) {
    return (
      "PCN: <Strong>"+
@@ -2260,6 +2317,48 @@ var pcn_footprint = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { sty
 })
 .addTo(map_pcn_footprint);
 
+var pcn_footprint_coverage_method_1 = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { style: style_footprint_coverage })
+.bindPopup(function (layer) {
+   return (
+     "PCN: <Strong>"+
+     layer.feature.properties.PCN_Name +
+     "</Strong><br><br>This footprint covers a population of <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Patients) +
+     ' residents</Strong>. This is <Strong>' +
+     d3.format('.1%')(layer.feature.properties.Patients/layer.feature.properties.Total_patients) + '</Strong> of all patients registered to this PCN <Strong>(' +
+     d3.format(',.0f')(layer.feature.properties.Total_patients) +
+     ' patients). </Strong>.'
+   );
+})
+
+var pcn_footprint_method_2 = L.geoJSON(PCN_footprint_Method_2_geojson.responseJSON, { style: style_footprint })
+.bindPopup(function (layer) {
+   return (
+     "PCN: <Strong>"+
+     layer.feature.properties.PCN_Name +
+     "</Strong><br><br>This footprint covers a population of <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Patients) +
+     ' residents</Strong>. This is <Strong>' +
+     d3.format('.1%')(layer.feature.properties.Patients/layer.feature.properties.Total_patients) + '</Strong> of all patients registered to this PCN <Strong>(' +
+     d3.format(',.0f')(layer.feature.properties.Total_patients) +
+     ' patients). </Strong>.'
+   );
+})
+
+var pcn_footprint_coverage_method_2 = L.geoJSON(PCN_footprint_Method_2_geojson.responseJSON, { style: style_footprint_coverage })
+.bindPopup(function (layer) {
+   return (
+     "PCN: <Strong>"+
+     layer.feature.properties.PCN_Name +
+     "</Strong><br><br>This footprint covers a population of <Strong>" +
+     d3.format(',.0f')(layer.feature.properties.Patients) +
+     ' residents</Strong>. This is <Strong>' +
+     d3.format('.1%')(layer.feature.properties.Patients/layer.feature.properties.Total_patients) + '</Strong> of all patients registered to this PCN <Strong>(' +
+     d3.format(',.0f')(layer.feature.properties.Total_patients) +
+     ' patients). </Strong>.'
+   );
+})
+
 var ltla_boundary_footprint = L.geoJSON(LTLA_geojson.responseJSON, { style: style_ltla })
 .bindPopup(function (layer) {
    return (
@@ -2272,17 +2371,25 @@ var ltla_boundary_footprint = L.geoJSON(LTLA_geojson.responseJSON, { style: styl
      'km<sup>2</sup> </Strong>.'
    );
 })
-.addTo(map_pcn_footprint);
+// .addTo(map_pcn_footprint);
 
-map_pcn_footprint.fitBounds(pcn_footprint.getBounds(), {maxZoom: 13});
+map_pcn_footprint.fitBounds(pcn_footprint_method_1.getBounds(), {maxZoom: 13});
 
 var baseMaps_map_footprint = {
-  "Show PCN footprints": pcn_footprint,
+"Show Method 1 PCN footprint (coloured by PCN)": pcn_footprint_method_1,
+"Show Method 2 PCN footprint (coloured by PCN)": pcn_footprint_method_2,
+"Show Method 1 PCN footprint (coloured by footprint coverage)": pcn_footprint_coverage_method_1,
+"Show Method 2 PCN footprint (coloured by footprint coverage)": pcn_footprint_coverage_method_2,
+}
+
+var overlayMaps_map_footprint = {
   "Show Local Authorities": ltla_boundary_footprint,
  };
 
+
+
 L.control
-.layers(null, baseMaps_map_footprint, { collapsed: false, position: 'topright'})
+.layers(baseMaps_map_footprint, overlayMaps_map_footprint, { collapsed: false, position: 'topright'})
 .addTo(map_pcn_footprint);
 
 }); // pcn data load scope

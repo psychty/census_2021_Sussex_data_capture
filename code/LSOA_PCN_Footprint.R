@@ -371,4 +371,83 @@ method_1_footprint_json <- SpatialPolygonsDataFrame(method_1_footprint, method_1
 
 geojson_write(ms_simplify(geojson_json(method_1_footprint_json), keep = 0.5), file = paste0(output_directory, '/sussex_pcn_footprints_method_1.geojson'))
 
-          
+# Method 2 - Sussex PCNs - This method uses the LSOA and PCN data for Sussex PCNs only to assign a neighbourhood to a PCN. Every Sussex LSOA is allocated to a PCN.
+
+oa11_lookup <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/OA11_LSOA11_MSOA11_LAD20_RGN20_EW_LU_a1cf695c9b074c708921b2a7555f808a/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  st_drop_geometry()
+
+# We can also create an LSOA lookup by subsetting this dataframe
+lsoa11_lookup <- oa11_lookup %>% 
+  select(LSOA11CD, LSOA11NM, MSOA11CD, MSOA11NM, LTLA = LAD20NM) %>% 
+  unique() %>% 
+  filter(LTLA %in% areas)
+
+# Here, the denominator is all LSOA residents registered to a practice (aggregated to PCN level).
+Method_2_LSOA_based_PCN_df <- lsoa_pcn_df %>% 
+  filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% # Keep only those 
+  # filter(LSOA11CD %in% sussex_pcn_reach$LSOA11CD) %>% # look for any LSOA from our Sussex PCN reach dataframe
+  filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) %>% # Filter out the Sussex areas
+  group_by(LSOA11CD) %>% # Group by LSOA
+  mutate(Proportion_residents_to_PCN = Patients / sum(Patients)) %>% # As we have group_by(LSOA11CD) this will divide the number of patients by the total number of patients in that LSOA
+  arrange(LSOA11CD, desc(Proportion_residents_to_PCN)) %>% # Sort by descending proportion 
+  slice(1) %>% # Keep the highest proportion (again for each LSOA11CD)
+  ungroup()
+
+Method_2_LSOA_based_PCN_footprint <- lsoa_2011_boundaries_spdf %>% 
+  filter(LSOA11CD %in% Method_2_LSOA_based_PCN_df$LSOA11CD) %>%
+  left_join(Method_2_LSOA_based_PCN_df, by = 'LSOA11CD')
+
+setdiff(unique(sussex_PCN_total_pop$PCN_Name), unique(Method_2_LSOA_based_PCN_footprint@data$PCN_Name))
+
+# We need to create a single geojson file that has our PCN boundaries.
+for(i in 1:length(unique(Method_2_LSOA_based_PCN_footprint@data$PCN_Name))){
+  pcn_x <- unique(Method_2_LSOA_based_PCN_footprint@data$PCN_Name)[i]
+  
+  pcn_footprint_x_df <- Method_2_LSOA_based_PCN_footprint@data %>% 
+    filter(PCN_Name == pcn_x) %>% 
+    summarise(Patients = sum(Patients),
+              PCN_Code = unique(PCN_Code),
+              PCN_Name = unique(PCN_Name))
+  
+  pcn_x_footprint <-  Method_2_LSOA_based_PCN_footprint %>% 
+    filter(PCN_Name %in% pcn_x) %>% 
+    gUnaryUnion()
+  
+  assign(paste0('pcn_footprint_', i),  SpatialPolygonsDataFrame(pcn_x_footprint, pcn_footprint_x_df))
+  
+}
+
+method_2_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3,  pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39, pcn_footprint_40) %>% 
+  select(-c(PCN_Code)) %>% 
+  left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
+
+leaflet() %>%
+  addControl(paste0("<font size = '2px'><b>Primary Care organisations; Sussex; as at ", Extract_date, "</b><br>Based on main GP practice details on registered address;</font>"),
+             position='topright') %>%
+  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',attribution = paste0('&copy; <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors &copy; <a href=https://carto.com/attributions>CARTO</a><br>Contains OS data ? Crown copyright and database right 2021<br>Zoom in/out using your mouse wheel or the plus (+) and minus (-) buttons and click on an area/circle to find out more.')) %>%
+  addPolygons(data = method_1_footprint,
+              stroke = TRUE,
+              smoothFactor = 0.2,
+              fillOpacity = NULL,
+              color = 'maroon',
+              group = 'Method 1') %>%   
+  addPolygons(data = method_2_footprint,
+              stroke = TRUE,
+              smoothFactor = 0.2,
+              fillOpacity = NULL,
+              color = 'darkgreen',
+              group = 'Method 2') %>% 
+  addLayersControl(baseGroups = c('Method 1', 'Method 2'))
+  
+df <- data.frame(ID = character())
+
+# Get the IDs of spatial polygon
+for (i in method_2_footprint@polygons ) { df <- rbind(df, data.frame(ID = i@ID, stringsAsFactors = FALSE))  }
+
+# and set rowname = ID
+row.names(method_2_footprint) <- df$ID
+
+# Then use df as the second argument to the spatial dataframe conversion function:
+method_2_footprint_json <- SpatialPolygonsDataFrame(method_2_footprint, method_2_footprint@data)  
+
+geojson_write(ms_simplify(geojson_json(method_2_footprint_json), keep = 0.5), file = paste0(output_directory, '/sussex_pcn_footprints_method_2.geojson'))
