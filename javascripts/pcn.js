@@ -221,7 +221,18 @@ function reg_pop_style(feature) {
     return {
       fill: false,
       color: 'maroon',
-      weight: 1.5,
+      weight: 5,
+      dashArray: '5,5',
+      fillOpacity: 0,
+    };
+  }
+
+  function style_ltla_white(feature) {
+    return {
+      fill: false,
+      color: '#fff',
+      weight: 5,
+      dashArray: '5,5',
       fillOpacity: 0,
     };
   }
@@ -2359,7 +2370,7 @@ var pcn_footprint_coverage_method_2 = L.geoJSON(PCN_footprint_Method_2_geojson.r
    );
 })
 
-var ltla_boundary_footprint = L.geoJSON(LTLA_geojson.responseJSON, { style: style_ltla })
+var ltla_boundary_footprint = L.geoJSON(LTLA_geojson.responseJSON, { style: style_ltla_white })
 .bindPopup(function (layer) {
    return (
      "Local authority: <Strong>" +
