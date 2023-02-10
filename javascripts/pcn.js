@@ -127,6 +127,8 @@ var pcn_colour_function = d3
   .domain(PCNs)
   .range(["#92a0d6","#74cf3d","#4577ff","#449e00","#e84fcd","#02de71","#f68bff","#63df6b","#8f227f","#508000","#4646a9","#deab00","#0295e8","#c44e00","#02caf9","#ff355c","#01c2a0","#a50c35","#019461","#ff7390","#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"]);
 
+  console.log(PCNs)
+
 // We need a function to return our own PCN_ID (the number we've given to the PCN based on its row number in the dataframe in R).
 var selected_pcn_id_lookup = d3
   .scaleOrdinal()

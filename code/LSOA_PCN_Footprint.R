@@ -155,7 +155,6 @@ sussex_pcn_reach <- lsoa_pcn_df %>%
 #   ggplot() +
 #   geom_histogram(aes(x = Patients))
 
-
 # We need to create a single geojson file that holds one row per LSOA per PCN which has at least five registered patients in. You would expect the same LSOA to appear multiple times if it has at least five patients assigned to a PCN.
 
 for(i in 1:length(unique(sussex_pcn_reach$PCN_Name))){
@@ -318,6 +317,10 @@ Method_1_LSOA_based_PCN_df <- lsoa_pcn_df %>%
   filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name) %>% # Keep only those 
   ungroup()
 
+Method_1_LSOA_based_PCN_df %>% 
+  write.csv(., paste0(output_directory, '/Method_1_LSOA_based_PCN_df.csv'),
+            row.names = FALSE)
+
 Method_1_LSOA_based_PCN_footprint <- lsoa_2011_boundaries_spdf %>% 
   filter(LSOA11CD %in% Method_1_LSOA_based_PCN_df$LSOA11CD) %>%
   left_join(Method_1_LSOA_based_PCN_df, by = 'LSOA11CD')
@@ -391,6 +394,10 @@ Method_2_LSOA_based_PCN_df <- lsoa_pcn_df %>%
   arrange(LSOA11CD, desc(Proportion_residents_to_PCN)) %>% # Sort by descending proportion 
   slice(1) %>% # Keep the highest proportion (again for each LSOA11CD)
   ungroup()
+
+Method_2_LSOA_based_PCN_df %>% 
+  write.csv(., paste0(output_directory, '/Method_2_LSOA_based_PCN_df.csv'),
+            row.names = FALSE)
 
 Method_2_LSOA_based_PCN_footprint <- lsoa_2011_boundaries_spdf %>% 
   filter(LSOA11CD %in% Method_2_LSOA_based_PCN_df$LSOA11CD) %>%

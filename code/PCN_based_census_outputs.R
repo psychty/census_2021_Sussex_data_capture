@@ -21,6 +21,12 @@ pcn_spdf <- st_read(paste0(output_directory, '/sussex_pcn_footprints_method_2.ge
 
 areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing') 
 
+PCN_Meta <- fromJSON(paste0(output_directory, '/Sussex_PCN_summary_df.json'))
+
+# This is missing the unallocated Brighton PCN, and we need to make a factor of this field (PCN Name)
+Method_2_LSOA_based_PCN_df <- read_csv(paste0(output_directory, '/Method_2_LSOA_based_PCN_df.csv')) %>% 
+  mutate(PCN_Name = factor(PCN_Name, levels = PCN_Meta$PCN_Name))
+
 # To do this we can use a 2021 LSOA lookup, built up from an output area lookup 
 oa21_lookup <- read_csv('https://www.arcgis.com/sharing/rest/content/items/792f7ab3a99d403ca02cc9ca1cf8af02/data')
 
@@ -174,113 +180,92 @@ leaf_map <- leaf_map %>%
   hideGroup(c('Show 2021 boundaries'))
 
 # Export the map as a html file
-htmlwidgets::saveWidget(leaf_map,
-                        paste0(output_directory, '/lsoa_2011_changes_map.html'),
-                        selfcontained = TRUE)
+# htmlwidgets::saveWidget(leaf_map,
+#                         paste0(output_directory, '/lsoa_2011_changes_map.html'),
+#                         selfcontained = TRUE)
 
 pcn_sf <- st_read(paste0(output_directory, '/sussex_pcn_footprints_method_2.geojson')) 
 
 lsoa_2021_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2021_Boundaries_Generalised_Clipped_EW_BGC_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   filter(LSOA21CD %in% Sussex_lsoa21_lookup$LSOA21CD)
 
-# Does not work
-# geo_join <- st_join(pcn_sf, lsoa_2021_sf, left = FALSE, largest = TRUE)
+# Can we repeat PCN boundaries with Census 2021 LSOAs?
 
-lsoa_centroids <- st_point_on_surface(lsoa_2021_sf) %>% 
-  as_Spatial()
+PCN_lsoa_change_df <- lsoa_change_df %>% 
+  filter(Original_LSOA11CD %in% Method_2_LSOA_based_PCN_df$LSOA11CD) %>% 
+  left_join(Method_2_LSOA_based_PCN_df, by = c('Original_LSOA11CD' =  'LSOA11CD')) %>% 
+  mutate(PCN_Name = factor(PCN_Name)) %>% 
+  select(!c(Original_LSOA11CD, Patients, LSOA21NM, Proportion_residents_to_PCN)) %>% 
+  unique()
 
-LSOA_PCN_lookup <- cbind(lsoa_centroids, over(lsoa_centroids, pcn_spdf))
-                         
-lsoa_2021_spdf <- cbind(lsoa_2021_spdf, over(lsoa_2021_spdf, pcn_spdf))
+Method_3_LSOA_based_PCN_footprint <- lsoa_2021_spdf %>% 
+  filter(LSOA21CD %in% PCN_lsoa_change_df$LSOA21CD) %>%
+  left_join(PCN_lsoa_change_df, by = 'LSOA21CD')
 
+# PCN_object <- Method_3_LSOA_based_PCN_footprint %>% 
+#   group_by(PCN_Name) %>% 
+#   summarise()
 
-LSOA_PCN_lookup
-
-leaflet(lsoa_2021_spdf) %>% 
+PCN_palette <- colorFactor(c("#92a0d6","#74cf3d","#4577ff","#449e00","#e84fcd","#02de71","#f68bff","#63df6b","#8f227f","#508000","#4646a9","#deab00","#0295e8","#c44e00","#02caf9","#ff355c","#01c2a0","#a50c35","#019461","#ff7390","#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"),
+                              levels = levels(Method_3_LSOA_based_PCN_footprint$PCN_Name))
+leaflet(lsoa_2011_spdf) %>% 
   addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
            attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.') %>%
-  addPolygons(data = pcn_spdf,
-              fill = FALSE,
+  addPolygons(data = Method_3_LSOA_based_PCN_footprint,
               stroke = TRUE, 
-              color = "maroon",
-              weight = 4,
-              label = paste0(pcn_spdf$PCN_Name),
-              group = 'Show PCN boundaries from 2011 LSOAs') %>% 
-  addPolygons(data = lsoa_2021_spdf,
-              stroke = TRUE,
-              fillColor = 'orange',
-              fillOpacity = .3,
-              color = "purple",
-              popup = paste0('LSOA 2021: ', lsoa_2021_spdf$LSOA21NM, ' (', lsoa_2021_spdf$LSOA21CD, ')'),
+              color = "#000000",
+              fillColor = ~PCN_palette(PCN_Name),
+              fillOpacity = .8,
               weight = 1,
-              group = 'Show 2021 boundaries') %>%
-  addCircleMarkers(LSOA_PCN_lookup)
-  addLayersControl(overlayGroups = c('Show PCN boundaries from 2011 LSOAs', 'Show 2021 boundaries'),
-                   options = layersControlOptions(collapsed = FALSE))
-
-
-# method_3 ####
-
-# We need to create a single geojson file that has our PCN boundaries.
-for(i in 1:length(unique(LSOA_PCN_lookup@data$PCN_Name))){
-  pcn_x <- unique(LSOA_PCN_lookup@data$PCN_Name)[i]
-  
-  pcn_footprint_x_df <- LSOA_PCN_lookup@data %>% 
-    filter(PCN_Name == pcn_x) %>% 
-    select(PCN_Name) %>% 
-    unique()
-  
-  pcn_x_footprint <-  LSOA_PCN_lookup %>% 
-    filter(PCN_Name %in% pcn_x) %>% 
-    gUnaryUnion()
-  
-  assign(paste0('pcn_footprint_', i),  SpatialPolygonsDataFrame(pcn_x_footprint, pcn_footprint_x_df))
-  
-}
-
-method_3_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3,  pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38) 
-
-
-
-leaflet(lsoa_2021_spdf,
-        options = leafletOptions(zoomControl = TRUE)) %>%
-  addControl(paste0("<font size = '1px'><b>Sussex 2011 LSOAs</font>"),
-             position='topleft') %>% 
-  addControl(paste0("<font size = '1px'><b>Sussex 2021 LSOAs</font>"),
-             position='topright') %>% 
-  addMapPane("left", zIndex = 0) %>%
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
-           layerId = "left_layer",
-           options = pathOptions(pane = "left")) %>%
+              popup = paste0(Method_3_LSOA_based_PCN_footprint$PCN_Name),
+              group = 'Show PCN boundaries from 2021 LSOAs') %>% 
   addPolygons(data = pcn_spdf,
               fill = FALSE,
               stroke = TRUE, 
               color = "maroon",
               weight = 4,
               label = paste0(pcn_spdf$PCN_Name),
-              options = pathOptions(pane = "left"),
               group = 'Show PCN boundaries from 2011 LSOAs') %>% 
-  addMapPane("right", zIndex = 0) %>% 
-  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.',
-           layerId = "right_layer",
-           options = pathOptions(pane = "right")) %>%
-  addPolygons(data = method_3_footprint,
-              fill = FALSE,
-              stroke = TRUE, 
-              color = "purple",
-              weight = 4,
-              label = paste0(method_3_footprint$PCN_Name),
-              options = pathOptions(pane = "right"),
-              group = 'Show PCN boundaries from 2021 LSOAs') %>% 
-  addSidebyside(layerId = "sidecontrols",
-                leftId = "left_layer",
-                rightId = "right_layer") %>% 
   addLayersControl(overlayGroups = c('Show PCN boundaries from 2011 LSOAs', 'Show PCN boundaries from 2021 LSOAs'),
                    options = layersControlOptions(collapsed = FALSE))
 
 
+# Checking by PCN ####
+
+i = 40
+pcn_x <- levels(Method_3_LSOA_based_PCN_footprint$PCN_Name)[i]
+
+pcn_x_lsoas <- Method_3_LSOA_based_PCN_footprint %>%
+  filter(PCN_Name == pcn_x)
+
+pcn_foot <- pcn_spdf %>% 
+  filter(PCN_Name == pcn_x)
+
+leaflet() %>% 
+  addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+           attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.') %>%
+  addPolygons(data = pcn_x_lsoas,
+              stroke = TRUE, 
+              color = "#000000",
+              fillColor = 'pink',
+              fillOpacity = .8,
+              weight = 1,
+              popup = paste0(pcn_x_lsoas$LSOA21CD),
+              group = 'Show PCN boundaries from 2021 LSOAs') %>% 
+  addPolygons(data = pcn_foot,
+              fill = FALSE,
+              stroke = TRUE, 
+              color = "purple",
+              weight = 4,
+              label = paste0(pcn_spdf$PCN_Name),
+              group = 'Show PCN boundaries from 2011 LSOAs') %>% 
+  addLayersControl(overlayGroups = c('Show PCN boundaries from 2011 LSOAs', 'Show PCN boundaries from 2021 LSOAs'),
+                   options = layersControlOptions(collapsed = FALSE))
+
+# Good enough for me, lets start bulding PCN census profile
+
+final_lsoa_pcn_lookup <- PCN_lsoa_change_df %>% 
+  select(!Change)
 
 # Census data ####
 
@@ -293,7 +278,6 @@ nomis_area_types <- data.frame(Level = c('OA','LSOA','MSOA','LTLA', 'UTLA', 'Reg
 nomis_tables <- nomis_data_info() %>% 
   select(id, components.dimension, name.value) # We really only need three fields from this table
 
-
 # Health ####
 
 # *At the moment there are only topic summaries available from nomis so it might be possible to use that information to retrieve a table of just census 21 files.
@@ -301,17 +285,14 @@ nomis_tables <- nomis_data_info() %>%
 census_nomis_tables <- nomis_tables %>% 
   filter(str_detect(name.value, '^TS'))
 
-census_nomis_tables %>% 
-  View()
+# census_nomis_tables %>% 
+#   View()
 
 # Lets say we want to use the lsoa level disability
 table_x <- nomis_tables %>% 
   filter(id == 'NM_2056_1')
 
 table_x$components.dimension
-
-names(census_LSOA_disability_raw_df)
-
 
 census_LSOA_disability_raw_df <- nomis_get_data(id = table_x$id,
                                                 measure = '20100',

@@ -112,7 +112,7 @@ census_LAD_density_raw_df <- nomis_get_data(id = 'NM_2026_1',
 lsoa_change_df <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA11_LSOA21_LAD22_EW_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   select(LSOA11CD = F_LSOA11CD, LSOA11NM, LSOA21CD, LSOA21NM, LTLA = LAD22NM, Change = CHGIND) %>% 
   st_drop_geometry() %>% 
-  mutate(Change = ifelse(Change == 'M', 'Merged', ifelse(Change == 'S', 'Split', ifelse(Change == 'X', 'Redefined', ifelse(Change == 'U', 'Unchanged', NA)))))
+  mutate(Change = factor(ifelse(Change == 'M', 'Merged', ifelse(Change == 'S', 'Split', ifelse(Change == 'X', 'Redefined', ifelse(Change == 'U', 'Unchanged', NA)))), levels = c('Unchanged', 'Merged', 'Split', 'Redefined')))
 
 # I want to summarise how many LSOAs there were in 2011 and 2021 for each LTLA, I'm also going to add UTLA information and order thetable ready for exporting as a json file that I can use on the website.
 lsoa_changes <- lsoa_change_df %>% 
@@ -131,6 +131,11 @@ lsoa_change_detail <- lsoa_change_df %>%
               values_from = 'Areas') %>% 
   mutate(Merged = replace_na(Merged, 0),
          Split = replace_na(Split, 0))
+
+lsoa_change_df1 <- lsoa_change_df %>% 
+  filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) %>% 
+  select(LSOA11CD, Change) %>% 
+  unique()
 
 ltla_summary_df <- lsoa_changes %>% 
   left_join(lsoa_change_detail, by = 'LTLA') %>% 
@@ -197,7 +202,15 @@ lsoa_2011_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/re
   filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) 
   
 # Convert it to a spatial polygon data frame
-lsoa_2011_boundaries_spdf <-  as_Spatial(lsoa_2011_sf, IDs = lsoa_2011_sf$LSOA11CD)
+lsoa_2011_boundaries_spdf <-  as_Spatial(lsoa_2011_sf, IDs = lsoa_2011_sf$LSOA11CD) %>% 
+  left_join(lsoa_change_df1, by = 'LSOA11CD')
+
+unique(lsoa_2011_boundaries_spdf$Change)
+
+change_colours <- c('#c9c9c9', '#da20b2', '#20b2da', '#ff1a55')
+
+change_palette <- colorFactor(change_colours,
+                              levels = levels(lsoa_2011_boundaries_spdf$Change))
 
 lsoa_2021_boundaries_spdf <- lsoa_2021_boundaries_spdf %>% 
   left_join(census_LSOA_df, by = c('LSOA21CD', 'LSOA21NM')) 
@@ -273,7 +286,6 @@ htmlwidgets::saveWidget(lsoa_2021_leaflet_map,
 geojson_write(ms_simplify(geojson_json(lsoa_2021_boundaries_spdf), keep = 0.85), file = paste0(output_directory, '/sussex_2021_lsoas.geojson'))
 
 geojson_write(ms_simplify(geojson_json(lsoa_2011_boundaries_spdf), keep = 1), file = paste0(output_directory, '/sussex_2011_lsoas.geojson'))
-
 
 # Add population
 
