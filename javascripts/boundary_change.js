@@ -178,9 +178,7 @@ var baseMaps_map_lsoa_change = {
   "Show Local Authority boundaries": ltla_boundary,
   };
 
-  
-
-  var lsoa2011_boundary = L.geoJSON(LSOA11_geojson.responseJSON, { style: lsoa_change_style, pane: 'left' })
+var lsoa2011_boundary = L.geoJSON(LSOA11_geojson.responseJSON, { style: lsoa_change_style, pane: 'left' })
  .bindPopup(function (layer) {
     return (
       '2011 LSOA:<br><Strong>' +
@@ -216,7 +214,24 @@ L.control
  .sideBySide(lsoa2011_boundary, lsoa2021_boundary)
  .addTo(map_lsoa_change);
 
-
+// Categorical legend 
+var legend_map_change = L.control({position: 'bottomright'});
+legend_map_change.onAdd = function (map_2) {
+      var div = L.DomUtil.create('div', 'info legend'),
+          grades = ['Unchanged', 'Merged', 'Split', 'Redefined'], // Note that you have to print the labels, you cannot use the object deprivation_deciles
+          labels = ['Neighbourhood change'];
+      // loop through our density intervals and generate a label with a colored square for each interval
+      for (var i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+          labels.push(
+              '<i style="background:' + lsoa_change_colour_function(grades[i] + 1) + '"></i> ' +
+              grades[i] );
+      }
+      div.innerHTML = labels.join('<br>');
+      return div;
+  };
+  legend_map_change.addTo(map_lsoa_change);
+  
 
 // ! Postcode search map 1
 var marker_chosen = L.marker([0, 0])
