@@ -10,7 +10,7 @@ areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'We
 
 # GP Practice registered populations ####
 
-# October 2022 is the most recent release with an LSOA file. These are usually released once per quarter. We may find that on the January release (due on 12th Jan) this can be updated.
+# Jan 2023 is the most recent release with an LSOA file. These are usually released once per quarter. We may find that on the January release (due on 12th Jan) this can be updated.
 time_period <- 'january-2023' 
 
 # We need the latest release that has the LSOA level numbers we need. As such, we need to specify the January 2022 release.
@@ -295,7 +295,6 @@ leaflet() %>%
               color = '#000000')
   
 # There is one Sussex LSOA (E01031502) with less than the threshold (five plus) residents registered to a Sussex PCN.
-
 LSOA_x <- lsoa_gp_df %>% 
   filter(LSOA11CD %in% 'E01031502')
   

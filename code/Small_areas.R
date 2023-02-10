@@ -1,7 +1,6 @@
 
 # Small areas 
 
-
 # Small areas across England and Wales can be segmented based on consistent population sizes. Output Areas (OAs) are a geography used by many population and health services to detail small area characteristics, activity, and outcomes, because of their consistent population size and stable boundaries (which only change as a result of new Census outputs every 10 years). 
 
 # Whilst Output Areas (OAs) are the smallest statistical geography from the Census, the numbers of people in each area (usually a maximum of 250 households or 650 people) are often too small when looking at specific population characteristics like age and sex or ethnicity to meaningfully compare areas.
