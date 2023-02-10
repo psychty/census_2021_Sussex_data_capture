@@ -193,7 +193,8 @@ td:nth-child(1) {
 }
 
 /* Maps */
- #map_1_id {
+
+#map_slider_change_id {
   height: 480px;
   /* width: 80%; */
   margin: auto;

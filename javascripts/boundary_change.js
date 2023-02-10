@@ -7,6 +7,22 @@ if (width > 900) {
 }
 var width_margin = width * 0.15;
 
+// Function to colour our lsoas by change on the map
+var lsoa_change_colour_function = d3
+  .scaleOrdinal()
+  .domain(['Unchanged', 'Merged', 'Split', 'Redefined'])
+  .range(['#c9c9c9', '#da20b2', '#20b2da', '#ff1a55']);
+
+// Create a function to add stylings to the polygons in the leaflet map
+function lsoa_change_style(feature) {
+  return {
+    fillColor: lsoa_change_colour_function(feature.properties.Change),
+    // color: lsoa_change_colour_function(feature.properties.Change),
+    color: 'maroon',
+    weight: 1,
+    fillOpacity: 0.85,
+  };
+}
 
 function ltla_colours(feature) {
     return {
@@ -111,12 +127,12 @@ var attribution =
 // Specify that this code should run once the PCN_geojson data request is complete
 $.when(LSOA21_geojson).done(function () {
 
-// Create a leaflet map (L.map) in the element map_1_id
-var map_1 = L.map("map_1_id", { zoomControl: false});
+// Create a leaflet map (L.map) in the element map_slider_change_id
+var map_lsoa_change = L.map("map_slider_change_id", { zoomControl: false});
 
 L.control.zoom({
   position: 'bottomleft'
-}).addTo(map_1);
+}).addTo(map_lsoa_change);
 
 // Add titles
 var title11 = L.control({position: 'topleft'});
@@ -127,7 +143,7 @@ title11.onAdd = function () {
       div.innerHTML = '<span class="map_title">2011 Census LSOAs</span>';
       return div;
 };
-title11.addTo(map_1);
+title11.addTo(map_lsoa_change);
 
 var title21 = L.control({position: 'topright'});
 
@@ -137,17 +153,17 @@ title21.onAdd = function () {
   div.innerHTML = '<span class="map_title">2021 Census LSOAs</span>';
   return div;
 };
-title21.addTo(map_1);
+title21.addTo(map_lsoa_change);
 
-map_1.createPane('left');
-map_1.createPane('right');
+map_lsoa_change.createPane('left');
+map_lsoa_change.createPane('right');
  
 // add the background and attribution to the map
  L.tileLayer(tileUrl, { attribution })
- .addTo(map_1);
+ .addTo(map_lsoa_change);
 
 var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: ltla_colours })
- .addTo(map_1)
+ .addTo(map_lsoa_change)
  .bindPopup(function (layer) {
     return (
       "Local authority: <Strong>" +
@@ -156,23 +172,28 @@ var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: ltla_colours }
     );
  });
 
-map_1.fitBounds(ltla_boundary.getBounds());
+map_lsoa_change.fitBounds(ltla_boundary.getBounds());
 
-var baseMaps_map_1 = {
+var baseMaps_map_lsoa_change = {
   "Show Local Authority boundaries": ltla_boundary,
   };
 
-  var lsoa2011_boundary = L.geoJSON(LSOA11_geojson.responseJSON, { style: lsoa2011_colours, pane: 'left' })
+  
+
+  var lsoa2011_boundary = L.geoJSON(LSOA11_geojson.responseJSON, { style: lsoa_change_style, pane: 'left' })
  .bindPopup(function (layer) {
     return (
-      '<Strong>2011</Strong> LSOA:<br><Strong>' +
+      '2011 LSOA:<br><Strong>' +
       layer.feature.properties.LSOA11CD +
       "</Strong> (" +
       layer.feature.properties.LSOA11NM +
-      ')'
+      ')<br>' +
+      'Status from 2011 to 2021:<Strong>' +
+      layer.feature.properties.Change +
+      '</Strong>'
     );
  })
- .addTo(map_1);
+ .addTo(map_lsoa_change);
 
 var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: lsoa2021_colours, pane: 'right' })
  .bindPopup(function (layer) {
@@ -184,22 +205,22 @@ var lsoa2021_boundary = L.geoJSON(LSOA21_geojson.responseJSON, { style: lsoa2021
       ')'
     );
  })
- .addTo(map_1);
+ .addTo(map_lsoa_change);
 
 L.control
- .layers(null, baseMaps_map_1, { collapsed: false, position: 'bottomright'})
- .addTo(map_1);
+ .layers(null, baseMaps_map_lsoa_change, { collapsed: false, position: 'bottomright'})
+ .addTo(map_lsoa_change);
 
 // ! This works only because we change the leaflet-side-by-side.js file to have getPane() instead of getContainer()
 L.control
  .sideBySide(lsoa2011_boundary, lsoa2021_boundary)
- .addTo(map_1);
+ .addTo(map_lsoa_change);
 
 
 
 // ! Postcode search map 1
 var marker_chosen = L.marker([0, 0])
-.addTo(map_1);
+.addTo(map_lsoa_change);
 
 //search event
 $(document).on("click", "#btnPostcode", function () {
@@ -212,7 +233,7 @@ $(document).on("click", "#btnPostcode", function () {
     var chosen_long = postcode["result"]["longitude"];
 
     marker_chosen.setLatLng([chosen_lat, chosen_long]);
-    map_1.setView([chosen_lat, chosen_long], 12);
+    map_lsoa_change.setView([chosen_lat, chosen_long], 12);
 
     // var msoa_summary_data_chosen = msoa_summary_data.filter(function (d) {
     //   return d.MSOA11NM == chosen_msoa;
@@ -262,5 +283,8 @@ function post(url) {
     },
   });
 }
+
+
+
 
 });
