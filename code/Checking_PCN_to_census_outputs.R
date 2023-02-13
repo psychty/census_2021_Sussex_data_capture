@@ -267,47 +267,9 @@ leaflet() %>%
 final_lsoa_pcn_lookup <- PCN_lsoa_change_df %>% 
   select(!Change)
 
-# Census data ####
-
-# I have created a lookup for the area types that nomisr uses for Census 21, these are different to other datasets so bear this in mind
-nomis_area_types <- data.frame(Level = c('OA','LSOA','MSOA','LTLA', 'UTLA', 'Region'), Area_type_code = c('150','151','152','154', '155','480'))
-
-# We will want to filter the datasets for just Sussex areas, it is not practical to do this within the nomis call (to specify 1,029 areas to the api call), so whilst it takes a while to extract all LSOAs in england, you can filter afterwards.
-
-# This is a really useful function from the nomisr package to help identify the table id you want.
-nomis_tables <- nomis_data_info() %>% 
-  select(id, components.dimension, name.value) # We really only need three fields from this table
-
-# Health ####
-
-# *At the moment there are only topic summaries available from nomis so it might be possible to use that information to retrieve a table of just census 21 files.
-
-census_nomis_tables <- nomis_tables %>% 
-  filter(str_detect(name.value, '^TS'))
-
-# census_nomis_tables %>% 
-#   View()
-
-# Lets say we want to use the lsoa level disability
-table_x <- nomis_tables %>% 
-  filter(id == 'NM_2056_1')
-
-table_x$components.dimension
-
-census_LSOA_disability_raw_df <- nomis_get_data(id = table_x$id,
-                                                measure = '20100',
-                                                geography = 'TYPE151') %>% 
-  select(LSOA21CD = GEOGRAPHY_CODE, LSOA21NM = GEOGRAPHY_NAME, Disability = C2021_DISABILITY_5_NAME, Population = OBS_VALUE) %>% 
-  filter(LSOA21CD %in% Sussex_lsoa21_lookup$LSOA21CD)
-
-unique(census_LSOA_disability_raw_df$Disability)
-
-census_LSOA_disability_df <- census_LSOA_disability_raw_df %>% 
-  group_by(Disability) %>% 
-  summarise(Population = sum(Population))
-  
-  
-
+final_lsoa_pcn_lookup %>% 
+  write.csv(paste0(output_directory, '/lsoa_2021_lookup_to_Sussex_PCNs.csv'),
+            row.names = FALSE)
 
   
    

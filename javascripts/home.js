@@ -592,8 +592,7 @@ var ltla_boundary = L.geoJSON(LTLA_geojson.responseJSON, { style: density_style_
 
 map_population.fitBounds(ltla_boundary.getBounds());
 
-var baseMaps_map_population = {
-  'Show Lower layer super output areas (LSOAs)': lsoa2021_boundary,
+var baseMaps_map_population = {'Show Lower layer super output areas (LSOAs)': lsoa2021_boundary,
   'Show Middle layer super output areas (MSOAs)': msoa2021_boundary,
    "Show Local Authorities": ltla_boundary,
   };

@@ -52,10 +52,35 @@
         
       <section id = 'health_intro'>
         <h1>Health in Sussex</h1>
-        <p>The Health topic from the Census 2021 has not yet been released at a local level.</p>
-        <p>It is expected that the health, disability, and unpaid care topic summary data will be available on the 19th January 2023.</p>
+        <p>The 2021 Census asked people to self-report their general health status from very poor, to very good health, as well as asking people if they were disabled (as defined under the Equality Act) and whether they provided unpaid care to another person. These responses are detailed on this page.</p>
+
+        <div class="good_to_know">
+          <h3>A note about age and health</h3>
+        <p>Health (or ill health in particular) is closely related to age with peoples health tending to decline as people get older and the need for care to increase. As such, you might expect areas with higher proportions of older people to have worse health outcomes. To account for this, the ONS have created age-standardised data but this is not available at small area (LSOA) level detailed here.</p>
+
+        <p>At the bottom of this page you can find an interactive scatter plot to compare the relationship between indicators at area level.</p>
+        </div>
+
       </section>
-         
+    
+      <section id = 'general_health'>
+        <h2>General Health</h2>
+        <p></p>
+      </section>
+
+      <section id = 'disability'>
+        <h2>Disability</h2>
+        <p>Those who reported that they had a disability were also asked whether their day-to-day activities were limited a little or a lot.</p>
+      </section>
+
+      <section id = 'unpaid_care'>
+        <h2>Unpaid care</h2>
+        <p>This Census 2021 question asks "Do you look after, or give any help or support to, anyone because they have long-term physical or mental health conditions or illnesses, or problems related to old age?". People were asked to exclude anything they did as part of their paid employment. The wording of the question differs from the 2011 Census question, which began "Do you look after, or give any help or support to family members, friends, neighbours or others".</p>
+        <p>The responses to this question are a good proxy measure of the need for care, and need for support for carers in an area, although this indicator doesn't explicitly tell us the number of people in need of care.</p>
+      </section>
+
+
+
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
       <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
@@ -64,5 +89,7 @@
       <script src="https://d3js.org/d3-format.v1.min.js"></script>
       <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
       <script src="./javascripts/health.js"></script>
+      <script src="./javascripts/join.js"></script>
+      <script src="./javascripts/join_test.js"></script>
    </body>
 </html>
