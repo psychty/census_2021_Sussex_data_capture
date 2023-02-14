@@ -1,4 +1,3 @@
-
 // http://learnjsdata.com/combine_data.html
 
 function join(lookupTable, mainTable, lookupKey, mainKey, select) {
@@ -18,24 +17,29 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     return output;
 };
 
-// Because above defined function creates an index for the lookupTable (in our case lsoa_to_pcn_data) in the first iteration, it runs considerably faster than the previously shown method. Also, via a callback, it allows us to directly define which keys (or "attributes") we want to retain in the resulting, joined array (output). It is used like so:
 
+// I have also tried creating an id field which is numerical
+// I have also tried butting the id field first in the array, although it is sorted differently in the result object. 
 
-var result = join(lsoa_to_pcn_data, health_df, "LSOA21CD", "LSOA21CD", function(lookup, main) {
-    return {
-        LSOA21CD: main.LSOA21CD,
-        PCN_Name: lookup.PCN_Name,
-        LTLA: lookup.LTLA,
-        Topic: main.Topic,
-        Category: main.Category,
-        Numerator: main.Numerator,
-        Proportion: main.Proportion,
-        Denominator: main.Denominator,
-        // brand: (lsoa_to_pcn_data !== undefined) ? lsoa_to_pcn_data.LSOA21CD : null
-    };
-});
+// console.log(lsoa_to_pcn_data)
+// console.log(health_df)
 
-console.log(result);
+// var result = join(lsoa_to_pcn_data, health_df, "LSOA21CD", "LSOA21CD", function(x, y) {
+//     return {
+//         LSOA21CD: y.LSOA21CD,
+//         PCN_Name: x.PCN_name,
+//         LTLA: y.LTLA,
+//         Topic: x.Topic,
+//         Category: x.Category,
+//         Numerator: x.Numerator,
+//         Proportion: x.Proportion,
+//         Denominator: x.Denominator,
+//         // brand: (lsoa_to_pcn_data !== undefined) ? lsoa_to_pcn_data.LSOA21CD : null
+//     };
+// });
+
+//console.log(health_df)
+// console.log(result);
 
 // FIXME
 

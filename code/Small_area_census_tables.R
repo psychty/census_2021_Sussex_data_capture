@@ -22,7 +22,9 @@ PCN_Meta <- fromJSON(paste0(output_directory, '/Sussex_PCN_summary_df.json'))
 Method_2_LSOA_based_PCN_df <- read_csv(paste0(output_directory, '/Method_2_LSOA_based_PCN_df.csv')) %>% 
   mutate(PCN_Name = factor(PCN_Name, levels = PCN_Meta$PCN_Name))
 
-final_lsoa_pcn_lookup  <- read_csv(paste0(output_directory, '/lsoa_2021_lookup_to_Sussex_PCNs.csv'))
+final_lsoa_pcn_lookup  <- read_csv(paste0(output_directory, '/lsoa_2021_lookup_to_Sussex_PCNs.csv')) %>% 
+  arrange(LSOA21CD) %>% 
+  mutate(id = row_number())
 
 # Census data ####
 
@@ -76,8 +78,6 @@ census_LSOA_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
   select(LSOA21CD = GEOGRAPHY_CODE, LSOA21NM = GEOGRAPHY_NAME, Health = C2021_HEALTH_6_NAME, Population = OBS_VALUE) %>% 
   filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
 
-
-
 census_LSOA_health_table <- census_LSOA_health_raw_df %>% 
   filter(Health != 'Total: All usual residents') %>% 
   mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
@@ -107,7 +107,7 @@ census_LSOA_unpaid_care_yes_no <-  census_LSOA_unpaid_care_raw_df %>%
   filter(Care_provided != 'Total: All usual residents aged 5 and over') %>% 
   filter(Care_provided != 'Provides 19 hours or less unpaid care a week') %>% 
   filter(Care_provided != 'Provides 20 to 49 hours unpaid care a week') %>% 
-  mutate(Care_provided = ifelse(Care_provided %in% c("Provides 9 hours or less unpaid care a week",  "Provides 10 to 19 hours unpaid care a week", "Provides 20 to 34 hours unpaid care a week", "Provides 35 to 49 hours unpaid care a week",   "Provides 50 or more hours unpaid care a week"), 'Providers some care', Care_provided)) %>% 
+  mutate(Care_provided = ifelse(Care_provided %in% c("Provides 9 hours or less unpaid care a week",  "Provides 10 to 19 hours unpaid care a week", "Provides 20 to 34 hours unpaid care a week", "Provides 35 to 49 hours unpaid care a week",   "Provides 50 or more hours unpaid care a week"), 'Provides some care', Care_provided)) %>% 
   group_by(LSOA21CD, Care_provided) %>% 
   summarise(Population = sum(Population)) %>% 
   group_by(LSOA21CD) %>% 
@@ -118,7 +118,7 @@ census_LSOA_unpaid_care_35_plus <- census_LSOA_unpaid_care_raw_df %>%
   filter(Care_provided != 'Total: All usual residents aged 5 and over') %>% 
   filter(Care_provided != 'Provides 19 hours or less unpaid care a week') %>% 
   filter(Care_provided != 'Provides 20 to 49 hours unpaid care a week') %>% 
-  mutate(Care_provided = ifelse(Care_provided %in% c("Provides 9 hours or less unpaid care a week",  "Provides 10 to 19 hours unpaid care a week", "Provides 20 to 34 hours unpaid care a week"), 'Up to 34 hours', ifelse(Care_provided %in% c("Provides 35 to 49 hours unpaid care a week",   "Provides 50 or more hours unpaid care a week"), 'Providers 35 or more hours', Care_provided))) %>% 
+  mutate(Care_provided = ifelse(Care_provided %in% c("Provides 9 hours or less unpaid care a week",  "Provides 10 to 19 hours unpaid care a week", "Provides 20 to 34 hours unpaid care a week"), 'Up to 34 hours', ifelse(Care_provided %in% c("Provides 35 to 49 hours unpaid care a week",   "Provides 50 or more hours unpaid care a week"), 'Provides 35 or more hours', Care_provided))) %>% 
   group_by(LSOA21CD, Care_provided) %>% 
   summarise(Population = sum(Population)) %>% 
   group_by(LSOA21CD) %>% 
@@ -131,6 +131,24 @@ census_LSOA_unpaid_care_table <- census_LSOA_unpaid_care_yes_no %>%
   mutate(Topic = 'Unpaid care') %>% 
   select(LSOA21CD, Topic, Category = Care_provided, Numerator = Population, Proportion, Denominator)
 
+census_number_disabled_in_household_raw_df <-  nomis_get_data(id = 'NM_2058_1',
+                                                              measure = '20100',
+                                                              geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, LSOA21NM = GEOGRAPHY_NAME, Number_of_people = C2021_HHDISABLED_4_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+census_number_disabled_in_household_table <- census_number_disabled_in_household_raw_df %>%  
+  filter(Number_of_people != 'Total: All households') %>% 
+  mutate(Number_of_people = ifelse(Number_of_people %in% c('1 person disabled under the Equality Act in household', '2 or more people disabled under the Equality Act in household'), 'One or more in household', ifelse(Number_of_people == 'No people disabled under the Equality Act in household', 'None', NA))) %>% 
+  group_by(LSOA21CD, Number_of_people) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(LSOA21CD) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'HH disabled') %>% 
+  select(LSOA21CD, Topic, Category = Number_of_people, Numerator = Population, Proportion, Denominator)
+
+
 # building LSOA table ####
 
 # %>% 
@@ -139,6 +157,7 @@ census_LSOA_unpaid_care_table <- census_LSOA_unpaid_care_yes_no %>%
 LSOA_table <- census_LSOA_disability_table %>% 
   bind_rows(census_LSOA_health_table) %>% 
   bind_rows(census_LSOA_unpaid_care_table) %>% 
+  bind_rows(census_number_disabled_in_household_table) %>% 
   left_join(final_lsoa_pcn_lookup, by = 'LSOA21CD') %>% 
   select(LSOA21CD, PCN_Name, LTLA, Topic, Category, Numerator, Proportion, Denominator)
 
@@ -147,8 +166,13 @@ LSOA_table %>%
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_health_data.json'))
 
+# LSOA_table %>%
+#   toJSON() %>% 
+#   write_lines(paste0(output_directory, '/LSOA_health_data_plan_B.json'))
+
 LSOA_table %>%
-  select(c('LSOA21CD','PCN_Name', 'LTLA')) %>%
+  select(c('LSOA21CD', 'PCN_Name', 'LTLA')) %>%
+  # select(c('id', 'LSOA21CD', 'PCN_Name', 'LTLA')) %>%
   unique() %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_PCN_lookup_data.json'))

@@ -21,7 +21,7 @@ var articles = [{
     "name": "super fast laptop",
     "weight": 400,
     "price": 899.9,
-    "brand_id": 3
+    "brand_id": 3,
 }];
 
 var brands = [{
@@ -32,16 +32,16 @@ var brands = [{
     "name": "HomeSweetHome"
 }];
 
-console.log(brands)
-console.log(articles)
-
 var result = join(brands, articles, "id", "brand_id", function(article, brand) {
     return {
         id: article.id,
         name: article.name,
         weight: article.weight,
         price: article.price,
-        brand: (brand !== undefined) ? brand.name : null
+        brand: (brand !== undefined) ? brand.name : null,
     };
 });
-console.log(result);
+// console.log(result);
+
+
+

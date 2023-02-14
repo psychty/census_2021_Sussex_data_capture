@@ -49,13 +49,13 @@
         </div>
         </section>
             
-        
-      <section id = 'health_intro'>
+     <section id = 'health_intro'>
         <h1>Health in Sussex</h1>
         <p>The 2021 Census asked people to self-report their general health status from very poor, to very good health, as well as asking people if they were disabled (as defined under the Equality Act) and whether they provided unpaid care to another person. These responses are detailed on this page.</p>
-
+        <p>We show small area (LSOA) differences in some of the responses to these Census questions and where possible aggregate or combine the data at small area to the level of PCN based on our PCN footprints (see the <a href = './pcn.html'>PCN footprint page</a> for more details).</p>
+        
         <div class="good_to_know">
-          <h3>A note about age and health</h3>
+        <h3>A note about age and health</h3>
         <p>Health (or ill health in particular) is closely related to age with peoples health tending to decline as people get older and the need for care to increase. As such, you might expect areas with higher proportions of older people to have worse health outcomes. To account for this, the ONS have created age-standardised data but this is not available at small area (LSOA) level detailed here.</p>
 
         <p>At the bottom of this page you can find an interactive scatter plot to compare the relationship between indicators at area level.</p>
@@ -65,18 +65,60 @@
     
       <section id = 'general_health'>
         <h2>General Health</h2>
-        <p></p>
+        <p>Map first</p>
+
+        <p>The table below shows the small areas aggregated up to the PCN footprint.</p>
+        <h3>Table - Overall population (usual residents) reporting good or very good health; Census 2021</h3>
+        <table id = 'table_pcn_health_1' style="margin-bottom: 20px" class = 'table_pcn_class'>
+         <thead>
+           <tr>
+             <th style = 'text-align: left;'>PCN footprint*</th>
+             <th style = 'text-align: right;'>Number of residents</th>
+             <th style = 'text-align: right;'>Proportion</th>
+             <th style = 'text-align: right;'>Total number of residents</th>
+           </tr>
+         </thead>
+       <tbody id="table_pcn_health_1_body"></tbody>
+       </table>
+       <p>* remember, this is the area designated as covering the majority of patients registered to the PCN. It is not the PCN registered population itself. Some residents the areas in a PCNs footprint may be registered to other PCNs and some registered patients may live outside of the areas designated in the footprint of a particular PCN.</p>
+     
       </section>
 
       <section id = 'disability'>
         <h2>Disability</h2>
-        <p>Those who reported that they had a disability were also asked whether their day-to-day activities were limited a little or a lot.</p>
+        <p>A person is defined as disabled if they assessed their day-to-day activities as limited by long-term physical or mental health conditions or illnesses. This definition of a disabled person meets the harmonised standard for measuring disability and is in line with the Equality Act (2010).</p>
+        <p>The 2021 Census also enables us to count how many households in an area have one or more people who are registered disabled under the Equality Act.</p>
+        
       </section>
 
       <section id = 'unpaid_care'>
         <h2>Unpaid care</h2>
         <p>This Census 2021 question asks "Do you look after, or give any help or support to, anyone because they have long-term physical or mental health conditions or illnesses, or problems related to old age?". People were asked to exclude anything they did as part of their paid employment. The wording of the question differs from the 2011 Census question, which began "Do you look after, or give any help or support to family members, friends, neighbours or others".</p>
         <p>The responses to this question are a good proxy measure of the need for care, and need for support for carers in an area, although this indicator doesn't explicitly tell us the number of people in need of care.</p>
+
+        
+        <p>The table below shows the small areas aggre</p>
+        <h3>Table - Overall population (usual residents aged 5+ years) reporting providing some unpaid care each week; Census 2021</h3>
+        <table id = 'table_pcn_unpaid_care_1' style="margin-bottom: 20px" class = 'table_pcn_class'>
+         <thead>
+           <tr>
+             <th style = 'text-align: left;'>PCN footprint area*</th>
+             <th style = 'text-align: right;'>Number of people providing<br>some unpaid care</th>
+             <th style = 'text-align: right;'>Proportion</th>
+             <th style = 'text-align: right;'>Total number of residents<br>aged 5+ years</th>
+           </tr>
+         </thead>
+       <tbody id="table_pcn_unpaid_care_1_body"></tbody>
+       </table>
+       <p>* remember, this is the area designated as covering the majority of patients registered to the PCN. It is not the PCN registered population itself. Some residents the areas in a PCNs footprint may be registered to other PCNs and some registered patients may live outside of the areas designated in the footprint of a particular PCN.</p>
+     
+      </section>
+
+      <section id = 'relationship'>
+        <h2>Looking at relationships</h2>
+        <p>This section allows you to look at patterns between two area level indicators (such as age, and general health). It will enable you to answer the question, in Sussex do areas with higher proportions of older people have lower self-reported general health.</p>
+        <h3 id = scatter_health_title>Scatter plot</h3>
+        <div id = 'scatter_health'></div>
       </section>
 
 
@@ -89,7 +131,8 @@
       <script src="https://d3js.org/d3-format.v1.min.js"></script>
       <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
       <script src="./javascripts/health.js"></script>
-      <script src="./javascripts/join.js"></script>
-      <script src="./javascripts/join_test.js"></script>
+      <!-- <script src="./javascripts/join.js"></script> -->
+      <!-- <script src="./javascripts/join_test.js"></script> -->
+      <script src="./javascripts/scatter_lsoa.js"></script>
    </body>
 </html>
