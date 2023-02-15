@@ -63,6 +63,9 @@ var very_good_good_health_df =  lsoa_health_data.filter(function (d) {
   return d.Topic == 'Health' && d.Category == 'Good or very good health';
 });
 
+var very_bad_bad_health_df =  lsoa_health_data.filter(function (d) {
+  return d.Topic == 'Health' && d.Category == 'Bad or very bad health';
+});
 // TODO create a PCN (and LTLA) version of these datasets
 
 // TODO this might be better transposed (then youd have one row with bad/very bad, fair, good/very good and denominator)
@@ -81,10 +84,51 @@ var PCN_health_df = d3.nest()
 .map(function(d){
   return { 
     PCN: d.key,
-    Numerator: d.value.Numerator,
-    Proportion: d.value.Numerator / d.value.Denominator,
+    Numerator_good: d.value.Numerator,
+    Proportion_good: d.value.Numerator / d.value.Denominator,
     Denominator: d.value.Denominator};
 });
+
+
+var PCN_health_df_2 = d3.nest()
+  .key(function(d){
+  return d.PCN_Name})
+  .rollup(function(item){
+  return {Numerator: d3.sum(item, function(d){
+      return d.Numerator    
+  }), 
+          Denominator : d3.sum(item, function(d){
+      return d.Denominator    
+  })};
+}).entries(very_bad_bad_health_df)
+.map(function(d){
+  return { 
+    PCN: d.key,
+    Numerator_bad: d.value.Numerator,
+    Proportion_bad: d.value.Numerator / d.value.Denominator,
+    Denominator: d.value.Denominator};
+});
+
+// TODO
+// Joing PCN_health_df_1 and PCN_health_df_2, then subtract sum of Numerator_good and Numerator_bad from denominator to get number reporting fair health.
+// add a sortable table if poss.
+
+console.log(PCN_health_df)
+console.log(PCN_health_df_2)
+
+PCN_health_df.forEach(function(main_item) {
+  var result = PCN_health_df_2.filter(function(lookup_item) {
+      return lookup_item.PCN === main_item.PCN;
+  });
+  main_item.Numerator_bad = (result[0] !== undefined) ? result[0].Numerator_bad : null;
+  main_item.Proportion_bad = (result[0] !== undefined) ? result[0].Proportion_bad : null;
+});
+
+// PCN_health_df.push({
+//   Numerator_fair: Numerator_good + Numerator_bad
+// })
+
+console.log(PCN_health_df)
 
 // Disability
 var disability_df =  lsoa_health_data.filter(function (d) {
@@ -126,7 +170,7 @@ var PCN_unpaid_care_df = d3.nest()
 
 // ! Render LTLA table on load
 window.onload = () => {
-  loadTable_health_PCN_summary(PCN_health_df);
+  // loadTable_health_PCN_summary(PCN_health_df);
   loadTable_unpaid_care_PCN_summary(PCN_unpaid_care_df);
   // loadTable_disability_PCN_summary(ltla_pop_summary_data);
 };
@@ -166,6 +210,15 @@ var LTLA_geojson = $.ajax({
   url: "./outputs/sussex_ltlas.geojson",
   dataType: "json",
   success: console.log("LTLA boundary data successfully loaded."),
+  error: function (xhr) {
+    alert(xhr.statusText);
+  },
+});
+
+var PCN_geojson = $.ajax({
+  url: "./outputs/sussex_pcn_footprints_method_2.geojson",
+  dataType: "json",
+  success: console.log("PCN boundary data successfully loaded."),
   error: function (xhr) {
     alert(xhr.statusText);
   },
@@ -240,6 +293,15 @@ function ltla_colours(feature) {
   return {
    //  fillColor: '#000000',
     color: '#000000',
+    weight: 2,
+    fillOpacity: 0
+  }
+}
+
+function pcn_colours(feature) {
+  return {
+   //  fillColor: '#000000',
+    color: 'maroon',
     weight: 2,
     fillOpacity: 0
   }
@@ -326,7 +388,15 @@ function bvb_style(feature) {
        layer.feature.properties.LAD22NM //+
      );
   });
-  
+
+  var pcn_boundary = L.geoJSON(PCN_geojson.responseJSON, { style: pcn_colours })
+  .bindPopup(function (layer) {
+     return (
+       "Primary Care Network footprint for: <Strong>" +
+       layer.feature.properties.PCN_Name //+
+     );
+  });
+    
   map_general_health.fitBounds(lsoa2021_good_very_good.getBounds());
     
   var legend_good_health_map = L.control({position: 'bottomleft'});
@@ -347,9 +417,8 @@ function bvb_style(feature) {
        return div;
    };
    
-   legend_good_health_map.addTo(map_general_health);
-
-   
+  legend_good_health_map.addTo(map_general_health);
+ 
   var legend_bad_health_map = L.control({position: 'bottomright'});
     
   legend_bad_health_map.onAdd = function (map_general_health) {
@@ -371,12 +440,13 @@ function bvb_style(feature) {
   legend_bad_health_map.addTo(map_general_health);
 
  
-   var baseMaps_map_population = {'Show good or very good health (LSOAs)': lsoa2021_good_very_good,
-     'Show bad or very bad (LSOAs)': lsoa2021_bad_very_bad
+   var baseMaps_map_population = {'Show proportion reporting<br>good or very good health (LSOAs)': lsoa2021_good_very_good,
+     'Show proportion reporting<br>bad or very bad health (LSOAs)': lsoa2021_bad_very_bad
      };
  
    var overlayMaps_map_population = {
-     "Show Local Authorities": ltla_boundary
+    "Show Local Authorities": ltla_boundary,
+    "Show PCN footprints": pcn_boundary,
    };
    
     L.control
