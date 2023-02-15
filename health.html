@@ -66,7 +66,9 @@
       <section id = 'general_health'>
         <h2>General Health</h2>
         <p>Map first</p>
-
+        <h3>Map - small area population estimates; Census 2021</h3>
+        <div id = "map_general_health_id"></div>
+        
         <p>The table below shows the small areas aggregated up to the PCN footprint.</p>
         <h3>Table - Overall population (usual residents) reporting good or very good health; Census 2021</h3>
         <table id = 'table_pcn_health_1' style="margin-bottom: 20px" class = 'table_pcn_class'>
@@ -117,22 +119,19 @@
       <section id = 'relationship'>
         <h2>Looking at relationships</h2>
         <p>This section allows you to look at patterns between two area level indicators (such as age, and general health). It will enable you to answer the question, in Sussex do areas with higher proportions of older people have lower self-reported general health.</p>
+        <h4>This section is coming soon...</h4>
         <h3 id = scatter_health_title>Scatter plot</h3>
         <div id = 'scatter_health'></div>
       </section>
 
-
-
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-      <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+      <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
       <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
       <script src="leaflet-side-by-side.js"></script>
       <script src="https://d3js.org/d3-format.v1.min.js"></script>
       <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
       <script src="./javascripts/health.js"></script>
-      <!-- <script src="./javascripts/join.js"></script> -->
-      <!-- <script src="./javascripts/join_test.js"></script> -->
       <script src="./javascripts/scatter_lsoa.js"></script>
    </body>
 </html>

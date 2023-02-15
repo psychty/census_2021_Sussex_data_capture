@@ -228,6 +228,12 @@ td:nth-child(1) {
   background-color: antiquewhite;
 }
 
+#map_general_health_id {
+  height: 480px;
+  margin:auto;
+  background-color: antiquewhite;
+}
+
 .legend {
   border-radius: 10px;
   background-color: #fff;

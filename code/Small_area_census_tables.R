@@ -166,6 +166,12 @@ LSOA_table %>%
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_health_data.json'))
 
+LSOA_table %>% 
+  filter(Category == 'Good or very good health') %>% 
+  group_by(PCN_Name) %>% 
+  summarise(Numerator = sum(Numerator, na.rm = TRUE))
+
+
 # LSOA_table %>%
 #   toJSON() %>% 
 #   write_lines(paste0(output_directory, '/LSOA_health_data_plan_B.json'))
