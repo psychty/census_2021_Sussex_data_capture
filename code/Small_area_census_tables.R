@@ -172,6 +172,8 @@ LSOA_table %>%
   summarise(Numerator = sum(Numerator, na.rm = TRUE))
 
 
+1
+
 # LSOA_table %>%
 #   toJSON() %>% 
 #   write_lines(paste0(output_directory, '/LSOA_health_data_plan_B.json'))
@@ -183,11 +185,48 @@ LSOA_table %>%
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_PCN_lookup_data.json'))
 
+# Plan B geojson file containing the data for these maps
+
+very_good_good_proportion
+very_bad_bad_proportion
+provides_some_unpaid_care_proportion
+disabled_proportion
+households_with_disabled_proportion
+
 unique(LSOA_table$Category)
 
-# building PCN table ####
-  
-  # This can come after we've got the LSOA level tables right.
 
-# PCN_table <-
 
+
+prop_health <- LSOA_table %>% 
+  filter(Category %in% c("Disabled under the Equality Act", "Bad or very bad health", "Good or very good health", "Provides some care", "One or more in household")) %>% 
+  select(LSOA21CD, Category, Numerator) %>% 
+  mutate(Category = paste0(ifelse(Category == 'Disabled under the Equality Act', 'disabled_', ifelse(Category == 'Bad or very bad health', 'very_bad_bad_', ifelse(Category == 'Good or very good health', 'very_good_good_', ifelse(Category == 'Provides some care', 'provides_some_unpaid_care_proportion', ifelse(Category == 'One or more in household', 'households_with_disabled_', NA))))), 'numerator')) %>% 
+  pivot_wider(names_from = 'Category',
+              values_from = 'Numerator')
+
+num_health <- LSOA_table %>% 
+  filter(Category %in% c("Disabled under the Equality Act", "Bad or very bad health", "Good or very good health", "Provides some care", "One or more in household")) %>% 
+  select(LSOA21CD, Category, Proportion) %>% 
+  mutate(Category = paste0(ifelse(Category == 'Disabled under the Equality Act', 'disabled_', ifelse(Category == 'Bad or very bad health', 'very_bad_bad_', ifelse(Category == 'Good or very good health', 'very_good_good_', ifelse(Category == 'Provides some care', 'provides_some_unpaid_care_proportion', ifelse(Category == 'One or more in household', 'households_with_disabled_', NA))))), 'proportion')) %>% 
+  pivot_wider(names_from = 'Category',
+              values_from = 'Proportion')
+
+LSOA_table %>% 
+  group_by(Category) %>% 
+  summarise(min_prop = min(Proportion),
+            max_prop = max(Proportion))
+
+viridis::magma(9)
+
+
+lsoa_df_to_add <- num_health %>% 
+  left_join(prop_health, by = 'LSOA21CD')
+
+lsoa_21_health <- st_read(paste0(output_directory, '/sussex_2021_lsoas.geojson')) %>% 
+  as_Spatial(IDs = 'LSOA21CD') %>% 
+  left_join(lsoa_df_to_add, by = 'LSOA21CD') %>% 
+  left_join(final_lsoa_pcn_lookup[c('LSOA21CD', 'PCN_Name')], by = 'LSOA21CD') %>% 
+  select(!c(Population, Persons_per_square_kilometre))
+
+geojson_write(lsoa_21_health, file = paste0(output_directory, '/sussex_2021_lsoas_health.geojson'))

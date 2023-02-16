@@ -110,11 +110,7 @@ var PCN_health_df_2 = d3.nest()
 });
 
 // TODO
-// Joing PCN_health_df_1 and PCN_health_df_2, then subtract sum of Numerator_good and Numerator_bad from denominator to get number reporting fair health.
 // add a sortable table if poss.
-
-console.log(PCN_health_df)
-console.log(PCN_health_df_2)
 
 PCN_health_df.forEach(function(main_item) {
   var result = PCN_health_df_2.filter(function(lookup_item) {
@@ -122,15 +118,15 @@ PCN_health_df.forEach(function(main_item) {
   });
   main_item.Numerator_bad = (result[0] !== undefined) ? result[0].Numerator_bad : null;
   main_item.Proportion_bad = (result[0] !== undefined) ? result[0].Proportion_bad : null;
+  main_item.Numerator_fair = main_item.Denominator - (main_item.Numerator_bad + main_item.Numerator_good);
+  main_item.Label_good = d3.format('.1%')(main_item.Numerator_good / main_item.Denominator) + ' (' + d3.format(',.0f')(main_item.Numerator_good) + ')'
+  main_item.Label_fair = d3.format('.1%')(main_item.Numerator_fair / main_item.Denominator) + ' (' + d3.format(',.0f')(main_item.Numerator_fair) + ')'
+  main_item.Label_bad = d3.format('.1%')(main_item.Numerator_bad / main_item.Denominator) + ' (' + d3.format(',.0f')(main_item.Numerator_bad) + ')'
 });
 
-// PCN_health_df.push({
-//   Numerator_fair: Numerator_good + Numerator_bad
-// })
+PCN_health_df.sort(function (a,b) {return d3.ascending(a.PCN, b.PCN);});
 
-console.log(PCN_health_df)
-
-// Disability
+// ! Disability
 var disability_df =  lsoa_health_data.filter(function (d) {
   return d.Topic == 'Disability';
 });
@@ -170,7 +166,7 @@ var PCN_unpaid_care_df = d3.nest()
 
 // ! Render LTLA table on load
 window.onload = () => {
-  // loadTable_health_PCN_summary(PCN_health_df);
+  loadTable_health_PCN_summary(PCN_health_df);
   loadTable_unpaid_care_PCN_summary(PCN_unpaid_care_df);
   // loadTable_disability_PCN_summary(ltla_pop_summary_data);
 };
@@ -180,7 +176,7 @@ function loadTable_health_PCN_summary(PCN_health_df) {
   var dataHTML = "";
 
   for (let item of PCN_health_df) {
-    dataHTML += `<tr><td>${item.PCN}</td><td>${d3.format(",.0f")(item.Numerator)}</td><td>${d3.format('.1%')(item.Numerator/item.Denominator)}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
+    dataHTML += `<tr><td>${item.PCN}</td><td>${item.Label_good}</td><td>${item.Label_fair}</td><td>${item.Label_bad}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
   }
   tableBody.innerHTML = dataHTML;
 }
