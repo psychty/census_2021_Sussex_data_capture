@@ -47,7 +47,6 @@ $.ajax({
   },
 });
 
-
 $.ajax({
   url: "./outputs/GP_location_data.json",
   dataType: "json",
@@ -81,7 +80,7 @@ $.ajax({
 });
 
 // This is the sum of the Patients in the Sussex_pcn_summary_df
-var total_pcn_population = Sussex_pcn_summary_df.map(i=>i.Total_patients).reduce((a,b)=>a+b);
+var total_pcn_population = Sussex_pcn_summary_df.map(i=>i.Patients).reduce((a,b)=>a+b);
 var total_pcn_patients_with_no_lsoa = Sussex_pcn_summary_df.map(i=>i.Patients_with_no_LSOA).reduce((a,b)=>a+b);
 
 d3.select("#pcn_summary_text_2").html(function (d) {
@@ -126,8 +125,6 @@ var pcn_colour_function = d3
   .scaleOrdinal()
   .domain(PCNs)
   .range(["#92a0d6","#74cf3d","#4577ff","#449e00","#e84fcd","#02de71","#f68bff","#63df6b","#8f227f","#508000","#4646a9","#deab00","#0295e8","#c44e00","#02caf9","#ff355c","#01c2a0","#a50c35","#019461","#ff7390","#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"]);
-
-  console.log(PCNs)
 
 // We need a function to return our own PCN_ID (the number we've given to the PCN based on its row number in the dataframe in R).
 var selected_pcn_id_lookup = d3
@@ -2275,6 +2272,52 @@ new L.circleMarker([pcn_gp_location_40[i]['latitude'], pcn_gp_location_40[i]['lo
    .addTo(pcn_40_group) // These markers are directly added to the layer group
   };
 
+// ! PCN 41
+pcn_41_group = L.layerGroup();
+pcn_41 = PCNs[41 - 1]
+pcn_41_boundary = L.geoJSON(PCN_ReachLSOA11_geojson.responseJSON, {
+         filter: function(feat) { return feat.properties.PCN_Name === pcn_41; }
+        , style: reg_pop_style})
+      //  .addTo(pcn_x_boundary)
+       .bindPopup(function (layer) {
+          return (
+            '<Strong>' +
+            layer.feature.properties.LSOA11CD +
+            '</Strong><br><br>Patients registered to ' +
+            layer.feature.properties.PCN_Name +
+            ': <Strong>' +
+            d3.format(',.0f')(layer.feature.properties.Patients) +
+            '</Strong>.<br><br>This is <Strong>' +
+            d3.format('.1%')(layer.feature.properties.Patients / layer.feature.properties.Total_patients) +
+            '</Strong> of the total number of patients registered to a practice in this PCN (<Strong>' + 
+            d3.format(',.0f')(layer.feature.properties.Total_patients) +
+            '</Strong> patients).'
+          );
+       })
+pcn_41_boundary.addTo(pcn_41_group)
+pcn_gp_location_41 = GP_location.filter(function (d) {
+  return d.PCN_Name == pcn_41;
+});
+
+for (var i = 0; i < pcn_gp_location_41.length; i++) {
+new L.circleMarker([pcn_gp_location_41[i]['latitude'], pcn_gp_location_41[i]['longitude']],{
+     radius: 8,
+     weight: .75,
+     fillColor: gp_marker_colour,
+     color: '#fff',
+     fillOpacity: 1})
+    .bindPopup('<Strong>' + 
+    pcn_gp_location_41[i]['ODS_Code'] + 
+    ' ' + 
+    pcn_gp_location_41[i]['ODS_Name'] + 
+    '</Strong><br><br>This practice is part of the ' + 
+    pcn_gp_location_41[i]['PCN_Name'] +
+    '. There are <Strong>' + 
+    d3.format(',.0f')(pcn_gp_location_41[i]['Patients']) + 
+    '</Strong> patients registered to this practice.' )
+   .addTo(pcn_41_group) // These markers are directly added to the layer group
+  };
+
 // This function identifies the selected PCN, hides all areas then adds the appropriate PCN layer 
 function showSelectedPCN(){
 
@@ -2307,13 +2350,10 @@ map_lsoa_pcn_reach.fitBounds(selected_pcn_boundary.getBounds(), {maxZoom: 13});
 // initalise the function
 showSelectedPCN()
 
-
 // showSelectedPCN() is fired any time the select changes
 d3.select("#select_pcn_x_button").on("change", function (d) {
   showSelectedPCN()
  });
-
-
 
 var pcn_footprint_method_1 = L.geoJSON(PCN_footprint_Method_1_geojson.responseJSON, { style: style_footprint })
 .bindPopup(function (layer) {
@@ -2399,12 +2439,8 @@ var overlayMaps_map_footprint = {
   "Show Local Authorities": ltla_boundary_footprint,
  };
 
-
-
 L.control
 .layers(baseMaps_map_footprint, overlayMaps_map_footprint, { collapsed: false, position: 'topright'})
 .addTo(map_pcn_footprint);
 
 }); // pcn data load scope
-
-

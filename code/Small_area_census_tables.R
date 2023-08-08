@@ -42,6 +42,139 @@ nomis_tables <- nomis_data_info() %>%
 census_nomis_tables <- nomis_tables %>% 
   filter(str_detect(name.value, '^TS'))
 
+# Age
+census_LSOA_age_raw_df <- nomis_get_data(id = 'NM_2020_1',
+                                                measure = '20100',
+                                                geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Age_group = C2021_AGE_19_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+census_LSOA_age_df <- census_LSOA_age_raw_df %>% 
+  filter(Age_group != 'Total') %>% 
+  mutate(Age_group = ifelse(Age_group == 'Aged 85 years and over', '85+ years', ifelse(Age_group == 'Aged 4 years and under', '0-4 years', gsub(' to ', '-', gsub('Aged ', '', Age_group))))) 
+
+unique(census_LSOA_age_df$Age_group)
+
+census_LSOA_65_plus <- census_LSOA_age_df %>% 
+  mutate(Age_65 = ifelse(Age_group %in% c('65-69 years','70-74 years','75-79 years','80-84 years','85+ years'), '65+ years', ifelse(Age_group %in% c('0-4 years','5-9 years','10-14 years','15-19 years','20-24 years','25-29 years','30-34 years','35-39 years','40-44 years','45-49 years','50-54 years','55-59 years','60-64 years'), 'Under 65 years', NA))) %>% 
+  group_by(LSOA21CD, Age_65) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(LSOA21CD) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Proportion = Population / Denominator) %>% 
+  filter(Age_65 == '65+ years') %>% 
+  mutate(Topic = 'Age') %>% 
+  select(LSOA21CD, Topic, Category = Age_65, Numerator = Population, Proportion, Denominator)
+
+census_LSOA_75_plus <- census_LSOA_age_df %>% 
+  mutate(Age_75 = ifelse(Age_group %in% c('75-79 years','80-84 years','85+ years'), '75+ years', ifelse(Age_group %in% c('0-4 years','5-9 years','10-14 years','15-19 years','20-24 years','25-29 years','30-34 years','35-39 years','40-44 years','45-49 years','50-54 years','55-59 years','60-64 years', '65-69 years','70-74 years'), 'Under 75 years', NA))) %>% 
+  group_by(LSOA21CD, Age_75) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(LSOA21CD) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Proportion = Population / Denominator) %>% 
+  filter(Age_75 == '75+ years') %>% 
+  mutate(Topic = 'Age') %>% 
+  select(LSOA21CD, Topic, Category = Age_75, Numerator = Population, Proportion, Denominator)
+
+# Ethnicity 
+
+census_LSOA_ethnicity_raw_df <- nomis_get_data(id = 'NM_2020_1',
+                                         measure = '20100',
+                                         geography = 'TYPE151') #%>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Ethnicity = C2021_AGE_19_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+# TODO Country of birth ###
+
+census_LSOA_country_of_birth_raw_df <- nomis_get_data(id = 'NM_2024_1',
+                                               measure = '20100',
+                                               geography = 'TYPE151')# %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Country_of_birth = C2021_AGE_19_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+# unique(census_LSOA_country_of_birth_raw_df$)
+
+# TODO Household experiencing deprivation ###
+
+census_LSOA_hh_deprivation_raw_df <- nomis_get_data(id = 'NM_2031_1',
+                                                      measure = '20100',
+                                                      geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Household_deprivation_dimension = C2021_DEP_6_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+
+# Definition: The dimensions of deprivation used to classify households are indicators based on four selected household characteristics.
+# 
+# Education: A household is classified as deprived in the education dimension if no one has at least level 2 education and no one aged 16 to 18 years is a full-time student.
+# 
+# Employment: A household is classified as deprived in the employment dimension if any member, not a full-time student, is either unemployed or economically inactive due to long-term sickness or disability.
+# 
+# Health: A household is classified as deprived in the health dimension if any person in the household has general health that is bad or very bad or is identified as disabled. People who have assessed their day-to-day activities as limited by long-term physical or mental health conditions or illnesses are considered disabled. This definition of a disabled person meets the harmonised standard for measuring disability and is in line with the Equality Act (2010).
+# 
+# Housing: A household is classified as deprived in the housing dimension if the household's accommodation is either overcrowded, in a shared dwelling, or has no central heating.
+
+# TODO Household language
+census_LSOA_household_language_raw_df <- nomis_get_data(id = 'NM_2044_1',
+                                                    measure = '20100',
+                                                    geography = 'TYPE151') %>% 
+select(LSOA21CD = GEOGRAPHY_CODE, Household_language = C2021_HHLANG_5_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+# TODO Household size
+census_LSOA_household_size_raw_df <- nomis_get_data(id = 'NM_2037_1',
+                                                    measure = '20100',
+                                                    geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Household_size = C2021_HHSIZE_10_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+
+# Household composition 
+
+census_LSOA_household_comp_raw_df <- nomis_get_data(id = 'NM_2023_1',
+                                         measure = '20100',
+                                         geography = 'TYPE151') %>% 
+  select(LSOA21CD = GEOGRAPHY_CODE, Household_composition = C2021_HHCOMP_15_NAME, Population = OBS_VALUE) %>% 
+  filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
+  
+census_LSOA_household_comp_df_broad <- census_LSOA_household_comp_raw_df %>% 
+  filter(Household_composition %in% c('One-person household', 'Single family household', 'Other household types')) %>% 
+  group_by(LSOA21CD) %>% 
+  mutate(Proportion = Population / sum(Population),
+         Denominator = sum(Population),
+         Topic = 'Household composition')
+
+census_LSOA_household_comp_single_person_over_66 <- census_LSOA_household_comp_raw_df %>% 
+  filter(Household_composition %in% c('Total: All households', 'One-person household: Aged 66 years and over')) %>% 
+  pivot_wider(names_from = 'Household_composition',
+              values_from = 'Population') %>% 
+  rename(Numerator = 'One-person household: Aged 66 years and over',
+         Denominator = 'Total: All households') %>% 
+  mutate(Proportion = Numerator/Denominator,
+         Topic = 'Household composition',
+         Category = 'One-person household: Aged 66 years and over')
+
+census_LSOA_household_comp_lone_parent_dependent_children <- census_LSOA_household_comp_raw_df %>%   filter(Household_composition %in% c('Total: All households', 'Single family household: Lone parent family: With dependent children')) %>% 
+  pivot_wider(names_from = 'Household_composition',
+              values_from = 'Population') %>% 
+  rename(Numerator = 'Single family household: Lone parent family: With dependent children',
+         Denominator = 'Total: All households') %>% 
+  mutate(Proportion = Numerator/Denominator,
+         Topic = 'Household composition',
+         Category = 'Lone parent family: With dependent children')
+
+census_LSOA_household_comp_any_with_dependent_children <- census_LSOA_household_comp_raw_df %>%   filter(Household_composition %in% c('Total: All households', 'Single family household: Married or civil partnership couple: Dependent children', 'Single family household: Cohabiting couple family: With dependent children', 'Single family household: Lone parent family: With dependent children', 'Other household types: With dependent children')) %>%
+  mutate(Household_composition = ifelse(Household_composition %in% c('Single family household: Married or civil partnership couple: Dependent children', 'Single family household: Cohabiting couple family: With dependent children', 'Single family household: Lone parent family: With dependent children', 'Other household types: With dependent children'), 'Any with dependent children', ifelse(Household_composition == 'Total: All households', 'Total: All households', NA))) %>% 
+  group_by(LSOA21CD, Household_composition) %>%
+  summarise(Population = sum(Population)) %>% 
+  group_by(LSOA21CD) %>% 
+  pivot_wider(names_from = 'Household_composition',
+              values_from = 'Population') %>% 
+  rename(Numerator = 'Any with dependent children',
+         Denominator = 'Total: All households') %>% 
+  mutate(Proportion = Numerator/Denominator,
+         Topic = 'Household composition',
+         Category = 'Any with dependent children')
+
 # Disability ####
 
 census_LSOA_disability_raw_df <- nomis_get_data(id = 'NM_2056_1',
@@ -88,6 +221,17 @@ census_LSOA_health_table <- census_LSOA_health_raw_df %>%
   mutate(Denominator = sum(Population)) %>% 
   mutate(Topic = 'Health') %>% 
   select(LSOA21CD, Topic, Category = Health, Numerator = Population, Proportion, Denominator)
+
+census_LSOA_health_raw_df %>% 
+  filter(Health != 'Total: All usual residents') %>% 
+  left_join(final_lsoa_pcn_lookup, by = 'LSOA21CD') %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(PCN_Name, Health) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(PCN_Name) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  pivot_wider(names_from = 'Health',
+              values_from = 'Population') 
 
 # census_LSOA_health_table <- census_LSOA_health_raw_df %>% 
 #   filter(Health != 'Total: All usual residents') %>% 
@@ -170,9 +314,6 @@ LSOA_table %>%
   filter(Category == 'Good or very good health') %>% 
   group_by(PCN_Name) %>% 
   summarise(Numerator = sum(Numerator, na.rm = TRUE))
-
-
-1
 
 # LSOA_table %>%
 #   toJSON() %>% 
