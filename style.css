@@ -10,7 +10,7 @@ body {width: 80vw;
   margin: auto;}
 
 section {
-  padding-top: 5vh;
+  padding-top: 2vh;
 }
   
 p {
@@ -229,6 +229,12 @@ td:nth-child(1) {
 }
 
 #map_general_health_id {
+  height: 480px;
+  margin:auto;
+  background-color: antiquewhite;
+}
+
+#map_disability_id {
   height: 480px;
   margin:auto;
   background-color: antiquewhite;

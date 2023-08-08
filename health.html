@@ -43,7 +43,7 @@
      
       <section id = 'note'>
         <div class="good_to_know">
-        <h3>Notes</h3>
+        <!-- <h3>Notes</h3> -->
         <!-- <p>This page is not currently accessibility friendly, due to some of the interactive elements on some figures and the maps. We are working to create a print and screen reader friendly version of the site as soon as possible. If you need help with any part of the analyses below, please email jsna[at]westsussex.gov.uk</p> -->
         <p>This page displays a lot of data and may take a few moments to load.</p>
         </div>
@@ -52,8 +52,10 @@
      <section id = 'health_intro'>
         <h1>Health in Sussex</h1>
         <p>The 2021 Census asked people to self-report their general health status from very poor, to very good health, as well as asking people if they were disabled (as defined under the Equality Act) and whether they provided unpaid care to another person. These responses are detailed on this page.</p>
-        <p>We show small area (LSOA) differences in some of the responses to these Census questions and where possible aggregate or combine the data at small area to the level of PCN based on our PCN footprints (see the <a href = './pcn.html'>PCN footprint page</a> for more details).</p>
+        <p>We show small area (LSOA) differences in some of the responses to these Census questions and where possible aggregate or combine the data at small area to the level of PCN based on our PCN footprints (see the <a href = './pcn.html'>PCN footprint page</a> for more details) and Local Authorities.</p>
         
+ 
+
         <div class="good_to_know">
         <h3>A note about age and health</h3>
         <p>Health (or ill health in particular) is closely related to age with peoples health tending to decline as people get older and the need for care to increase. As such, you might expect areas with higher proportions of older people to have worse health outcomes. To account for this, the ONS have created age-standardised data but this is not available at small area (LSOA) level detailed here.</p>
@@ -67,7 +69,7 @@
         <h2>General Health</h2>
         <p>The first map below shows the proportion of residents in each small area neighbourhood that self-report their health as being eiher good or very good. You can also switch the map to show the proportion who reported their health as bad or very bad by clicking the radio buttons on the top right of the map. Finally, you can toggle on overlay boundaries for Local Authorities and for the PCN footprints as defined by our method 2 analysis (detailed on the <a href = './pcn.html'>PCN footprint page</a>).</p>
         
-        <h3>Map - small area population estimates; Census 2021</h3>
+        <h3>Map - small area self-reported general health; Census 2021</h3>
         <div id = "map_general_health_id"></div>
         <p>The map highlights the variation across Sussex, with northern areas of the map tending to report higher proportions of good health than areas across the coast. Residents in the Horsham LSOA (E01035339, near Wickhurst Green) reported the highest proportion with 94% of its residents reporting good or very good health. In contrast, the Brighton and Hove LSOA (E01016942, near Kemptown) had the smallest proportion of residents (just 60%) reporting good or very good health. This Brighton and Hove LSOA also has the highest proportion of residents reporting worse general health with one in five residents (19%) reporting their health as bad or very bad. Overall, Brighton and Hove has a lot of variation in a fairly small geographical area with some of the highest and lowest proportions of good or very good health in neighbourhoods just streets apart.</p>
 
@@ -94,7 +96,25 @@
         <h2>Disability</h2>
         <p>A person is defined as disabled if they assessed their day-to-day activities as limited by long-term physical or mental health conditions or illnesses. This definition of a disabled person meets the harmonised standard for measuring disability and is in line with the Equality Act (2010).</p>
         <p>The 2021 Census also enables us to count how many households in an area have one or more people who are registered disabled under the Equality Act.</p>
-        
+        <h3>Map - small area proportion of residents disabled under the Equality Act; Census 2021</h3>
+        <div id = "map_disability_id"></div>
+        <p>There is also a coastal and inland divide across Sussex, with northern areas of the map tending to have a smaller proportion of residents and households with disability. More than a third of residents in the Brighton LSOA (E01016942) reported having a disability as defined by the Equality Act (2010). In contrast, the Chichester LSOA E01031532 had the lowest propoeriotn at 7%. There are however neighbourhoods in Crawley which have a higher proportion of disabled residents as well as households with at least one person whose day-to-day activities are limited by long-term physical or mental health conditions.</p>
+
+        <!-- <p>The table below shows the proportion of residents and households with residents who have a disability by small areas aggregated up to the PCN footprint. This helps to give a guide for the populations covered by the network for planning purposes but remember, this is the area designated as covering the majority of patients registered to the PCN. It is not the PCN registered population itself. Some residents the areas in a PCNs footprint may be registered to other PCNs and some registered patients may live outside of the areas designated in the footprint of a particular PCN.</p>
+        <p>The number of residents reporting each response is given in brackets next to the proportion of residents in that area.</p>
+        <h3>Table - Overall population (usual residents) with a disability; Sussex LSOAs; Census 2021</h3>
+        <table id = 'table_pcn_disability_1' style="margin-bottom: 20px" class = 'table_pcn_class'>
+         <thead>
+           <tr>
+             <th style = 'text-align: left;'>PCN footprint area*</th>
+             <th style = 'text-align: right;'>Number of people<br>with a disability</th>
+             <th style = 'text-align: right;'>Proportion of people<br>with a disability</th>
+             <th style = 'text-align: right;'>Number of households<br>with at least one<br>resident with a disability</th>
+             <th style = 'text-align: right;'>Proportion of households<br>with at least one<br>resident with a disability</th>
+           </tr>
+         </thead>
+       <tbody id="table_pcn_health_1_body"></tbody>
+       </table> -->
       </section>
 
       <section id = 'unpaid_care'>

@@ -285,6 +285,49 @@ function get_bad_health_proportion_legend_colour(d) {
          '#edf8b1' ;
 }
 
+function get_disability_proportion_colour(d) {
+  return d > .35 ? '#8c2d04' :
+         d > .30  ? '#cc4c02' :
+         d > .25  ? '#ec7014' :
+         d > .2 ? '#fe9929' :
+         d > .15   ? '#fec44f' :
+         d > .1   ? '#fee391' :
+         d > .05   ? '#fff7bc' :
+         '#ffffe5' ;
+}
+
+function get_disability_proportion_legend_colour(d) {
+  return d > 35 ? '#8c2d04' :
+         d > 30  ? '#cc4c02' :
+         d > 25  ? '#ec7014' :
+         d > 20 ? '#fe9929' :
+         d > 15   ? '#fec44f' :
+         d > 10   ? '#fee391' :
+         d > 5   ? '#fff7bc' :
+         '#ffffe5' ;
+}
+
+function get_hh_disability_proportion_colour(d) {
+  return d > .6 ? '#8c2d04' :
+         d > .5  ? '#cc4c02' :
+         d > .4  ? '#ec7014' :
+         d > .3 ? '#fe9929' :
+         d > .2   ? '#fec44f' :
+         d > .1   ? '#fee391' :
+         '#ffffd4' ;
+}
+
+function get_hh_disability_proportion_legend_colour(d) {
+  return d > 60 ? '#8c2d04' :
+         d > 50  ? '#cc4c02' :
+         d > 40  ? '#ec7014' :
+         d > 30 ? '#fe9929' :
+         d > 20   ? '#fec44f' :
+         d > 10   ? '#fee391' :
+         '#ffffd4' ;
+}
+
+
 function ltla_colours(feature) {
   return {
    //  fillColor: '#000000',
@@ -332,6 +375,28 @@ function bvb_style(feature) {
   return {
     fillColor: get_bad_health_proportion_colour(feature.properties.very_bad_bad_proportion),
     color: get_bad_health_proportion_colour(feature.properties.very_bad_bad_proportion),
+    // fillColor: '#f4365f',
+    // color: '#c9c9c9',
+    weight: 1,
+    fillOpacity: 0.85,
+  };
+}
+
+function disability_style(feature) {
+  return {
+    fillColor: get_disability_proportion_colour(feature.properties.disabled_proportion),
+    color: get_disability_proportion_colour(feature.properties.disabled_proportion),
+    // fillColor: '#f4365f',
+    // color: '#c9c9c9',
+    weight: 1,
+    fillOpacity: 0.85,
+  };
+}
+
+function hh_disability_style(feature) {
+  return {
+    fillColor: get_hh_disability_proportion_colour(feature.properties.households_with_disabled_proportion),
+    color: get_hh_disability_proportion_colour(feature.properties.households_with_disabled_proportion),
     // fillColor: '#f4365f',
     // color: '#c9c9c9',
     weight: 1,
@@ -435,8 +500,7 @@ function bvb_style(feature) {
   
   legend_bad_health_map.addTo(map_general_health);
 
- 
-   var baseMaps_map_population = {'Show proportion reporting<br>good or very good health (LSOAs)': lsoa2021_good_very_good,
+    var baseMaps_map_population = {'Show proportion reporting<br>good or very good health (LSOAs)': lsoa2021_good_very_good,
      'Show proportion reporting<br>bad or very bad health (LSOAs)': lsoa2021_bad_very_bad
      };
  
@@ -449,7 +513,116 @@ function bvb_style(feature) {
     .layers(baseMaps_map_population, overlayMaps_map_population, { collapsed: false, position: 'topright'})
     .addTo(map_general_health);
  
+    // Create a leaflet map (L.map) in the element map_disability
+    var map_disability = L.map("map_disability_id");
+    
+  // add the background and attribution to the map
+  L.tileLayer(tileUrl, { attribution })
+  .addTo(map_disability);
   
+  var lsoa2021_disability = L.geoJSON(LSOA21_geojson_health.responseJSON, { style: disability_style})
+   .bindPopup(function (layer) {
+      return (
+        '2021 LSOA: <Strong>' +
+        layer.feature.properties.LSOA21CD +
+        " (" +
+        layer.feature.properties.LSOA21NM +
+        ')</Strong><br>Number of residents registered as disabled under the Equality Act (2010): <Strong>' +
+        d3.format(',.0f')(layer.feature.properties.disabled_numerator) +
+        '</Strong><br>Proportion of residents registered as disabled under the Equality Act (2010): <Strong>' +
+        d3.format('.1%')(layer.feature.properties.disabled_proportion) +
+        '</Strong>.'
+      );
+   })
+   .addTo(map_disability);
+
+   var lsoa2021_hh_disability = L.geoJSON(LSOA21_geojson_health.responseJSON, { style: hh_disability_style})
+   .bindPopup(function (layer) {
+      return (
+        '2021 LSOA: <Strong>' +
+        layer.feature.properties.LSOA21CD +
+        " (" +
+        layer.feature.properties.LSOA21NM +
+        ')</Strong><br>Number of households with at least one resident registered as disabled under the Equality Act (2010): <Strong>' +
+        d3.format(',.0f')(layer.feature.properties.households_with_disabled_numerator) +
+        '</Strong><br>Proportion of households with at least one person with a disability: <Strong>' +
+        d3.format('.1%')(layer.feature.properties.households_with_disabled_proportion) +
+        '</Strong>.'
+      );
+   })
+  
+  var ltla_boundary_disability = L.geoJSON(LTLA_geojson.responseJSON, { style: ltla_colours })
+  .bindPopup(function (layer) {
+     return (
+       "Local authority: <Strong>" +
+       layer.feature.properties.LAD22NM //+
+     );
+  });
+
+  var pcn_boundary_disability = L.geoJSON(PCN_geojson.responseJSON, { style: pcn_colours })
+  .bindPopup(function (layer) {
+     return (
+       "Primary Care Network footprint for: <Strong>" +
+       layer.feature.properties.PCN_Name //+
+     );
+  });
+    
+  map_disability.fitBounds(lsoa2021_disability.getBounds());
+    
+  var legend_disability_map = L.control({position: 'bottomleft'});
+    
+  legend_disability_map.onAdd = function (map_disability) {
+        var div = L.DomUtil.create('div', 'info legend'),
+           grades = [0, 5, 10, 15, 20, 25, 30, 35],
+           labels = ['<b>Proportion of residents<br>registered as disabled<br>under the Equality Act (2010)</br>'];
+   
+       // loop through our density intervals and generate a label with a colored square for each interval
+       for (var i = 0; i < grades.length; i++) {
+           div.innerHTML +=
+           labels.push(
+               '<i style="background:' + get_disability_proportion_legend_colour(grades[i] + 1) + '"></i> ' +
+               d3.format(',.0f')(grades[i]) + (grades[i + 1] ? '&ndash;' + d3.format(',.0f')(grades[i + 1]) + '%' : '%+'));
+       }
+       div.innerHTML = labels.join('<br>');
+       return div;
+   };
+   
+   legend_disability_map.addTo(map_disability);
+ 
+   var legend_hh_disability_map = L.control({position: 'bottomright'});
+    
+  legend_hh_disability_map.onAdd = function (map_disability) {
+       var div = L.DomUtil.create('div', 'info legend'),
+          grades = [0, 10, 20, 30, 40, 50, 60],
+          labels = ['<b>Proportion of households<br>with at least one person<br>who is registered disabled</b>'];
+  
+      // loop through our density intervals and generate a label with a colored square for each interval
+      for (var i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+          labels.push(
+              '<i style="background:' + get_hh_disability_proportion_legend_colour(grades[i] + 1) + '"></i> ' +
+              d3.format(',.1f')(grades[i]) + (grades[i + 1] ? '&ndash;' + d3.format(',.1f')(grades[i + 1]) + '%' : '%+'));
+      }
+      div.innerHTML = labels.join('<br>');
+      return div;
+  };
+  
+  legend_hh_disability_map.addTo(map_disability);
+
+    var baseMaps_map_disability = {'Show proportion registered as disabled<br>under the Equality Acty (2010) (LSOAs)': lsoa2021_disability,
+     'Show proportion of households with<br>atleast one person with a disability (LSOAs)': lsoa2021_hh_disability
+     };
+ 
+   var overlayMaps_map_disability = {
+    "Show Local Authorities": ltla_boundary_disability,
+    "Show PCN footprints": pcn_boundary_disability,
+   };
+   
+    L.control
+    .layers(baseMaps_map_disability, overlayMaps_map_disability, { collapsed: false, position: 'topright'})
+    .addTo(map_disability);
+
+
   });
   
   

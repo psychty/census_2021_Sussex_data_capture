@@ -56,8 +56,8 @@ lsoa11_lookup <- oa11_lookup %>%
   filter(LTLA %in% areas)
 
 # This is extracting a geojson format file from open geography portal. It has geometry information as well as the information we need and is a spatial features object. By adding the st_drop_geometry() function we turn this into a dataframe
-lsoa_change_df <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA11_LSOA21_LAD22_EW_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
-  select(Original_LSOA11CD = F_LSOA11CD, LSOA21CD, LSOA21NM, LTLA = LAD22NM, Change = CHGIND) %>% 
+lsoa_change_df <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_(2011)_to_LSOA_(2021)_to_Local_Authority_District_(2022)_Lookup_for_England_and_Wales/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+  select(Original_LSOA11CD = LSOA11CD, LSOA21CD, LSOA21NM, LTLA = LAD22NM, Change = CHGIND) %>% 
   st_drop_geometry() %>% 
   mutate(Change = factor(ifelse(Change == 'M', 'Merged', ifelse(Change == 'S', 'Split', ifelse(Change == 'X', 'Redefined', ifelse(Change == 'U', 'Unchanged', NA)))), levels = c('Unchanged', 'Merged', 'Split', 'Redefined')))
 
@@ -66,7 +66,7 @@ lsoa_change_df1 <- lsoa_change_df %>%
   select(Original_LSOA11CD, Change) %>% 
   unique()
 
-lsoa_2011_spdf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
+lsoa_2011_spdf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') %>% 
   filter(LSOA11CD %in% lsoa11_lookup$LSOA11CD) %>% 
   as_Spatial(IDs = LSOA11CD) %>% 
   left_join(lsoa_change_df1, by = c('LSOA11CD' = 'Original_LSOA11CD'))
@@ -206,8 +206,10 @@ Method_3_LSOA_based_PCN_footprint <- lsoa_2021_spdf %>%
 #   group_by(PCN_Name) %>% 
 #   summarise()
 
-PCN_palette <- colorFactor(c("#92a0d6","#74cf3d","#4577ff","#449e00","#e84fcd","#02de71","#f68bff","#63df6b","#8f227f","#508000","#4646a9","#deab00","#0295e8","#c44e00","#02caf9","#ff355c","#01c2a0","#a50c35","#019461","#ff7390","#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"),
-                              levels = levels(Method_3_LSOA_based_PCN_footprint$PCN_Name))
+ 
+ PCN_palette <- colorFactor(c('#33b6ad', '#a3deda', '#00478a', '#337ec6', '#99bee3', '#fc9e33', '#fdcf9c', '#feecd7', '#b94487', '#c86ba0', '#dea5c6', '#eccddf', '#78be20', '#bade8d', '#006747', '#33ab61', '#66c088', '#371462', '#6a4598', '#7c5ca5', '#beadd2', "#00afa6","#ff8753","#0063a5","#c5cd5d","#0a5494","#897400","#b2afff","#395c0a","#f7afed","#90d78a","#9b2344","#00796b","#ff836f","#81b6ff","#843f22","#524b85","#dfc47c","#853a4a","#f8b892","#ff91b9"),
+                            levels =  c('Rural North Chichester PCN', 'Chichester Alliance of Medical Practices PCN', 'Horsham Central PCN', 'Horsham Collaborative PCN', 'Chanctonbury PCN', 'Crawley Care Collaborative PCN', 'Healthy Crawley PCN', 'South Crawley PCN', 'East Grinstead PCN', 'Haywards Heath Villages PCN', 'Haywards Heath Central PCN', 'Burgess Hill & Villages PCN', 'Shoreham and Southwick PCN', 'Lancing and Sompting PCN', 'Central Worthing Practices PCN','Cissbury Integrated Care PCN', 'Coastal and South Downs PCN', 'Bognor Coastal Alliance PCN', 'Regis Healthcare PCN', 'Angmering Coppice Fitzalan (ACF) PCN', 'Arun Integrated Care (AIC) PCN', 'Alps Group PCN','Bexhill PCN',"Dean's and Central Brighton PCN", 'East & Central Brighton PCN', 'Eastbourne East PCN','Foundry Healthcare Lewes PCN','Goldstone PCN','Greater Wealden PCN','Hailsham PCN','Hastings & St Leonards PCN','High Weald PCN','North & Central Brighton PCN','Preston Park Community PCN','Rural Rother PCN','Seaford PCN','The Havens PCN','Unallocated - Sidley Medical Practice','Victoria Eastbourne PCN','West Hove PCN'))
+
 leaflet(lsoa_2011_spdf) %>% 
   addTiles(urlTemplate = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
            attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a><br>Contains Royal Mail data<br>Reproduced under Open Government Licence<br>&copy Crown copyright<br>Zoom in/out using your mouse wheel<br>Click on an area to find out more.') %>%
