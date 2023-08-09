@@ -33,6 +33,43 @@ $.ajax({
   },
 });
 
+$.ajax({
+  url: "./outputs/Higher_health_table_data.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    higher_health_table = data;
+   console.log('Higher geography health table data successfully loaded.')},
+  error: function (xhr) {
+    alert('Higher geography health table not loaded - ' + xhr.statusText);
+  },
+});
+
+$.ajax({
+  url: "./outputs/Higher_health_table_ASR_data.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    higher_health_table_2_ASR = data;
+   console.log('Higher geography ASR health table data successfully loaded.')},
+  error: function (xhr) {
+    alert('Higher geography health table not loaded - ' + xhr.statusText);
+  },
+});
+
+$.ajax({
+  url: "./outputs/Higher_health_data.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    higher_health_data = data;
+   console.log('Higher geography health data successfully loaded.')},
+  error: function (xhr) {
+    alert('Higher geography health not loaded - ' + xhr.statusText);
+  },
+});
+
+
 // $.ajax({
 //   url: "./outputs/LSOA_health_data_plan_B.json",
 //   dataType: "json",
@@ -131,7 +168,24 @@ var disability_df =  lsoa_health_data.filter(function (d) {
   return d.Topic == 'Disability';
 });
 
-// console.log(disability_df)
+var PCN_disability_df = d3.nest()
+  .key(function(d){
+  return d.PCN_Name})
+  .rollup(function(item){
+  return {Numerator: d3.sum(item, function(d){
+      return d.Numerator    
+  }), 
+          Denominator : d3.sum(item, function(d){
+      return d.Denominator    
+  })};
+}).entries(disability_df)
+.map(function(d){
+  return { 
+    PCN: d.key,
+    Numerator: d.value.Numerator,
+    Proportion: d.value.Numerator / d.value.Denominator,
+    Denominator: d.value.Denominator};
+});
 
 // Provision of unpaid care 
 var unpaid_care_df =  lsoa_health_data.filter(function (d) {
@@ -139,7 +193,6 @@ var unpaid_care_df =  lsoa_health_data.filter(function (d) {
          d.Category === 'Provides some care';
 });
 
-// console.log(unpaid_care_df)
 
 var PCN_unpaid_care_df = d3.nest()
   .key(function(d){
@@ -160,16 +213,37 @@ var PCN_unpaid_care_df = d3.nest()
     Denominator: d.value.Denominator};
 });
 
-// console.log(unpaid_care_df)
  
 // Tables
 
 // ! Render LTLA table on load
 window.onload = () => {
+  loadTable_health_higher_summary(higher_health_table);
+  loadTable_health_higher_ASR_summary(higher_health_table_2_ASR);
   loadTable_health_PCN_summary(PCN_health_df);
   loadTable_unpaid_care_PCN_summary(PCN_unpaid_care_df);
-  // loadTable_disability_PCN_summary(ltla_pop_summary_data);
+  loadTable_disability_PCN_summary(PCN_disability_df);
 };
+
+
+function loadTable_health_higher_summary(higher_health_table) {
+  const tableBody = document.getElementById("table_higher_health_1_body");
+  var dataHTML = "";
+
+  for (let item of higher_health_table) {
+    dataHTML += `<tr><td>${item.Area_name}</td><td>${item['Good or very good health']}</td><td>${item['Fair health']}</td><td>${item['Bad or very bad health']}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
+function loadTable_health_higher_ASR_summary(higher_health_table_2_ASR) {
+  const tableBody = document.getElementById("table_higher_health_2_body");
+  var dataHTML = "";
+
+  for (let item of higher_health_table_2_ASR) {
+    dataHTML += `<tr><td>${item.Area_name}</td><td>${item['Good or very good health']}</td><td>${item['Fair health']}</td><td>${item['Bad or very bad health']}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
 
 function loadTable_health_PCN_summary(PCN_health_df) {
   const tableBody = document.getElementById("table_pcn_health_1_body");
@@ -177,6 +251,16 @@ function loadTable_health_PCN_summary(PCN_health_df) {
 
   for (let item of PCN_health_df) {
     dataHTML += `<tr><td>${item.PCN}</td><td>${item.Label_good}</td><td>${item.Label_fair}</td><td>${item.Label_bad}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
+
+function loadTable_disability_PCN_summary(PCN_disability_df) {
+  const tableBody = document.getElementById("table_pcn_disability_1_body");
+  var dataHTML = "";
+
+  for (let item of PCN_disability_df) {
+    dataHTML += `<tr><td>${item.PCN}</td><td>${d3.format(",.0f")(item.Numerator)}</td><td>${d3.format('.1%')(item.Numerator/item.Denominator)}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
   }
   tableBody.innerHTML = dataHTML;
 }
@@ -190,6 +274,9 @@ function loadTable_unpaid_care_PCN_summary(PCN_unpaid_care_df) {
   }
   tableBody.innerHTML = dataHTML;
 }
+
+
+
 
 // Maps - 
 

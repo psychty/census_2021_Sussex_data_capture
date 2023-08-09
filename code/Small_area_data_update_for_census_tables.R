@@ -29,7 +29,7 @@ final_lsoa_pcn_lookup  <- read_csv(paste0(output_directory, '/lsoa_2021_lookup_t
 # Census data ####
 
 # I have created a lookup for the area types that nomisr uses for Census 21, these are different to other datasets so bear this in mind
-nomis_area_types <- data.frame(Level = c('OA','LSOA','MSOA','LTLA', 'UTLA', 'Region'), Area_type_code = c('150','151','152','154', '155','480'))
+nomis_area_types <- data.frame(Level = c('OA','LSOA','MSOA','LTLA', 'UTLA', 'Region', 'Nation'), Area_type_code = c('150','151','152','154', '155','480', '499'))
 
 # We will want to filter the datasets for just Sussex areas, it is not practical to do this within the nomis call (to specify 1,029 areas to the api call), so whilst it takes a while to extract all LSOAs in england, you can filter afterwards.
 
@@ -53,8 +53,6 @@ census_LSOA_age_df <- census_LSOA_age_raw_df %>%
   filter(Age_group != 'Total') %>% 
   mutate(Age_group = ifelse(Age_group == 'Aged 85 years and over', '85+ years', ifelse(Age_group == 'Aged 4 years and under', '0-4 years', gsub(' to ', '-', gsub('Aged ', '', Age_group))))) 
 
-unique(census_LSOA_age_df$Age_group)
-
 census_LSOA_65_plus <- census_LSOA_age_df %>% 
   mutate(Age_65 = ifelse(Age_group %in% c('65-69 years','70-74 years','75-79 years','80-84 years','85+ years'), '65+ years', ifelse(Age_group %in% c('0-4 years','5-9 years','10-14 years','15-19 years','20-24 years','25-29 years','30-34 years','35-39 years','40-44 years','45-49 years','50-54 years','55-59 years','60-64 years'), 'Under 65 years', NA))) %>% 
   group_by(LSOA21CD, Age_65) %>% 
@@ -77,9 +75,7 @@ census_LSOA_75_plus <- census_LSOA_age_df %>%
   mutate(Topic = 'Age') %>% 
   select(LSOA21CD, Topic, Category = Age_75, Numerator = Population, Proportion, Denominator)
 
-
 # Health ####
-
 census_LSOA_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
                                                 measure = '20100',
                                                 geography = 'TYPE151') %>% 
@@ -108,14 +104,59 @@ census_LSOA_health_raw_df %>%
   pivot_wider(names_from = 'Health',
               values_from = 'Population') 
 
-# census_LSOA_health_table <- census_LSOA_health_raw_df %>% 
-#   filter(Health != 'Total: All usual residents') %>% 
-#   group_by(LSOA21CD) %>% 
-#   mutate(Proportion = Population / sum(Population)) %>% 
-#   mutate(Denominator = sum(Population)) %>% 
-#   mutate(Topic = 'Health') %>% 
-#   select(LSOA21CD, Topic, Category = Health, Numerator = Population, Proportion, Denominator)
 
+census_LTLA_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
+                                            measure = '20100',
+                                            geography = 'TYPE154') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Health = C2021_HEALTH_6_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c(areas, 'South East', 'England')) 
+
+census_UTLA_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
+                                            measure = '20100',
+                                            geography = 'TYPE155') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Health = C2021_HEALTH_6_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_Region_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
+                                            measure = '20100',
+                                            geography = 'TYPE480') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Health = C2021_HEALTH_6_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_National_health_raw_df <- nomis_get_data(id = 'NM_2055_1',
+                                              measure = '20100',
+                                              geography = 'TYPE499') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Health = C2021_HEALTH_6_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+Census_higher_health_raw_df <- census_LTLA_health_raw_df %>% 
+  bind_rows(census_UTLA_health_raw_df) %>% 
+  bind_rows(census_Region_health_raw_df) %>% 
+  bind_rows(census_National_health_raw_df) %>% 
+  unique()
+
+rm(census_LTLA_health_raw_df, census_UTLA_health_raw_df, census_Region_health_raw_df, census_National_health_raw_df)
+
+census_higher_health_table <- Census_higher_health_raw_df %>% 
+  filter(Health != 'Total: All usual residents') %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(Area_code, Area_name, Health) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_code, Area_name) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'Health') %>% 
+  select(Area_code, Area_name, Topic, Category = Health, Numerator = Population, Proportion, Denominator)
+
+Census_higher_health_raw_df %>% 
+  filter(Health != 'Total: All usual residents') %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(Area_name, Health) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_name) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  pivot_wider(names_from = 'Health',
+              values_from = 'Population') 
 
 # Disability ####
 
@@ -145,6 +186,45 @@ census_LSOA_disability_table <- census_LSOA_disability_df %>%
   mutate(Topic = 'Disability') %>% 
   select(LSOA21CD, Topic, Category = Disability, Numerator = Population, Proportion, Denominator)
 
+census_LTLA_disability_raw_df <- nomis_get_data(id = 'NM_2056_1',
+                                            measure = '20100',
+                                            geography = 'TYPE154') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME,  Disability = C2021_DISABILITY_5_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c(areas, 'South East', 'England')) 
+
+census_UTLA_disability_raw_df <- nomis_get_data(id = 'NM_2056_1',
+                                            measure = '20100',
+                                            geography = 'TYPE155') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME,  Disability = C2021_DISABILITY_5_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_Region_disability_raw_df <- nomis_get_data(id = 'NM_2056_1',
+                                              measure = '20100',
+                                              geography = 'TYPE480') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME,  Disability = C2021_DISABILITY_5_NAME, Population = OBS_VALUE) %>%   filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_National_disability_raw_df <- nomis_get_data(id = 'NM_2056_1',
+                                                measure = '20100',
+                                                geography = 'TYPE499') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME,  Disability = C2021_DISABILITY_5_NAME, Population = OBS_VALUE) %>%   filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+Census_higher_disability_raw_df <- census_LTLA_disability_raw_df %>% 
+  bind_rows(census_UTLA_disability_raw_df) %>% 
+  bind_rows(census_Region_disability_raw_df) %>% 
+  bind_rows(census_National_disability_raw_df) %>% 
+  unique()
+
+rm(census_LTLA_disability_raw_df, census_UTLA_disability_raw_df, census_Region_disability_raw_df, census_National_disability_raw_df)
+
+census_higher_disability_table <- Census_higher_disability_raw_df %>% 
+  filter(Disability %in% c('Disabled under the Equality Act', 'Not disabled under the Equality Act')) %>% 
+  group_by(Area_code, Area_name) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'Disability') %>% 
+  select(Area_code, Area_name, Topic, Category = Disability, Numerator = Population, Proportion, Denominator)
+
+# Unpaid care ####
 census_LSOA_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
                                                 measure = '20100',
                                                 geography = 'TYPE151') %>% 
@@ -179,6 +259,54 @@ census_LSOA_unpaid_care_table <- census_LSOA_unpaid_care_yes_no %>%
   mutate(Topic = 'Unpaid care') %>% 
   select(LSOA21CD, Topic, Category = Care_provided, Numerator = Population, Proportion, Denominator)
 
+
+census_LTLA_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
+                                                measure = '20100',
+                                                geography = 'TYPE154') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Care_provided = C2021_CARER_7_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c(areas, 'South East', 'England')) 
+
+census_UTLA_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
+                                                measure = '20100',
+                                                geography = 'TYPE155') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Care_provided = C2021_CARER_7_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_Region_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
+                                                  measure = '20100',
+                                                  geography = 'TYPE480') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Care_provided = C2021_CARER_7_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_National_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
+                                                    measure = '20100',
+                                                    geography = 'TYPE499') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Care_provided = C2021_CARER_7_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+Census_higher_unpaid_care_raw_df <- census_LTLA_unpaid_care_raw_df %>% 
+  bind_rows(census_UTLA_unpaid_care_raw_df) %>% 
+  bind_rows(census_Region_unpaid_care_raw_df) %>% 
+  bind_rows(census_National_unpaid_care_raw_df) %>% 
+  unique()
+
+rm(census_LTLA_unpaid_care_raw_df, census_UTLA_unpaid_care_raw_df, census_Region_unpaid_care_raw_df, census_National_unpaid_care_raw_df)
+
+
+
+census_higher_unpaid_care_table <- Census_higher_unpaid_care_raw_df %>% 
+  filter(Care_provided != 'Total: All usual residents aged 5 and over') %>% 
+  filter(Care_provided != 'Provides 19 hours or less unpaid care a week') %>% 
+  filter(Care_provided != 'Provides 20 to 49 hours unpaid care a week') %>% 
+  mutate(Care_provided = ifelse(Care_provided %in% c("Provides 9 hours or less unpaid care a week",  "Provides 10 to 19 hours unpaid care a week", "Provides 20 to 34 hours unpaid care a week", "Provides 35 to 49 hours unpaid care a week",   "Provides 50 or more hours unpaid care a week"), 'Provides some care', Care_provided)) %>% 
+  group_by(Area_code, Area_name, Care_provided) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_code, Area_name) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'Unpaid care') %>% 
+  select(Area_code, Area_name, Topic, Category = Care_provided, Numerator = Population, Proportion, Denominator)
+
 census_number_disabled_in_household_raw_df <-  nomis_get_data(id = 'NM_2058_1',
                                                               measure = '20100',
                                                               geography = 'TYPE151') %>% 
@@ -195,6 +323,71 @@ census_number_disabled_in_household_table <- census_number_disabled_in_household
   mutate(Denominator = sum(Population)) %>% 
   mutate(Topic = 'HH disabled') %>% 
   select(LSOA21CD, Topic, Category = Number_of_people, Numerator = Population, Proportion, Denominator)
+
+census_LTLA_disabled_in_household_raw_df <- nomis_get_data(id = 'NM_2058_1',
+                                                 measure = '20100',
+                                                 geography = 'TYPE154') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Number_of_people = C2021_HHDISABLED_4_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c(areas, 'South East', 'England')) 
+
+census_UTLA_disabled_in_household_raw_df <- nomis_get_data(id = 'NM_2058_1',
+                                                 measure = '20100',
+                                                 geography = 'TYPE155') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Number_of_people = C2021_HHDISABLED_4_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_Region_disabled_in_household_raw_df <- nomis_get_data(id = 'NM_2058_1',
+                                                   measure = '20100',
+                                                   geography = 'TYPE480') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Number_of_people = C2021_HHDISABLED_4_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+census_National_disabled_in_household_raw_df <- nomis_get_data(id = 'NM_2058_1',
+                                                     measure = '20100',
+                                                     geography = 'TYPE499') %>% 
+  select(Area_code = GEOGRAPHY_CODE, Area_name = GEOGRAPHY_NAME, Number_of_people = C2021_HHDISABLED_4_NAME, Population = OBS_VALUE) %>% 
+  filter(Area_name %in% c('East Sussex', 'West Sussex', 'South East', 'England')) 
+
+Census_higher_disabled_in_household_raw_df <- census_LTLA_disabled_in_household_raw_df %>% 
+  bind_rows(census_UTLA_disabled_in_household_raw_df) %>% 
+  bind_rows(census_Region_disabled_in_household_raw_df) %>% 
+  bind_rows(census_National_disabled_in_household_raw_df) %>% 
+  unique()
+
+census_higher_number_disabled_in_household_table <- Census_higher_disabled_in_household_raw_df %>%  
+  filter(Number_of_people != 'Total: All households') %>% 
+  mutate(Number_of_people = ifelse(Number_of_people %in% c('1 person disabled under the Equality Act in household', '2 or more people disabled under the Equality Act in household'), 'One or more in household', ifelse(Number_of_people == 'No people disabled under the Equality Act in household', 'None', NA))) %>% 
+  group_by(Area_code, Area_name, Number_of_people) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_code, Area_name) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'HH disabled') %>% 
+  select(Area_code, Area_name, Topic, Category = Number_of_people, Numerator = Population, Proportion, Denominator)
+
+
+
+
+census_higher_health_table <- Census_higher_health_raw_df %>% 
+  filter(Health != 'Total: All usual residents') %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(Area_code, Area_name, Health) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_code, Area_name) %>% 
+  mutate(Proportion = Population / sum(Population)) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  mutate(Topic = 'Health') %>% 
+  select(Area_code, Area_name, Topic, Category = Health, Numerator = Population, Proportion, Denominator)
+
+Census_higher_health_raw_df %>% 
+  filter(Health != 'Total: All usual residents') %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(Area_name, Health) %>% 
+  summarise(Population = sum(Population)) %>% 
+  group_by(Area_name) %>% 
+  mutate(Denominator = sum(Population)) %>% 
+  pivot_wider(names_from = 'Health',
+              values_from = 'Population') 
 
 
 # wider determinants ####
@@ -313,6 +506,41 @@ LSOA_table %>%
   select(!c('PCN_Name', 'LTLA')) %>% 
   toJSON() %>% 
   write_lines(paste0(output_directory, '/LSOA_health_data.json'))
+
+census_higher_disability_table %>% 
+  bind_rows(census_higher_unpaid_care_table) %>% 
+  bind_rows(census_higher_number_disabled_in_household_table) %>% 
+  select(Area_name, Topic, Category, Numerator, Proportion, Denominator) %>%
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/Higher_health_data.json'))
+
+census_higher_health_table %>% 
+  mutate(Label = paste0(round(Proportion * 100, 1), '% (', format(Numerator, big.mark = ',', trim = TRUE), ')')) %>% 
+  select(Area_name, Category, Label, Denominator) %>% 
+  mutate(Category = factor(Category, levels = c('Good or very good health', 'Fair health', 'Bad or very bad health'))) %>% 
+  arrange(Area_name, Category) %>% 
+  pivot_wider(names_from = 'Category',
+              values_from = 'Label') %>% 
+  mutate(Area_name = factor(Area_name, levels = c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England'))) %>% 
+  arrange(Area_name) %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/Higher_health_table_data.json'))
+
+# Age standardised health
+ read_csv('https://www.nomisweb.co.uk/api/v01/dataset/NM_2092_1.data.csv?date=latest&geography=650117240,650117252,650117257,645923089...645923092,645923045,645923046,645923093,645923047,645923094,645923048,645923049,645923095,2092957699,2013265928&c2021_health_5=0...4&measures=20100') %>% 
+  select(Area_name = GEOGRAPHY_NAME, Health = C2021_HEALTH_5_NAME, Proportion = OBS_VALUE) %>% 
+  mutate(Health = ifelse(Health %in% c('Very good health', 'Good health'), 'Good or very good health', ifelse(Health %in% c('Bad health', 'Very bad health'), 'Bad or very bad health', Health))) %>% 
+  group_by(Area_name, Health) %>% 
+  summarise(Proportion = paste0(sum(Proportion), '%')) %>% 
+  group_by(Area_name) %>% 
+  pivot_wider(names_from = 'Health',
+              values_from = 'Proportion') %>% 
+   mutate(Area_name = factor(Area_name, levels = c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England'))) %>% 
+   arrange(Area_name) %>% 
+  toJSON() %>% 
+  write_lines(paste0(output_directory, '/Higher_health_table_ASR_data.json'))
+
+
 
 LSOA_table %>% 
   filter(Category == 'Good or very good health') %>% 

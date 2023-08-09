@@ -146,6 +146,24 @@ tr:nth-child(even) {
   font-weight: bold;
 }
 
+.table_higher_class tr:nth-child(1) {
+  font-weight: bold;
+}
+.table_higher_class tr:nth-child(2) {
+  font-weight: bold;
+}
+.table_higher_class tr:nth-child(8) {
+  font-weight: bold;
+}
+.table_higher_class tr:nth-child(16) {
+  font-weight: bold;
+  border-top: 1pt solid black; 
+}
+.table_higher_class tr:nth-child(17) {
+  font-weight: bold;
+
+}
+
 td:nth-child(1) {
   width: 30%;
   text-align: left;
