@@ -25,21 +25,22 @@
             <a data-page="home" href="./index.html">Home</a>
           </li>
           <li>
-            <a data-page="health_section" class = 'highlighted' href="./health.html">Health</a>
+            <a data-page="pcn_section" href="./pcn.html">Primary Care Network Footprints</a>
           </li>
-          <li>
-            <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
-          </li>
-          <li>
-              <a data-page="pcn_section" href="./pcn.html">Primary Care Network Footprints</a>
-            </li>
           <li>
             <a data-page="boundary_section" href="./boundary_change.html">Changes in boundaries</a>
           </li>
-        </ul>
+          <li>
+            <a data-page="health_section"  class = 'highlighted' href="./health.html">Health</a>
+          </li>
+          <!-- <li>
+            <a data-page="determinants_section" href="./wider_determinants.html">Wider determinants</a>
+          </li> -->
+                </ul>
         <p style="text-align: right; padding-right: 25px" id="update_date_nav_label"></p>
       </nav>
     </header>
+
      
       <section id = 'note'>
         <div class="good_to_know">
@@ -74,7 +75,7 @@
           </thead>
         <tbody id="table_higher_health_1_body"></tbody>
         </table>
-<p>The proportion of residents reporting their health as bad or very bad is highest in East Sussex (5.7%) and lowest in West Sussex (4.5%) with all three Sussex authorities having a higher proportion of residents reporting bad health compared to the South East region. Within Sussex, this ranges from 3.5% in Horsham and Mid Sussex to 7.3% of residents in Hastings.</p>
+  <p>The proportion of residents reporting their health as bad or very bad is highest in East Sussex (5.7%) and lowest in West Sussex (4.5%) with all three Sussex authorities having a higher proportion of residents reporting bad health compared to the South East region. Within Sussex, this ranges from 3.5% in Horsham and Mid Sussex to 7.3% of residents in Hastings.</p>
 
   <div class="good_to_know">
   <h3>A note about age and health</h3>
@@ -125,6 +126,42 @@
         <h2>Disability</h2>
         <p>A person is defined as disabled if they assessed their day-to-day activities as limited by long-term physical or mental health conditions or illnesses. This definition of a disabled person meets the harmonised standard for measuring disability and is in line with the Equality Act (2010).</p>
         <p>The 2021 Census also enables us to count how many households in an area have one or more people who are registered disabled under the Equality Act.</p>
+
+<p>Around one in ten residents say they have a disability which limits their day-to-day activities a little, with slightly higher proportions in Brighton and Hove and East Sussex compared to West Sussex.</p>
+
+<p>The table below shows the number and proportion of residents reporting disability (activities limited a little or a lot as well as overall numbers of people reporting any disability) in Sussex local authority areas and in the South East region and England overall.</p>
+<p>The number of residents reporting each response is given in brackets next to the proportion of residents in that area. West Sussex and its district and boroughs tend to have the lowest proportion of residents reporting any disability out of the Sussex areas. In East Sussex one in five residents reported being disabled in the 2021 Census.</p> 
+<p>Within the counties, Hastings, Eastbourne, Arun, Adur, and Worthing have the highest proportions of residents reporting a disability, whilst Horsham and Mid Sussex have the lowest prevalence. </p>
+    <h3>Table - Overall population (usual residents) self-reported disability status; Sussex local authority areas; Census 2021</h3>
+    <table id = 'table_higher_disability' style="margin-bottom: 20px" class = 'table_higher_class'>
+      <thead>
+        <tr>
+          <th style = 'text-align: left;'>Area</th>
+          <th style = 'text-align: right;'>Disabled: Day-to-day activities limited a little</th>
+          <th style = 'text-align: right;'>Disabled: Day-to-day activities limited a lot</th>
+          <th style = 'text-align: right;'>Disabled under the Equality Act (activities limited at all)</th>
+          <th style = 'text-align: right;'>Not disabled under the Equality Act</th>
+          <!-- <th style = 'text-align: right;'>Total number of residents</th> -->
+        </tr>
+      </thead>
+    <tbody id="table_higher_disability_body"></tbody>
+    </table>
+
+    <p>The second disability table shows that when the proportion of people reporting a disability is age-standardised. This takes into account the different age profile of each area. West Sussex still has the lowest proportion of residents reporting day-to-day activities limited a little or a lot, but Brighton and Hove now has the highest proportion of those reporting disability.</p>
+  
+    <h3>Table - Age standardised proportions of self-reported disability status; Sussex local authority areas; Census 2021</h3>
+    <table id = 'table_higher_disability_2' style="margin-bottom: 20px" class = 'table_higher_class'>
+      <thead>
+        <tr>
+          <th style = 'text-align: left;'>Area</th>
+          <th style = 'text-align: right;'>Disabled: Day-to-day activities limited a little</th>
+          <th style = 'text-align: right;'>Disabled: Day-to-day activities limited a lot</th>
+          <th style = 'text-align: right;'>Not disabled under the Equality Act</th>
+        </tr>
+      </thead>
+    <tbody id="table_higher_disability_2_body"></tbody>
+    </table>
+
         <h3>Map - small area proportion of residents disabled under the Equality Act; Census 2021</h3>
         <div id = "map_disability_id"></div>
         <p>There is also a coastal and inland divide across Sussex, with northern areas of the map tending to have a smaller proportion of residents and households with disability. More than a third of residents in the Brighton LSOA (E01016942) reported having a disability as defined by the Equality Act (2010). In contrast, the Chichester LSOA E01031532 had the lowest propoeriotn at 7%. There are however neighbourhoods in Crawley which have a higher proportion of disabled residents as well as households with at least one person whose day-to-day activities are limited by long-term physical or mental health conditions.</p>
@@ -132,16 +169,37 @@
         <p>The table below shows the proportion of residents and households with residents who have a disability by small areas aggregated up to the PCN footprint. This helps to give a guide for the populations covered by the network for planning purposes but remember, this is the area designated as covering the majority of patients registered to the PCN. It is not the PCN registered population itself. Some residents the areas in a PCNs footprint may be registered to other PCNs and some registered patients may live outside of the areas designated in the footprint of a particular PCN.</p>
         <h3>Table - Overall population (usual residents) with a disability; Sussex LSOAs aggregated to PCN footprints; Census 2021</h3>
         <table id = 'table_pcn_disability_1' style="margin-bottom: 20px" class = 'table_pcn_class'>
-         <thead>
-           <tr>
-             <th style = 'text-align: left;'>PCN footprint area*</th>
-             <th style = 'text-align: right;'>Number of people<br>with a disability</th>
-             <th style = 'text-align: right;'>Proportion</th>
-             <th style = 'text-align: right;'>Total number of residents</th>
-           </tr>
-         </thead>
-       <tbody id="table_pcn_disability_1_body"></tbody>
-       </table>
+        <thead>
+          <tr>
+            <th style = 'text-align: left;'>PCN footprint area*</th>
+            <th style = 'text-align: right;'>Number of people<br>with a disability</th>
+            <th style = 'text-align: right;'>Proportion</th>
+            <th style = 'text-align: right;'>Total number of residents</th>
+          </tr>
+        </thead>
+      <tbody id="table_pcn_disability_1_body"></tbody>
+      </table>
+
+      <h2>Disability by age and sex</h2>
+      <p>As with general health, disability changes with age as well as by sex. Breaking disability prevalence down by sex and age generally shows a steady increase in the proportion of people who were disabled from aged 30 onwards, in both sexes. Steeper increases are seen in age groups above 65-74 years.</p>
+
+      <p>The figure below shows the age-specific prevalence of any disability (regardless of whether it limits day-to-day activities a little or alot). Use the drop down menu here to choose a area to find out more information about its age and sex population structure. The dashed line represents England and so when the coloured bars for an age group (for example in the 15-24 years and 25-34 years group in Brighton and Hove) extend beyond the dashed lines we can see that there is a greater age-specific prevalence of disability compared to national prevalence.</p>
+      <p>Equally, when the bars fall short of the dashed lines (as in Chichester for groups over 35 years), then we can see the age-specific prevalence is lower than England.</p>
+    
+   <h4 id = 'selected_area_asr_pyramid_title'></h4>
+   <select title = 'Population pyramid area selector' id="select_area_asr_pyramid_button"></select>
+
+   <!-- <div id = 'asr_pyramid_container'> -->
+   <div id = 'asr_pyramid_census_datavis'></div>
+   <!-- <div> -->
+   <!-- <p id = 'area_asr_pyramid_text_1'></p> -->
+   <!-- <p id = 'area_asr_pyramid_text_2'></p> -->
+   <!-- <p id = 'area_asr_pyramid_text_3'></p> -->
+   <!-- <p>The shape of the pyramid gives an indication of the age structure of a population, if the shape is wider at the top, this is indicative of an ageing population and a pyramid which is wider at the bottom indicates a relatively younger population overall.</p> -->
+   <p class = 'good_to_know'>Note that the x axis scale (along the bottom) is redrawn when a new area is selected.</p>
+   <!-- </div> -->
+   </div>
+
       </section>
 
       <section id = 'unpaid_care'>
@@ -182,6 +240,7 @@
       <script src="https://d3js.org/d3-format.v1.min.js"></script>
       <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
       <script src="./javascripts/health.js"></script>
+      <script src="./javascripts/test.js"></script>
       <script src="./javascripts/scatter_lsoa.js"></script>
    </body>
 </html>

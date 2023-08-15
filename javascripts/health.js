@@ -46,6 +46,30 @@ $.ajax({
 });
 
 $.ajax({
+  url: "./outputs/Higher_disability_table_data.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    higher_disability_table = data;
+   console.log('Higher geography disability table data successfully loaded.')},
+  error: function (xhr) {
+    alert('Higher geography health table not loaded - ' + xhr.statusText);
+  },
+});
+
+$.ajax({
+  url: "./outputs/Higher_disability_table_ASR_data.json",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+    higher_disability_table_2_ASR = data;
+   console.log('Higher geography ASR disability table data successfully loaded.')},
+  error: function (xhr) {
+    alert('Higher geography disability table not loaded - ' + xhr.statusText);
+  },
+});
+
+$.ajax({
   url: "./outputs/Higher_health_table_ASR_data.json",
   dataType: "json",
   async: false,
@@ -193,7 +217,6 @@ var unpaid_care_df =  lsoa_health_data.filter(function (d) {
          d.Category === 'Provides some care';
 });
 
-
 var PCN_unpaid_care_df = d3.nest()
   .key(function(d){
   return d.PCN_Name})
@@ -212,7 +235,6 @@ var PCN_unpaid_care_df = d3.nest()
     Proportion: d.value.Numerator / d.value.Denominator,
     Denominator: d.value.Denominator};
 });
-
  
 // Tables
 
@@ -221,10 +243,11 @@ window.onload = () => {
   loadTable_health_higher_summary(higher_health_table);
   loadTable_health_higher_ASR_summary(higher_health_table_2_ASR);
   loadTable_health_PCN_summary(PCN_health_df);
+  loadTable_disability_higher_summary(higher_disability_table);
+  loadTable_disability_higher_ASR_summary(higher_disability_table_2_ASR);
   loadTable_unpaid_care_PCN_summary(PCN_unpaid_care_df);
   loadTable_disability_PCN_summary(PCN_disability_df);
 };
-
 
 function loadTable_health_higher_summary(higher_health_table) {
   const tableBody = document.getElementById("table_higher_health_1_body");
@@ -244,13 +267,33 @@ function loadTable_health_higher_ASR_summary(higher_health_table_2_ASR) {
   }
   tableBody.innerHTML = dataHTML;
 }
-
 function loadTable_health_PCN_summary(PCN_health_df) {
   const tableBody = document.getElementById("table_pcn_health_1_body");
   var dataHTML = "";
 
   for (let item of PCN_health_df) {
     dataHTML += `<tr><td>${item.PCN}</td><td>${item.Label_good}</td><td>${item.Label_fair}</td><td>${item.Label_bad}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
+
+function loadTable_disability_higher_summary(higher_disability_table) {
+  const tableBody = document.getElementById("table_higher_disability_body");
+  var dataHTML = "";
+
+  for (let item of higher_disability_table) {
+    dataHTML += `<tr><td>${item.Area_name}</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a little']}</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a lot']}</td><td>${item['Disabled under the Equality Act']}</td><td>${item['Not disabled under the Equality Act']}</td></tr>`;
+    // dataHTML += `<tr><td>${item.Area_name}</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a little']}</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a lot']}</td><td>${item['Disabled under the Equality Act']}</td><td>${item['Not disabled under the Equality Act']}</td><td>${d3.format(",.0f")(item.Denominator)}</td></tr>`;
+  }
+  tableBody.innerHTML = dataHTML;
+}
+
+function loadTable_disability_higher_ASR_summary(higher_disability_table_2_ASR) {
+  const tableBody = document.getElementById("table_higher_disability_2_body");
+  var dataHTML = "";
+
+  for (let item of higher_disability_table_2_ASR) {
+    dataHTML += `<tr><td>${item.Area_name}</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a little']}%</td><td>${item['Disabled under the Equality Act: Day-to-day activities limited a lot']}%</td><td>${item['Not disabled under the Equality Act']}%</td></tr>`;
   }
   tableBody.innerHTML = dataHTML;
 }
