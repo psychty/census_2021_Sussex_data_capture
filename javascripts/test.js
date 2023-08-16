@@ -148,7 +148,7 @@ svg_asr_pyramid
   .attr("text-anchor", "start")
   .attr("class", "pyramid_1")
   .style("font-weight", "bold")
-  .style("font-size", "12px")
+  .style("font-size", ".9rem")
   .text('Males')
  
 svg_asr_pyramid
@@ -159,7 +159,7 @@ svg_asr_pyramid
   .attr("text-anchor", "end")
   .attr("class", "pyramid_1")
   .style("font-weight", "bold")
-  .style("font-size", "12px")
+  .style("font-size", ".9rem")
   .text('Females')
  
 

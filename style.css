@@ -97,7 +97,6 @@ nav {
   color: #cc0052 !important;
 }
 
-
 /* Table styling */
 table {
   border-collapse: collapse;
@@ -135,7 +134,6 @@ tr:nth-child(even) {
 .table_1_class tr:nth-child(8) {
   font-weight: bold;
 }
-
 .table_2_class tr:nth-child(1) {
   font-weight: bold;
 }
@@ -145,7 +143,6 @@ tr:nth-child(even) {
 .table_2_class tr:nth-child(8) {
   font-weight: bold;
 }
-
 .table_higher_class tr:nth-child(1) {
   font-weight: bold;
 }
@@ -161,9 +158,7 @@ tr:nth-child(even) {
 }
 .table_higher_class tr:nth-child(17) {
   font-weight: bold;
-
 }
-
 td:nth-child(1) {
   width: 30%;
   text-align: left;
@@ -177,20 +172,17 @@ td:nth-child(1) {
   flex-wrap: wrap;
   margin-bottom: 5px;
 }
-
 .SearchBar {
   display: inline;
   position: relative;
   left: 1%;
   font-weight: bold;
 }
-
 .SearchBar input {
   position: relative;
   left: 2%;
   font-weight: normal;
 }
-
 .tooltip_class {
   max-width: 200px;
   padding-left: 5px;
@@ -211,7 +203,6 @@ td:nth-child(1) {
 }
 
 /* Maps */
-
 #map_slider_change_id {
   height: 480px;
   /* width: 80%; */
@@ -273,7 +264,6 @@ td:nth-child(1) {
    margin-right: 8px;
    opacity: 1;
 } 
-
 .map_title {
   font-size: 1.2rem;
   font-weight: bold;

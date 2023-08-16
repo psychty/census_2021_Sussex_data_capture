@@ -49,6 +49,9 @@ census_LSOA_age_raw_df <- nomis_get_data(id = 'NM_2020_1',
   select(LSOA21CD = GEOGRAPHY_CODE, Age_group = C2021_AGE_19_NAME, Population = OBS_VALUE) %>% 
   filter(LSOA21CD %in% final_lsoa_pcn_lookup$LSOA21CD) 
 
+# We have to manually confirm we want to continue by entering 1 into the console.
+1
+
 census_LSOA_age_df <- census_LSOA_age_raw_df %>% 
   filter(Age_group != 'Total') %>% 
   mutate(Age_group = ifelse(Age_group == 'Aged 85 years and over', '85+ years', ifelse(Age_group == 'Aged 4 years and under', '0-4 years', gsub(' to ', '-', gsub('Aged ', '', Age_group))))) 
@@ -261,52 +264,78 @@ read_csv('https://www.nomisweb.co.uk/api/v01/dataset/NM_2093_1.data.csv?date=lat
 
 # Age by sex disability ####
 
-# data from ONS analysis
+# taken from nomis - allows for county level and is unrounded but does not have the same age bands
 
-download.file('https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/disability/datasets/disabilityinenglandandwales2021/current/disabilitycensus2021.xlsx',
-              paste0(local_store, '/disabilitycensus2021.xlsx'),
-              mode = 'wb')
+disability_census_age_by_sex_df_raw <- read_csv('https://www.nomisweb.co.uk/api/v01/dataset/NM_2173_1.data.csv?date=latest&geography=1774190633,1774190728,1774190744,1778385105...1778385108,1778384981,1778384982,1778385109,1778384983,1778385110,1778384984,1778384985,1778385111,2092957699,2013265928&c2021_disabled_5=0,1001,1,2,1002&c2021_age_13b=1...12&c_sex=0...2&measures=20100') %>% 
+  select(Area_name = GEOGRAPHY_NAME, Sex = C_SEX_NAME, Age = C2021_AGE_13B_NAME, Disability = C2021_DISABLED_5_NAME, Numerator = OBS_VALUE) %>% 
+  filter(Age != 'Total') %>% 
+  mutate(Age = ifelse(Age == 'Aged 85 years and over', '85+ years', ifelse(Age == 'Aged 9 years and under', '0-9 years', gsub(' to ', '-', gsub('Aged ', '', Age))))) %>% 
+  mutate(Age = ifelse(Age %in% c('35-39 years', '40-44 years'), '35-44 years', ifelse(Age %in% c('45-49 years', '50-54 years'), '45-54 years', Age))) %>% 
+  group_by(Area_name, Sex, Age, Disability) %>% 
+  summarise(Numerator = sum(Numerator))
 
-disabilitycensus2021_1 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
-                                   sheet = "Table 6", 
-                                   skip = 4,
-                                   col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
-  filter(Category == 'Three category') %>% 
-  filter(`Local Authority` %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
-  select(Area_name = `Local Authority`, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
-
-disabilitycensus2021_2 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
-                                   sheet = "Table 4", 
-                                   skip = 4,
-                                   col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
-  filter(Category == 'Three category') %>% 
-  filter(Region %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
-  select(Area_name = Region, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
-
-disabilitycensus2021_3 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
-                                     sheet = "Table 2", 
-                                     skip = 4,
-                                     col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
-  filter(Category == 'Three category') %>% 
-  filter(Country %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
-  select(Area_name = Country, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
-
-disabilitycensus2021 <- disabilitycensus2021_1 %>% 
-  bind_rows(disabilitycensus2021_2) %>% 
-  bind_rows(disabilitycensus2021_3) %>% 
-  filter(Sex != 'Persons')
-
-disabilitycensus2021
-
-disabilitycensus2021 %>% 
-  select(!c(UCI, LCI)) %>% 
+disability_census_age_by_sex_df_raw %>% 
+  filter(Disability %in% c('Disabled under the Equality Act', 'Not disabled under the Equality Act')) %>% 
+  filter(Sex != 'All persons') %>% 
+  group_by(Area_name, Sex, Age) %>% 
+  mutate(Denominator = sum(Numerator)) %>%
+  ungroup() %>% 
+  mutate(Proportion = Numerator / Denominator) %>% 
+  filter(Disability == 'Disabled under the Equality Act') %>%
+  select(Area_name, Sex, Age, Disability, Proportion) %>% 
   pivot_wider(names_from = 'Sex',
               values_from = 'Proportion') %>% 
-  toJSON() %>% 
-  write_lines(paste0(output_directory, '/Disability_ASP_data.json'))
+    toJSON() %>%
+    write_lines(paste0(output_directory, '/Disability_ASP_data.json'))
 
+unique(disability_census_age_by_sex_df_raw$Age_group)
 
-c("Under 1",  "1 to 4",   "5 to 9", "10 to 14", "15 to 19" ,"20 to 24", "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64", "65 to 69", "70 to 74", "75 to 79", "80 to 84", "85 to 89", "90+") 
+# data from ONS analysis
+# 
+# download.file('https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/disability/datasets/disabilityinenglandandwales2021/current/disabilitycensus2021.xlsx',
+#               paste0(local_store, '/disabilitycensus2021.xlsx'),
+#               mode = 'wb')
+# 
+# disabilitycensus2021_1 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
+#                                    sheet = "Table 6", 
+#                                    skip = 4,
+#                                    col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
+#   filter(Category == 'Three category') %>% 
+#   filter(`Local Authority` %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
+#   select(Area_name = `Local Authority`, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
+# 
+# disabilitycensus2021_2 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
+#                                    sheet = "Table 4", 
+#                                    skip = 4,
+#                                    col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
+#   filter(Category == 'Three category') %>% 
+#   filter(Region %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
+#   select(Area_name = Region, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
+# 
+# disabilitycensus2021_3 <- read_excel(paste0(local_store, '/disabilitycensus2021.xlsx'),
+#                                      sheet = "Table 2", 
+#                                      skip = 4,
+#                                      col_types = c('text', 'text','text','text','text','text','text','numeric','numeric','numeric','numeric','numeric','text')) %>% 
+#   filter(Category == 'Three category') %>% 
+#   filter(Country %in% c('Brighton and Hove', 'East Sussex', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'West Sussex',  'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing', 'South East', 'England')) %>% 
+#   select(Area_name = Country, Disability = 'Disability status', Sex, Age, Proportion = 'Age-specific Percentage', LCI = 'Lower 95% Confidence Interval', UCI = 'Upper 95% Confidence Interval')
+# 
+# disabilitycensus2021 <- disabilitycensus2021_1 %>% 
+#   bind_rows(disabilitycensus2021_2) %>% 
+#   bind_rows(disabilitycensus2021_3) %>% 
+#   filter(Sex != 'Persons')
+# 
+# disabilitycensus2021
+# 
+# disabilitycensus2021 %>% 
+#   select(!c(UCI, LCI)) %>% 
+#   pivot_wider(names_from = 'Sex',
+#               values_from = 'Proportion') %>% 
+#   toJSON() %>% 
+#   write_lines(paste0(output_directory, '/Disability_ASP_data.json'))
+# 
+# 
+# c("Under 1",  "1 to 4",   "5 to 9", "10 to 14", "15 to 19" ,"20 to 24", "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64", "65 to 69", "70 to 74", "75 to 79", "80 to 84", "85 to 89", "90+") 
 
 # Unpaid care ####
 census_LSOA_unpaid_care_raw_df <- nomis_get_data(id = 'NM_2057_1',
