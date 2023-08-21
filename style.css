@@ -101,7 +101,12 @@ nav {
 table {
   border-collapse: collapse;
   width: auto;
+  display: inline-block;
+  height: 55vh;
+  overflow: auto;
 }
+
+
 
 th {
   border-top: 1px solid #333;
@@ -163,6 +168,13 @@ td:nth-child(1) {
   width: 30%;
   text-align: left;
 }
+
+.table_pcn_class th {
+  background: white;
+  position: sticky;
+  top: 0; /* Don't forget this, required for the stickiness */
+}
+
 
 /* Element styling */
 .give_me_space_to_search {
