@@ -162,6 +162,12 @@ new_lsoa_2011_sf <- rest_of_the_world_lsoa %>%
 # Convert it to a spatial polygon data frame
 lsoa_2011_boundaries_new_spdf <- as_Spatial(new_lsoa_2011_sf, IDs = new_lsoa_2011_sf$LSOA11CD)
 
+plot(lsoa_2011_boundaries_new_spdf)
+
+lsoa_2011_boundaries_new_spdf@data$LSOA11CD
+
+
+
 # PCN view - showing all LSOAs linked to each network check - 
 sussex_pcn_reach <- lsoa_pcn_df %>% 
   filter(PCN_Name %in% sussex_PCN_total_pop$PCN_Name)
@@ -568,11 +574,14 @@ method_2_footprint %>%
   plot()
 dev.off()
 
+# LSOA 2021 boundaries
+ltla_spdf <- st_read(paste0(output_directory, '/sussex_ltlas.geojson')) %>% 
+  as_Spatial(IDs = LTLA)
 
-svg(paste0(output_directory,'/West_Sussex_PCN_July_2023.svg'),
+svg(paste0(output_directory,'/Sussex_LTLA.svg'),
     width = 10,
     height = 6)
-method_2_footprint %>% 
-  filter(PCN_Name %in% wsx_pcn$PCN_Name) %>% 
+ltla_spdf %>% 
   plot()
 dev.off()
+

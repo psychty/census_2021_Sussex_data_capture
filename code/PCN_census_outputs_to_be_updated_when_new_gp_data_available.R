@@ -19,6 +19,11 @@ output_directory <- '~/Repositories/census_2021_Sussex_data_capture/outputs'
 pcn_spdf <- st_read(paste0(output_directory, '/sussex_pcn_footprints_method_2.geojson')) %>% 
   as_Spatial(IDs = PCN_Name)
 
+
+
+
+plot(pcn_spdf)
+
 areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'Wealden', 'Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing') 
 
 PCN_Meta <- fromJSON(paste0(output_directory, '/Sussex_PCN_summary_df.json'))
