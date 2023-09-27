@@ -61,6 +61,11 @@ gp_locations %>%
   toJSON() %>%
   write_lines(paste0(output_directory, '/GP_location_data.json'))
 
+gp_locations %>% 
+  select(ODS_Code, ODS_Name, PCN_Name, longitude, latitude) %>% 
+  left_join(latest_gp_total_pop[c('ODS_Code', 'Patients')], by = 'ODS_Code') %>% 
+  write.csv(paste0(output_directory, '/GP_location_data.csv'), row.names = FALSE, na = '')
+
 latest_PCN_total_pop <- latest_gp_total_pop %>% 
   group_by(PCN_Code, PCN_Name) %>% 
   summarise(Patients = sum(Patients, na.rm = TRUE))
