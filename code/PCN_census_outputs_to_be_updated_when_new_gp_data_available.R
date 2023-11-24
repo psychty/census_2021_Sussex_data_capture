@@ -275,5 +275,11 @@ final_lsoa_pcn_lookup %>%
   write.csv(paste0(output_directory, '/lsoa_2021_lookup_to_Sussex_PCNs.csv'),
             row.names = FALSE)
 
-  
+
+pcn_colour_lookip <- read_csv("census_2021_Sussex_data_capture/raw_data/pcn_colour_lookip.csv")
+
+pcn_colour_lookip %>% 
+  left_join(PCN_Meta, by = 'PCN_Name') %>% 
+  select(PCN_Code, PCN_Name, HEX_colour) %>% 
+  write.csv(., paste0(output_directory, '/PCN_colour_lookup.csv'), row.names = FALSE)
    
