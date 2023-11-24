@@ -11,14 +11,23 @@ areas <- c('Brighton and Hove', 'Eastbourne', 'Hastings', 'Lewes', 'Rother', 'We
 # GP Practice registered populations ####
 
 # Jan 2023 is the most recent release with an LSOA file. These are usually released once per quarter. We may find that on the January release (due on 12th Jan) this can be updated.
-time_period <- 'july-2023' 
+time_period <- 'october-2023' 
 
-# We need the latest release that has the LSOA level numbers we need. As such, we need to specify the January 2022 release.
+# We need the latest release that has the LSOA level numbers we need. As such, we need to specify the quarterly release.
 calls_patient_numbers_webpage <- read_html(paste0('https://digital.nhs.uk/data-and-information/publications/statistical/patients-registered-at-a-gp-practice/', time_period)) %>%
   html_nodes("a") %>%
   html_attr("href")
 
-gp_mapping <- read_csv(unique(grep('gp-reg-pat-prac-map.csv', calls_patient_numbers_webpage, value = T))) %>%
+download.file(unique(grep('gp-reg-pat-prac-map.zip', calls_patient_numbers_webpage, value = T)),
+              paste0(local_store, '/gp-reg-pat-prac-map.zip'),
+              mode = 'wb')
+
+unzip(paste0(local_store, '/gp-reg-pat-prac-map.zip'),
+      exdir = local_store)
+
+list.files(local_store)
+
+gp_mapping <- read_csv(paste0(local_store, '/gp-reg-pat-prac-map.csv')) %>%
   mutate(PRACTICE_NAME = gsub('Woodlands&Clerklands', 'Woodlands & Clerklands', gsub('\\(Aic\\)', '\\(AIC\\)', gsub('\\(Acf\\)', '\\(ACF\\)', gsub('Pcn', 'PCN', gsub('And', 'and',  gsub(' Of ', ' of ',  str_to_title(PRACTICE_NAME)))))))) %>%  
   mutate(PCN_NAME = gsub('\\(Aic\\)', '\\(AIC\\)', gsub('\\(Acf\\)', '\\(ACF\\)', gsub('Pcn', 'PCN', gsub('And', 'and',  gsub(' Of ', ' of ',  str_to_title(PCN_NAME))))))) %>%
   mutate(EXTRACT_DATE = paste0(ordinal(as.numeric(substr(EXTRACT_DATE,1,2))), ' ', substr(EXTRACT_DATE, 3,5), ' 20', substr(EXTRACT_DATE, 8,9))) %>% 
@@ -48,8 +57,24 @@ gp_locations <- gp_mapping_sussex %>%
   left_join(lookup_result, by = 'postcode')  
 
 # Now we know that the file we want contains the string 'gp-reg-pat-prac-quin-age.csv' we can use that in the read_csv call.
+
+download.file(unique(grep('gp-reg-pat-prac-quin-age.zip', calls_patient_numbers_webpage, value = T)),
+              paste0(local_store, '/gp-reg-pat-prac-quin-age.zip'),
+              mode = 'wb')
+
+unzip(paste0(local_store, '/gp-reg-pat-prac-quin-age.zip'),
+      exdir = local_store)
+
+
+download.file(unique(grep('gp-reg-pat-prac-all.zip', calls_patient_numbers_webpage, value = T)),
+              paste0(local_store, '/gp-reg-pat-prac-all.zip'),
+              mode = 'wb')
+
+unzip(paste0(local_store, '/gp-reg-pat-prac-all.zip'),
+      exdir = local_store)
+
 # I have also tidied it a little bit by renaming the Sex field and giving R some meta data about the order in which the age groups should be
-latest_gp_total_pop <- read_csv(unique(grep('gp-reg-pat-prac-all.csv', calls_patient_numbers_webpage, value = T))) %>%
+latest_gp_total_pop <- read_csv(paste0(local_store, '/gp-reg-pat-prac-all.csv')) %>%
   select(EXTRACT_DATE, ODS_Code = CODE, Patients = NUMBER_OF_PATIENTS) %>%
   mutate(EXTRACT_DATE = paste0(ordinal(as.numeric(substr(EXTRACT_DATE,1,2))), ' ', substr(EXTRACT_DATE, 3,5), ' ', substr(EXTRACT_DATE, 6,10))) %>% 
   filter(ODS_Code %in% gp_mapping$ODS_Code) %>% 
@@ -140,13 +165,13 @@ sussex_PCN_total_pop %>%
   
  # "#440154", "#482173", "#433E85", "#38598C", "#2D708E", "#25858E", "#1E9B8A", "#2BB07F",
  # "#51C56A", "#85D54A", "#C2DF23", "#FDE725"
-# count the unknown addresses - NO2011
+# counts the unknown addresses - NO2011
   
 # We cannot map to 2021 LSOAs because we for LSOAs which split do not know which new LSOA they went to  
 # For the time being this is likely to be 2011 LSOA.
 
 # LSOA boundaries ####
-lsoa_2011_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') 
+lsoa_2011_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_Dec_2011_Boundaries_Generalised_Clipped_BGC_EW_V3/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson') thye
 
 # Convert it to a spatial polygon data frame
 lsoa_2011_boundaries_spdf <-  as_Spatial(lsoa_2011_sf, IDs = lsoa_2011_sf$LSOA11CD)
@@ -167,11 +192,7 @@ new_lsoa_2011_sf <- rest_of_the_world_lsoa %>%
 # Convert it to a spatial polygon data frame
 lsoa_2011_boundaries_new_spdf <- as_Spatial(new_lsoa_2011_sf, IDs = new_lsoa_2011_sf$LSOA11CD)
 
-plot(lsoa_2011_boundaries_new_spdf)
-
 lsoa_2011_boundaries_new_spdf@data$LSOA11CD
-
-
 
 # PCN view - showing all LSOAs linked to each network check - 
 sussex_pcn_reach <- lsoa_pcn_df %>% 
@@ -204,7 +225,7 @@ assign(paste0('pcn_reach_single', i), lsoa_2011_boundaries_spdf %>%
 
 }
 
-total_pcn_reach <- rbind(pcn_reach_1, pcn_reach_2, pcn_reach_3,  pcn_reach_4, pcn_reach_5, pcn_reach_6, pcn_reach_7,  pcn_reach_8, pcn_reach_9, pcn_reach_10, pcn_reach_11,  pcn_reach_12, pcn_reach_13, pcn_reach_14, pcn_reach_15,  pcn_reach_16, pcn_reach_17, pcn_reach_18, pcn_reach_19,  pcn_reach_20, pcn_reach_21, pcn_reach_22, pcn_reach_23,  pcn_reach_24, pcn_reach_25, pcn_reach_26, pcn_reach_27,  pcn_reach_28, pcn_reach_29, pcn_reach_30, pcn_reach_31,  pcn_reach_32, pcn_reach_33, pcn_reach_34, pcn_reach_35,  pcn_reach_36, pcn_reach_37, pcn_reach_38, pcn_reach_39,  pcn_reach_40, pcn_reach_41) %>% 
+total_pcn_reach <- rbind(pcn_reach_1, pcn_reach_2, pcn_reach_3,  pcn_reach_4, pcn_reach_5, pcn_reach_6, pcn_reach_7,  pcn_reach_8, pcn_reach_9, pcn_reach_10, pcn_reach_11,  pcn_reach_12, pcn_reach_13, pcn_reach_14, pcn_reach_15,  pcn_reach_16, pcn_reach_17, pcn_reach_18, pcn_reach_19,  pcn_reach_20, pcn_reach_21, pcn_reach_22, pcn_reach_23,  pcn_reach_24, pcn_reach_25, pcn_reach_26, pcn_reach_27,  pcn_reach_28, pcn_reach_29, pcn_reach_30, pcn_reach_31,  pcn_reach_32, pcn_reach_33, pcn_reach_34, pcn_reach_35,  pcn_reach_36, pcn_reach_37, pcn_reach_38, pcn_reach_39) %>% 
   select(-c(PCN_Code, LSOA11NM)) %>% 
   left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
 
@@ -374,7 +395,7 @@ for(i in 1:length(unique(Method_1_LSOA_based_PCN_footprint@data$PCN_Name))){
   
 }
 
-method_1_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3,  pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39, pcn_footprint_40) %>% 
+method_1_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3,  pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39) %>% 
   select(-c(PCN_Code)) %>% 
   left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
 
@@ -451,7 +472,7 @@ for(i in 1:length(unique(Method_2_LSOA_based_PCN_footprint@data$PCN_Name))){
   
 }
 
-method_2_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3, pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39, pcn_footprint_40) %>% 
+method_2_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3, pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39) %>% 
   select(-c(PCN_Code)) %>% 
   left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
 
@@ -523,7 +544,7 @@ for(i in 1:length(unique(Method_2_LSOA_based_PCN_footprint_2@data$PCN_Name))){
   
 }
 
-method_2_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3, pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39, pcn_footprint_40) %>% 
+method_2_footprint <- rbind(pcn_footprint_1, pcn_footprint_2, pcn_footprint_3, pcn_footprint_4, pcn_footprint_5, pcn_footprint_6, pcn_footprint_7,  pcn_footprint_8, pcn_footprint_9, pcn_footprint_10, pcn_footprint_11,  pcn_footprint_12, pcn_footprint_13, pcn_footprint_14, pcn_footprint_15,  pcn_footprint_16, pcn_footprint_17, pcn_footprint_18, pcn_footprint_19,  pcn_footprint_20, pcn_footprint_21, pcn_footprint_22, pcn_footprint_23,  pcn_footprint_24, pcn_footprint_25, pcn_footprint_26, pcn_footprint_27,  pcn_footprint_28, pcn_footprint_29, pcn_footprint_30, pcn_footprint_31,  pcn_footprint_32, pcn_footprint_33, pcn_footprint_34, pcn_footprint_35,  pcn_footprint_36, pcn_footprint_37, pcn_footprint_38, pcn_footprint_39) %>% 
   select(-c(PCN_Code)) %>% 
   left_join(sussex_PCN_total_pop[c('PCN_Name', 'Total_patients')], by = 'PCN_Name')
 
@@ -571,7 +592,7 @@ wsx_pcn <- sussex_gp_total_pop %>%
   unique() %>% 
   filter(str_detect(ICB_Name, '70F'))
 
-svg(paste0(output_directory,'/West_Sussex_PCN_July_2023.svg'),
+svg(paste0(output_directory,'/West_Sussex_PCN_October_2023.svg'),
     width = 10,
     height = 6)
 method_2_footprint %>% 

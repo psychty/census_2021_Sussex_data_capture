@@ -1,159 +1,158 @@
 "ODS_Code","ODS_Name","PCN_Name","longitude","latitude","Patients"
-"G81001","Hove Medical Centre","West Hove PCN",-0.19539,50.845024,9259
-"G81002","Grove Road Surgery","Unallocated - Grove Road Surgery",0.278765,50.767622,5864
-"G81003","The Lighthouse Medical Practice","Alps Group PCN",0.281363,50.765632,16801
-"G81004","Downlands Medical Centre","Victoria Eastbourne PCN",0.244128,50.822932,10622
-"G81006","Ardingly Court Surgery","East & Central Brighton PCN",-0.1329,50.821246,6480
-"G81007","Mid Downs Medical Practice","Greater Wealden PCN",0.01696,50.973635,10053
-"G81008","Stone Cross Surgery","Eastbourne East PCN",0.289944,50.816757,14495
-"G81011","St. Peter's Medical Centre","East & Central Brighton PCN",-0.135094,50.831021,19047
-"G81012","Bridgeside Surgery","Hailsham PCN",0.25607,50.861811,6601
-"G81014","Carden Surgery","North & Central Brighton PCN",-0.126631,50.862197,8503
-"G81016","Quayside Medical Practice","The Havens PCN",0.051236,50.793107,10740
-"G81017","Seaside Medical Centre","Alps Group PCN",0.294614,50.773566,11793
-"G81018","Preston Park Surgery","Preston Park Community PCN",-0.140346,50.837874,11847
-"G81019","Beacon Surgery","High Weald PCN",0.159904,51.059833,11027
-"G81021","Foundry Healthcare Lewes","Foundry Healthcare Lewes PCN",0.012064,50.873469,28446
-"G81022","Sovereign Practice","Eastbourne East PCN",0.302876,50.781493,14653
-"G81023","Martins Oak Surgery","Rural Rother PCN",0.483675,50.91716,8499
-"G81024","Ashdown Forest Health Centre","High Weald PCN",0.032866,51.097035,10104
-"G81028","Park Crescent Health Centre","East & Central Brighton PCN",-0.129422,50.832582,12676
-"G81029","Seaford Medical Practice","Seaford PCN",0.099275,50.772678,17848
-"G81030","Belmont Surgery","High Weald PCN",0.340829,51.061952,8729
-"G81031","Harold Road Surgery","Hastings & St Leonards PCN",0.605003,50.864714,11448
-"G81032","Victoria Medical Centre","Victoria Eastbourne PCN",0.255496,50.777446,29374
-"G81034","Charter Medical Centre","Goldstone PCN",-0.156741,50.831254,30158
-"G81036","Warmdene Surgery","Preston Park Community PCN",-0.126631,50.862197,9079
-"G81037","The Meads Surgery","Greater Wealden PCN",0.091636,50.969692,8933
-"G81038","Stanford Medical Centre","Preston Park Community PCN",-0.148293,50.838378,18382
-"G81039","Little Common Surgery","Bexhill PCN",0.433531,50.842024,17816
-"G81040","Woodhill Surgery","High Weald PCN",0.253956,51.019351,3575
-"G81041","Sidley Medical Practice","Unallocated - Sidley Medical Practice",0.463982,50.857326,13875
-"G81042","Beaconsfield Medical Practice","Preston Park Community PCN",-0.148293,50.838378,13702
-"G81043","Rotherfield Surgery","High Weald PCN",0.186003,51.049158,7427
-"G81044","Montpelier Surgery","North & Central Brighton PCN",-0.149079,50.827148,6197
-"G81046","Portslade Health Centre","West Hove PCN",-0.213225,50.833673,11807
-"G81047","Seven Dials Medical Centre","North & Central Brighton PCN",-0.147743,50.829681,6996
-"G81048","Carisbrooke Surgery","Hastings & St Leonards PCN",0.529559,50.852259,8486
-"G81049","Manor Park Medical Centre","Victoria Eastbourne PCN",0.24261,50.819107,6713
-"G81050","Arlington Road Surgery","Alps Group PCN",0.277559,50.768189,11412
-"G81051","Rye Medical Centre","Rural Rother PCN",0.730338,50.962007,7158
-"G81052","Fairfield Surgery","Rural Rother PCN",0.382808,50.997228,4224
-"G81054","Pavilion Surgery","East & Central Brighton PCN",-0.136211,50.821515,10250
-"G81055","Saxonbury House Surgery","High Weald PCN",0.161938,51.058455,9533
-"G81057","Sedlescombe & Westfield Surgeries","Rural Rother PCN",0.534725,50.934129,6307
-"G81059","Hailsham Medical Group","Hailsham PCN",0.261991,50.864071,11449
-"G81061","Chapel Street Surgery","The Havens PCN",0.051236,50.793107,6216
-"G81065","Woodingdean Medical Centre","East & Central Brighton PCN",-0.079651,50.835932,8912
-"G81070","Trinity Medical Centre","Goldstone PCN",-0.172008,50.831228,23680
-"G81071","University of Sussex Health Centre","North & Central Brighton PCN",-0.088891,50.869437,20212
-"G81073","Mile Oak Medical Centre","West Hove PCN",-0.226573,50.851294,8464
-"G81074","High Glades Medical Centre","Hastings & St Leonards PCN",0.551301,50.878354,18239
-"G81075","The Avenue Surgery","Dean's and Central Brighton PCN",-0.113425,50.844357,6426
-"G81076","Saltdean and Rottingdean Med Practice","Dean's and Central Brighton PCN",-0.0358,50.8023,12596
-"G81077","Collington Surgery","Bexhill PCN",0.465081,50.84043,17474
-"G81082","Oldwood Surgery","Rural Rother PCN",0.470553,50.985002,6194
-"G81083","Wish Park Surgery","West Hove PCN",-0.189693,50.834027,7504
-"G81084","Beaconsfield Road Surgery","Hastings & St Leonards PCN",0.585006,50.86702,10111
-"G81085","Ferry Road Health Centre","Rural Rother PCN",0.729004,50.951164,3923
-"G81086","Bird-In-Eye Surgery","Greater Wealden PCN",0.105639,50.96595,7800
+"G81001","Hove Medical Centre","West Hove PCN",-0.19539,50.845024,9241
+"G81002","Grove Road Surgery","Victoria Eastbourne PCN",0.278765,50.767622,5984
+"G81003","The Lighthouse Medical Practice","Alps Group PCN",0.281363,50.765632,16951
+"G81004","Downlands Medical Centre","Victoria Eastbourne PCN",0.244128,50.822932,10524
+"G81006","Ardingly Court Surgery","East & Central Brighton PCN",-0.1329,50.821246,6490
+"G81008","Stone Cross Surgery","Eastbourne East PCN",0.289944,50.816757,14573
+"G81011","St. Peter's Medical Centre","East & Central Brighton PCN",-0.135094,50.831021,19034
+"G81012","Bridgeside Surgery","Hailsham PCN",0.25607,50.861811,6648
+"G81014","Carden Surgery","North & Central Brighton PCN",-0.126631,50.862197,8516
+"G81016","Quayside Medical Practice","The Havens PCN",0.051236,50.793107,10856
+"G81017","Seaside Medical Centre","Alps Group PCN",0.294614,50.773566,11829
+"G81018","Preston Park Surgery","Preston Park Community PCN",-0.140346,50.837874,11931
+"G81019","Beacon Surgery","High Weald PCN",0.159904,51.059833,10973
+"G81021","Foundry Healthcare Lewes","Foundry Healthcare Lewes PCN",0.012064,50.873469,28516
+"G81022","Sovereign Practice","Eastbourne East PCN",0.302876,50.781493,14689
+"G81023","Martins Oak Surgery","Rural Rother PCN",0.483675,50.91716,8515
+"G81024","Ashdown Forest Health Centre","High Weald PCN",0.032866,51.097035,10196
+"G81028","Park Crescent Health Centre","East & Central Brighton PCN",-0.129422,50.832582,12776
+"G81029","Seaford Medical Practice","Seaford PCN",0.099275,50.772678,17834
+"G81030","Belmont Surgery","High Weald PCN",0.340829,51.061952,8692
+"G81031","Harold Road Surgery","Hastings & St Leonards PCN",0.605003,50.864714,11599
+"G81032","Victoria Medical Centre","Victoria Eastbourne PCN",0.255496,50.777446,29213
+"G81034","Charter Medical Centre","Goldstone PCN",-0.156741,50.831254,30528
+"G81036","Warmdene Surgery","Preston Park Community PCN",-0.126631,50.862197,9167
+"G81037","The Meads Surgery","Greater Wealden PCN",0.091636,50.969692,9013
+"G81038","Stanford Medical Centre","Preston Park Community PCN",-0.148293,50.838378,18246
+"G81039","Little Common Surgery","Bexhill PCN",0.433531,50.842024,17971
+"G81040","Woodhill Surgery","High Weald PCN",0.253956,51.019351,3609
+"G81041","Sidley Medical Practice","Bexhill PCN",0.463982,50.857326,13881
+"G81042","Beaconsfield Medical Practice","Preston Park Community PCN",-0.148293,50.838378,13798
+"G81043","Rotherfield Surgery","High Weald PCN",0.186003,51.049158,7387
+"G81044","Montpelier Surgery","North & Central Brighton PCN",-0.149079,50.827148,6325
+"G81046","Portslade Health Centre","West Hove PCN",-0.213225,50.833673,11780
+"G81047","Seven Dials Medical Centre","North & Central Brighton PCN",-0.147743,50.829681,7064
+"G81048","Carisbrooke Surgery","Hastings & St Leonards PCN",0.529559,50.852259,8408
+"G81049","Manor Park Medical Centre","Victoria Eastbourne PCN",0.24261,50.819107,6697
+"G81050","Arlington Road Surgery","Alps Group PCN",0.277559,50.768189,11441
+"G81051","Rye Medical Centre","Rural Rother PCN",0.730338,50.962007,7173
+"G81052","Fairfield Surgery","Rural Rother PCN",0.382808,50.997228,4231
+"G81054","Pavilion Surgery","East & Central Brighton PCN",-0.136211,50.821515,10021
+"G81055","Saxonbury House Surgery","High Weald PCN",0.161938,51.058455,9566
+"G81057","Sedlescombe & Westfield Surgeries","Rural Rother PCN",0.534725,50.934129,6320
+"G81059","Hailsham Medical Group","Hailsham PCN",0.261991,50.864071,11425
+"G81061","Chapel Street Surgery","The Havens PCN",0.051236,50.793107,6206
+"G81065","Woodingdean Medical Centre","East & Central Brighton PCN",-0.079651,50.835932,8893
+"G81070","Trinity Medical Centre","Goldstone PCN",-0.172008,50.831228,23636
+"G81071","University of Sussex Health Centre","North & Central Brighton PCN",-0.088891,50.869437,20490
+"G81073","Mile Oak Medical Centre","West Hove PCN",-0.226573,50.851294,8472
+"G81074","High Glades Medical Centre","Hastings & St Leonards PCN",0.551301,50.878354,18175
+"G81075","The Avenue Surgery","Dean's and Central Brighton PCN",-0.113425,50.844357,6263
+"G81076","Saltdean and Rottingdean Med Practice","Dean's and Central Brighton PCN",-0.0358,50.8023,12604
+"G81077","Collington Surgery","Bexhill PCN",0.465081,50.84043,17578
+"G81082","Oldwood Surgery","Rural Rother PCN",0.470553,50.985002,6192
+"G81083","Wish Park Surgery","West Hove PCN",-0.189693,50.834027,7540
+"G81084","Beaconsfield Road Surgery","Hastings & St Leonards PCN",0.585006,50.86702,9870
+"G81085","Ferry Road Health Centre","Rural Rother PCN",0.729004,50.951164,3916
+"G81086","Bird-In-Eye Surgery","Greater Wealden PCN",0.105639,50.96595,7773
 "G81087","Northiam Surgery","Rural Rother PCN",0.606545,50.989565,6870
-"G81088","Heathfield Surgery","Greater Wealden PCN",0.248157,50.97078,11874
-"G81089","South Saxon House Surgery","Hastings & St Leonards PCN",0.526723,50.868702,3578
-"G81095","Hastings Old Town Surgery","Hastings & St Leonards PCN",0.594927,50.856277,25283
-"G81096","Sedlescombe House","Hastings & St Leonards PCN",0.554825,50.867142,2835
-"G81098","Quintins Medical Centre","Hailsham PCN",0.262677,50.877063,11878
-"G81099","Old School Surgery","Seaford PCN",0.100743,50.771891,9577
-"G81100","Havenshealth","The Havens PCN",-0.000811,50.796102,18939
-"G81102","Buxted Medical Centre","Greater Wealden PCN",0.132095,50.989406,15993
-"G81104","Park Practice","Alps Group PCN",0.2776,50.794734,12499
-"G81613","School House Surgery","Dean's and Central Brighton PCN",-0.129717,50.845798,5041
-"G81614","Groombridge and Hartfield Medical Group","High Weald PCN",0.184416,51.113952,5367
-"G81634","Herstmonceux Integrative Health Centre","Greater Wealden PCN",0.31697,50.887451,5855
-"G81638","Wellbn Healthcare","Goldstone PCN",-0.156129,50.825177,25060
-"G81641","Priory Road Surgery","Hastings & St Leonards PCN",0.589253,50.860828,3397
-"G81646","The Haven Practice","Preston Park Community PCN",-0.142651,50.842776,2694
-"G81656","Regency Surgery","East & Central Brighton PCN",-0.136165,50.82196,5348
-"G81658","The Station Practice","Hastings & St Leonards PCN",0.578137,50.857944,17832
-"G81663","Links Road Surgery","West Hove PCN",-0.207428,50.837062,5231
-"G81669","Broadway Surgery","East & Central Brighton PCN",-0.107386,50.825445,2333
-"G81689","Arch Healthcare","East & Central Brighton PCN",-0.134298,50.82569,1490
-"G81694","Ship Street Surgery","Dean's and Central Brighton PCN",-0.141753,50.821384,3120
-"H82003","Meadows Surgery","Burgess Hill & Villages PCN",-0.151765,50.962136,10099
-"H82004","Cowfold Surgery","Horsham Collaborative PCN",-0.273407,50.989053,4871
-"H82005","Cuckfield Medical Centre","Haywards Heath Villages PCN",-0.136629,51.009425,12449
-"H82006","The Petworth Surgery","Rural North Chichester PCN",-0.607135,50.983365,6102
-"H82007","Westcourt Medical Centre","Arun Integrated Care (AIC) PCN",-0.513745,50.81149,13338
-"H82009","St. Lawrence Surgery","Central Worthing Practices PCN",-0.390026,50.823979,16199
-"H82011","Strand Medical Group","Cissbury Integrated Care PCN",-0.41094,50.818463,15670
-"H82012","Leacroft Medical Practice","Crawley Care Collaborative PCN",-0.196029,51.126566,13446
-"H82013","Langley House Surgery","Chichester Alliance of Medical Practices PCN",-0.78328,50.837059,13311
-"H82014","Coppice Surgery","Angmering Coppice Fitzalan (ACF) PCN",-0.500448,50.813155,12963
-"H82016","Bersted Green Surgery","Regis Healthcare PCN",-0.681813,50.798078,13332
-"H82017","Park Surgery","Horsham Central PCN",-0.327381,51.064354,22539
-"H82020","Bognor Medical Centre","Regis Healthcare PCN",-0.67724,50.783629,9281
-"H82021","Arundel Surgery","Regis Healthcare PCN",-0.567268,50.852881,6420
-"H82022","Steyning Health Centre","Chanctonbury PCN",-0.329972,50.890666,12006
-"H82023","Adur Health Partnership","Shoreham and Southwick PCN",-0.27437,50.833817,36279
-"H82025","Woodlands & Clerklands Partnership","Healthy Crawley PCN",-0.184861,51.103758,16260
-"H82026","Saxonbrook Medical Centre","South Crawley PCN",-0.153421,51.10739,19989
-"H82027","Rudgwick Medical Centre","Horsham Collaborative PCN",-0.450643,51.090073,4045
-"H82028","The Courtyard Surgery","Horsham Collaborative PCN",-0.328342,51.065411,14861
-"H82030","Pulborough Medical Group","Rural North Chichester PCN",-0.509104,50.961138,13260
-"H82031","Loxwood Surgery","Rural North Chichester PCN",-0.515744,51.072644,6585
-"H82032","Riverbank Medical Centre","Rural North Chichester PCN",-0.735087,50.993474,13114
-"H82033","Gossops Green Medical Ctr","South Crawley PCN",-0.21648,51.107248,7596
-"H82034","Lime Tree Surgery","Coastal and South Downs PCN",-0.395859,50.848816,27506
-"H82035","Lindfield Medical Centre","Haywards Heath Villages PCN",-0.08174,51.013024,11305
-"H82036","Orchard Surgery","Horsham Central PCN",-0.332753,51.062192,8896
-"H82037","Selsey Medical Practice","Chichester Alliance of Medical Practices PCN",-0.791781,50.733269,12629
-"H82038","Flansham Park Health Centre","Regis Healthcare PCN",-0.629205,50.794855,13198
-"H82039","Park Surgery","Arun Integrated Care (AIC) PCN",-0.531673,50.808759,11129
-"H82040","Modality Mid Sussex","East Grinstead PCN",-0.077621,51.122557,31278
-"H82041","Victoria Road Surgery","Central Worthing Practices PCN",-0.376837,50.816915,13840
-"H82042","Cathedral Medical Group","Chichester Alliance of Medical Practices PCN",-0.77643,50.832176,13659
-"H82043","Grove House Surgery","Bognor Coastal Alliance PCN",-0.718202,50.781766,11296
-"H82044","Dolphins Practice","Haywards Heath Central PCN",-0.116076,51.000201,11347
-"H82045","Worthing Medical Group","Cissbury Integrated Care PCN",-0.377041,50.811423,20776
-"H82046","Broadwater Medical Centre","Central Worthing Practices PCN",-0.374675,50.827649,12208
-"H82047","Bridge Medical Centre","Crawley Care Collaborative PCN",-0.166439,51.117364,11471
-"H82048","Avisford Medical Group","Regis Healthcare PCN",-0.61388,50.822687,11697
-"H82049","Parklands Surgery","Chichester Alliance of Medical Practices PCN",-0.78752,50.838937,10852
-"H82050","Ifield Medical Practice","Healthy Crawley PCN",-0.211928,51.121212,9973
-"H82051","Lavant Road Surgery","Chichester Alliance of Medical Practices PCN",-0.781051,50.853385,12091
-"H82052","Pound Hill Medical Group","Healthy Crawley PCN",-0.156409,51.118813,16898
-"H82053","Furnace Green Surgery","Healthy Crawley PCN",-0.172546,51.107082,7315
-"H82055","Billingshurst Surgery","Chanctonbury PCN",-0.445798,51.024981,13654
-"H82056","Newtons Practice","Haywards Heath Central PCN",-0.103899,51.000679,13133
-"H82057","Mid Sussex Health Care","Burgess Hill & Villages PCN",-0.175279,50.933719,20975
-"H82058","Maywood Health Care Centre","Bognor Coastal Alliance PCN",-0.693582,50.786664,17254
-"H82059","Willow Green Surgery","Arun Integrated Care (AIC) PCN",-0.49099,50.814625,11070
-"H82060","Henfield Medical Centre","Chanctonbury PCN",-0.275597,50.936107,10153
-"H82061","Selden Medical Centre","Cissbury Integrated Care PCN",-0.359296,50.813513,8898
-"H82063","Moatfield Surgery","East Grinstead PCN",-0.013038,51.131681,15581
-"H82064","Southgate Medical Group","Crawley Care Collaborative PCN",-0.194559,51.102316,11173
-"H82065","Ball Tree Surgery","Lancing and Sompting PCN",-0.338832,50.831767,14242
-"H82066","Fitzalan Medical Group","Angmering Coppice Fitzalan (ACF) PCN",-0.537647,50.80654,16065
-"H82067","Tangmere Medical Centre","Chichester Alliance of Medical Practices PCN",-0.71845,50.851023,7448
-"H82070","Glebe Surgery","Chanctonbury PCN",-0.458843,50.918032,13308
-"H82072","Silverdale Practice","Burgess Hill & Villages PCN",-0.121708,50.952843,13532
-"H82076","Cornerways Surgery","Cissbury Integrated Care PCN",-0.404519,50.81566,3791
-"H82077","The Croft Surgery","Regis Healthcare PCN",-0.657769,50.841375,12072
-"H82078","Southbourne Surgery","Chichester Alliance of Medical Practices PCN",-0.903214,50.84492,10763
-"H82084","Brow Medical Centre","Burgess Hill & Villages PCN",-0.135481,50.955587,6877
-"H82087","Barn Surgery","Coastal and South Downs PCN",-0.447347,50.813953,3930
-"H82088","Bewbush Medical Centre","South Crawley PCN",-0.223311,51.104195,6630
-"H82089","Riverside Surgery","Horsham Central PCN",-0.335963,51.061032,9381
-"H82091","New Pond Row Surgery","Lancing and Sompting PCN",-0.322292,50.824911,8770
-"H82092","Village Surgery","Horsham Collaborative PCN",-0.350376,51.023691,10353
-"H82095","Witterings Medical Centre","Chichester Alliance of Medical Practices PCN",-0.87449,50.770006,10624
-"H82096","The Orchard Surgery","Lancing and Sompting PCN",-0.324352,50.828062,5885
-"H82098","Coachmans Medical Practice","South Crawley PCN",-0.203875,51.096335,10381
-"H82099","West Meads Surgery","Bognor Coastal Alliance PCN",-0.701481,50.788299,7724
-"H82100","Northlands Wood Surgery","Haywards Heath Villages PCN",-0.081209,50.996531,9034
-"H82615","Ouse Valley Practice","Haywards Heath Villages PCN",-0.201706,51.060237,9099
-"H82640","Holbrook Surgery","Horsham Central PCN",-0.30035,51.08383,15913
-"Y00080","Harbour Medical Practice","Eastbourne East PCN",0.328335,50.798787,7119
-"Y00351","Langley Corner Surgery","Crawley Care Collaborative PCN",-0.212611,51.125723,12134
-"Y02676","Brighton Station Health Centre","Dean's and Central Brighton PCN",-0.141323,50.827937,9903
-"Y06007","Wellsbourne Healthcare Cic","East & Central Brighton PCN",-0.107386,50.825445,8062
+"G81088","Wealden Ridge Medical Partnership","Greater Wealden PCN",0.248157,50.97078,21856
+"G81089","South Saxon House Surgery","Hastings & St Leonards PCN",0.526723,50.868702,3565
+"G81095","Hastings Old Town Surgery","Hastings & St Leonards PCN",0.594927,50.856277,25475
+"G81096","Sedlescombe House","Hastings & St Leonards PCN",0.554825,50.867142,2848
+"G81098","Quintins Medical Centre","Hailsham PCN",0.262677,50.877063,12130
+"G81099","Old School Surgery","Seaford PCN",0.100743,50.771891,9593
+"G81100","Havenshealth","The Havens PCN",-0.000811,50.796102,18994
+"G81102","Buxted Medical Centre","Greater Wealden PCN",0.132095,50.989406,16012
+"G81104","Park Practice","Alps Group PCN",0.2776,50.794734,12542
+"G81613","School House Surgery","Dean's and Central Brighton PCN",-0.129717,50.845798,4968
+"G81614","Groombridge and Hartfield Medical Group","High Weald PCN",0.184416,51.113952,5353
+"G81634","Herstmonceux Integrative Health Centre","Greater Wealden PCN",0.31697,50.887451,5636
+"G81638","Wellbn Healthcare","Goldstone PCN",-0.156129,50.825177,25191
+"G81641","Priory Road Surgery","Hastings & St Leonards PCN",0.589253,50.860828,3426
+"G81646","The Haven Practice","Preston Park Community PCN",-0.142651,50.842776,2689
+"G81656","Regency Surgery","East & Central Brighton PCN",-0.136165,50.82196,5297
+"G81658","The Station Practice","Hastings & St Leonards PCN",0.578137,50.857944,17966
+"G81663","Links Road Surgery","West Hove PCN",-0.207428,50.837062,5181
+"G81669","Broadway Surgery","East & Central Brighton PCN",-0.107386,50.825445,2315
+"G81689","Arch Healthcare","East & Central Brighton PCN",-0.134298,50.82569,1538
+"G81694","Ship Street Surgery","Dean's and Central Brighton PCN",-0.141753,50.821384,3080
+"H82003","Meadows Surgery","Burgess Hill & Villages PCN",-0.151765,50.962136,10114
+"H82004","Cowfold Surgery","Horsham Collaborative PCN",-0.273407,50.989053,4889
+"H82005","Cuckfield Medical Centre","Haywards Heath Villages PCN",-0.136629,51.009425,12652
+"H82006","The Petworth Surgery","Rural North Chichester PCN",-0.607135,50.983365,6085
+"H82007","Westcourt Medical Centre","Arun Integrated Care (AIC) PCN",-0.513745,50.81149,13296
+"H82009","St. Lawrence Surgery","Central Worthing Practices PCN",-0.390026,50.823979,16305
+"H82011","Strand Medical Group","Cissbury Integrated Care PCN",-0.41094,50.818463,15690
+"H82012","Leacroft Medical Practice","Crawley Care Collaborative PCN",-0.196029,51.126566,13495
+"H82013","Langley House Surgery","Chichester Alliance of Medical Practices PCN",-0.78328,50.837059,13329
+"H82014","Coppice Surgery","Angmering Coppice Fitzalan (ACF) PCN",-0.500448,50.813155,13031
+"H82016","Bersted Green Surgery","Regis Healthcare PCN",-0.681813,50.798078,13241
+"H82017","Park Surgery","Horsham Central PCN",-0.327381,51.064354,22206
+"H82020","Bognor Medical Centre","Regis Healthcare PCN",-0.67724,50.783629,9378
+"H82021","Arundel Surgery","Regis Healthcare PCN",-0.567268,50.852881,6416
+"H82022","Steyning Health Centre","Chanctonbury PCN",-0.329972,50.890666,12011
+"H82023","Adur Health Partnership","Shoreham and Southwick PCN",-0.27437,50.833817,36262
+"H82025","Woodlands & Clerklands Partnership","Healthy Crawley PCN",-0.184861,51.103758,16324
+"H82026","Saxonbrook Medical Centre","South Crawley PCN",-0.153421,51.10739,19986
+"H82027","Rudgwick Medical Centre","Horsham Collaborative PCN",-0.450643,51.090073,4036
+"H82028","The Courtyard Surgery","Horsham Collaborative PCN",-0.328342,51.065411,15219
+"H82030","Pulborough Medical Group","Rural North Chichester PCN",-0.509104,50.961138,13213
+"H82031","Loxwood Surgery","Rural North Chichester PCN",-0.515744,51.072644,6654
+"H82032","Riverbank Medical Centre","Rural North Chichester PCN",-0.735087,50.993474,13092
+"H82033","Gossops Green Medical Ctr","South Crawley PCN",-0.21648,51.107248,7561
+"H82034","Lime Tree Surgery","Coastal and South Downs PCN",-0.395859,50.848816,27541
+"H82035","Lindfield Medical Centre","Haywards Heath Villages PCN",-0.08174,51.013024,11241
+"H82036","Orchard Surgery","Horsham Central PCN",-0.332753,51.062192,8886
+"H82037","Selsey Medical Practice","Chichester Alliance of Medical Practices PCN",-0.791781,50.733269,12633
+"H82038","Flansham Park Health Centre","Regis Healthcare PCN",-0.629205,50.794855,13226
+"H82039","Park Surgery","Arun Integrated Care (AIC) PCN",-0.531673,50.808759,10991
+"H82040","Modality Mid Sussex","East Grinstead PCN",-0.077621,51.122557,31002
+"H82041","Victoria Road Surgery","Central Worthing Practices PCN",-0.376837,50.816915,13888
+"H82042","Cathedral Medical Group","Chichester Alliance of Medical Practices PCN",-0.77643,50.832176,13626
+"H82043","Grove House Surgery","Bognor Coastal Alliance PCN",-0.718202,50.781766,11262
+"H82044","Dolphins Practice","Haywards Heath Central PCN",-0.116076,51.000201,11295
+"H82045","Worthing Medical Group","Cissbury Integrated Care PCN",-0.377041,50.811423,20850
+"H82046","Broadwater Medical Centre","Central Worthing Practices PCN",-0.374675,50.827649,12134
+"H82047","Bridge Medical Centre","Crawley Care Collaborative PCN",-0.166439,51.117364,11341
+"H82048","Avisford Medical Group","Regis Healthcare PCN",-0.61388,50.822687,11793
+"H82049","Parklands Surgery","Chichester Alliance of Medical Practices PCN",-0.78752,50.838937,10919
+"H82050","Ifield Medical Practice","Healthy Crawley PCN",-0.211928,51.121212,10066
+"H82051","Lavant Road Surgery","Chichester Alliance of Medical Practices PCN",-0.781051,50.853385,12165
+"H82052","Pound Hill Medical Group","Healthy Crawley PCN",-0.156409,51.118813,17005
+"H82053","Furnace Green Surgery","Healthy Crawley PCN",-0.172546,51.107082,7272
+"H82055","Billingshurst Surgery","Chanctonbury PCN",-0.445798,51.024981,13773
+"H82056","Newtons Practice","Haywards Heath Central PCN",-0.103899,51.000679,13180
+"H82057","Mid Sussex Health Care","Burgess Hill & Villages PCN",-0.175279,50.933719,21112
+"H82058","Maywood Health Care Centre","Bognor Coastal Alliance PCN",-0.693582,50.786664,17395
+"H82059","Willow Green Surgery","Arun Integrated Care (AIC) PCN",-0.49099,50.814625,11179
+"H82060","Henfield Medical Centre","Chanctonbury PCN",-0.275597,50.936107,10092
+"H82061","Selden Medical Centre","Cissbury Integrated Care PCN",-0.359296,50.813513,8932
+"H82063","Moatfield Surgery","East Grinstead PCN",-0.013038,51.131681,15768
+"H82064","Southgate Medical Group","Crawley Care Collaborative PCN",-0.194559,51.102316,11245
+"H82065","Ball Tree Surgery","Lancing and Sompting PCN",-0.338832,50.831767,14280
+"H82066","Fitzalan Medical Group","Angmering Coppice Fitzalan (ACF) PCN",-0.537647,50.80654,16143
+"H82067","Tangmere Medical Centre","Chichester Alliance of Medical Practices PCN",-0.71845,50.851023,7660
+"H82070","Glebe Surgery","Chanctonbury PCN",-0.458843,50.918032,13315
+"H82072","Silverdale Practice","Burgess Hill & Villages PCN",-0.121708,50.952843,13534
+"H82076","Cornerways Surgery","Cissbury Integrated Care PCN",-0.404519,50.81566,3836
+"H82077","The Croft Surgery","Regis Healthcare PCN",-0.657769,50.841375,12263
+"H82078","Southbourne Surgery","Chichester Alliance of Medical Practices PCN",-0.903214,50.84492,10701
+"H82084","Brow Medical Centre","Burgess Hill & Villages PCN",-0.135481,50.955587,7078
+"H82087","Barn Surgery","Coastal and South Downs PCN",-0.447347,50.813953,3941
+"H82088","Bewbush Medical Centre","South Crawley PCN",-0.223311,51.104195,6627
+"H82089","Riverside Medical Practice","Horsham Central PCN",-0.335963,51.061032,9722
+"H82091","New Pond Row Surgery","Lancing and Sompting PCN",-0.322292,50.824911,8900
+"H82092","Village Surgery","Horsham Collaborative PCN",-0.350376,51.023691,10494
+"H82095","Witterings Medical Centre","Chichester Alliance of Medical Practices PCN",-0.87449,50.770006,10562
+"H82096","The Orchard Surgery","Lancing and Sompting PCN",-0.324352,50.828062,5778
+"H82098","Coachmans Medical Practice","South Crawley PCN",-0.203875,51.096335,10346
+"H82099","West Meads Surgery","Bognor Coastal Alliance PCN",-0.701481,50.788299,7770
+"H82100","Northlands Wood Surgery","Haywards Heath Villages PCN",-0.081209,50.996531,8982
+"H82615","Ouse Valley Practice","Haywards Heath Villages PCN",-0.201706,51.060237,9110
+"H82640","Holbrook Surgery","Horsham Central PCN",-0.30035,51.08383,15815
+"Y00080","Harbour Medical Practice","Eastbourne East PCN",0.328335,50.798787,7103
+"Y00351","Langley Corner Surgery","Crawley Care Collaborative PCN",-0.212611,51.125723,12269
+"Y02676","Brighton Station Health Centre","Dean's and Central Brighton PCN",-0.141323,50.827937,9834
+"Y06007","Wellsbourne Healthcare Cic","East & Central Brighton PCN",-0.107386,50.825445,8219
